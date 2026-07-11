@@ -17,7 +17,7 @@ export default async function Confirm({ params }) {
         {!o ? <p className="err">Order not found.</p> : (
           <div className="card" style={{ maxWidth: 640, margin: "0 auto" }}>
             <h2 style={{ marginBottom: ".4rem" }}>Order Confirmed 🎉</h2>
-            <p>Order <strong>{o.OrderNumber}</strong> · {o.CreatedAt} · Status: <span className={`status-pill st-${o.Status}`}>{o.Status}</span></p>
+            <p>Order <strong>{o.OrderNumber}</strong> · {new Date(o.CreatedAt).toLocaleString()} · Status: <span className={`status-pill st-${o.Status}`}>{o.Status}</span></p>
             <p style={{ marginTop: ".6rem" }}><strong>{o.CustomerName}</strong> · Table {o.TableNumber}<br />{o.Email} · {o.Telephone}</p>
             <table className="inv">
               <thead><tr><th>Item</th><th>Qty</th><th className="num">Unit Price</th><th className="num">Total</th></tr></thead>

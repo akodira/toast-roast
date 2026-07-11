@@ -26,7 +26,7 @@ export default function OrdersPage() {
           {orders.map(o => (
             <tr key={o.OrderId}>
               <td><strong>{o.OrderNumber}</strong></td>
-              <td>{o.CreatedAt}</td>
+              <td>{new Date(o.CreatedAt).toLocaleString()}</td>
               <td>{o.TableNumber}</td>
               <td>{o.CustomerName}</td>
               <td>{o.Telephone}<br /><small>{o.Email}</small></td>
