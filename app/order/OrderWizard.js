@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 
 const fmt = (n) => n.toFixed(2);
 
-export default function OrderWizard({ categories, items, settings }) {
+export default function OrderWizard({ categories, items, tables = [], settings }) {
   const router = useRouter();
   const taxP = parseFloat(settings.tax_percent);
   const svcP = parseFloat(settings.service_percent);
@@ -68,7 +68,14 @@ export default function OrderWizard({ categories, items, settings }) {
       {step === 1 && (
         <div className="card" style={{ maxWidth: 480 }}>
           <div className="field"><label htmlFor="tbl">Table Number *</label>
-            <input id="tbl" value={info.tableNumber} onChange={e => setInfo({ ...info, tableNumber: e.target.value })} /></div>
+            {tables.length > 0 ? (
+              <select id="tbl" value={info.tableNumber} onChange={e => setInfo({ ...info, tableNumber: e.target.value })}>
+                <option value="">Select your table…</option>
+                {tables.map(t => <option key={t.TableId} value={t.Name}>{t.Name}</option>)}
+              </select>
+            ) : (
+              <input id="tbl" value={info.tableNumber} onChange={e => setInfo({ ...info, tableNumber: e.target.value })} />
+            )}</div>
           <div className="field"><label htmlFor="nm">Customer Name *</label>
             <input id="nm" value={info.name} onChange={e => setInfo({ ...info, name: e.target.value })} /></div>
           <div className="field"><label htmlFor="em">Email Address *</label>

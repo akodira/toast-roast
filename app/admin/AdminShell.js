@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 const links = [
   ["/admin", "Dashboard"], ["/admin/orders", "Orders"], ["/admin/menu", "Menu Items"],
-  ["/admin/categories", "Categories"], ["/admin/content", "Website Content"],
+  ["/admin/categories", "Categories"], ["/admin/tables", "Tables"], ["/admin/content", "Website Content"],
   ["/admin/settings", "Tax & Service"], ["/admin/users", "Users"],
 ];
 

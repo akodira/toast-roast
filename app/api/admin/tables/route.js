@@ -1,0 +1,24 @@
+export const dynamic = "force-dynamic";
+import { NextResponse } from "next/server";
+import { getDb, logActivity } from "@/lib/db";
+import { getSession } from "@/lib/auth";
+
+export async function GET() {
+  const db = await getDb();
+  const tables = await db.prepare("SELECT * FROM Tables ORDER BY DisplayOrder").all();
+  return NextResponse.json({ tables });
+}
+export async function POST(req) {
+  const s = await getSession();
+  const { Name, DisplayOrder = 0, IsActive = 1 } = await req.json();
+  if (!Name?.trim()) return NextResponse.json({ error: "Table name/number is required." }, { status: 400 });
+  const db = await getDb();
+  try {
+    const r = await db.prepare("INSERT INTO Tables (Name,DisplayOrder,IsActive) VALUES ($1,$2,$3) RETURNING TableId AS id")
+      .run(Name.trim(), DisplayOrder, IsActive ? true : false);
+    await logActivity(Number(s.sub), "TABLE_CREATE", Name);
+    return NextResponse.json({ ok: true, id: r.lastInsertRowid });
+  } catch {
+    return NextResponse.json({ error: "A table with that name already exists." }, { status: 400 });
+  }
+}

@@ -9,6 +9,7 @@ export default async function OrderPage() {
   const db = await getDb();
   const categories = await db.prepare("SELECT * FROM Categories WHERE IsActive=true ORDER BY DisplayOrder").all();
   const items = await db.prepare("SELECT * FROM MenuItems WHERE IsActive=true ORDER BY DisplayOrder").all();
+  const tables = await db.prepare("SELECT * FROM Tables WHERE IsActive=true ORDER BY DisplayOrder").all();
   const settingsRows = await db.prepare("SELECT * FROM Settings").all();
   const settings = Object.fromEntries(settingsRows.map(s => [s.SettingKey, s.SettingValue]));
   return (
@@ -16,7 +17,7 @@ export default async function OrderPage() {
       <Header content={content} />
       <main className="section container">
         <h2>Order to Your Table</h2>
-        <OrderWizard categories={categories} items={items} settings={settings} />
+        <OrderWizard categories={categories} items={items} tables={tables} settings={settings} />
       </main>
       <Footer content={content} />
     </>
