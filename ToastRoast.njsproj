@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{14D25121-FC47-4ADF-9BDE-154C5EABFCE8}</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <ProjectView>ShowAllFiles</ProjectView>
+    <StartupFile>server.js</StartupFile>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputDir>.</OutputDir>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <Name>ToastRoast</Name>
+    <RootNamespace>ToastRoast</RootNamespace>
+    <NodejsPort>3000</NodejsPort>
+    <StartWebBrowser>true</StartWebBrowser>
+    <LaunchUrl>http://localhost:3000</LaunchUrl>
+    <NodeExeArguments>
+    </NodeExeArguments>
+    <ScriptArguments>
+    </ScriptArguments>
+    <EnableTypeScript>false</EnableTypeScript>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <ItemGroup>
+    <Compile Include="server.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="package.json" />
+    <Content Include=".env.example" />
+    <Content Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="app\" />
+    <Folder Include="components\" />
+    <Folder Include="lib\" />
+    <Folder Include="public\" />
+    <Folder Include="database\" />
+    <Folder Include="docs\" />
+    <Folder Include="iis\" />
+  </ItemGroup>
+  <!-- Do not delete the following Import Project. While this appears to do nothing,
+       it is a marker for VS to recognize this as a Node.js Tools project even on
+       machines where the NTVS targets path below isn't found (falls back gracefully). -->
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\NodeJs\Microsoft.NodejsTools.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\NodeJs\Microsoft.NodejsTools.targets')" />
+</Project>

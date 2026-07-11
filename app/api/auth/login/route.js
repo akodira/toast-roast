@@ -1,0 +1,18 @@
+import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import { getDb, logActivity } from "@/lib/db";
+import { createSession } from "@/lib/auth";
+
+export async function POST(req) {
+  const { username, password } = await req.json().catch(() => ({}));
+  if (!username || !password) return NextResponse.json({ error: "Username and password are required." }, { status: 400 });
+  const db = await getDb();
+  const user = await db.prepare("SELECT * FROM Users WHERE Username=$1 AND IsActive=true").get(username);
+  if (!user || !bcrypt.compareSync(password, user.PasswordHash))
+    return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
+  const token = await createSession(user);
+  await logActivity(user.UserId, "LOGIN", `User ${username} signed in`);
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set("tr_session", token, { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 8 });
+  return res;
+}
