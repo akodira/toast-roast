@@ -1,15 +1,18 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getDb, logActivity } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { requireRole, ROLE_ADMIN, ROLE_EDITOR } from "@/lib/auth";
 
 export async function GET() {
+  const s = await requireRole([ROLE_ADMIN, ROLE_EDITOR]);
+  if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = await getDb();
   const items = await db.prepare("SELECT * FROM MenuItems ORDER BY CategoryId, DisplayOrder").all();
   return NextResponse.json({ items });
 }
 export async function POST(req) {
-  const s = await getSession();
+  const s = await requireRole([ROLE_ADMIN, ROLE_EDITOR]);
+  if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const b = await req.json();
   if (!b.Name?.trim() || !b.CategoryId || b.Price == null || isNaN(parseFloat(b.Price)))
     return NextResponse.json({ error: "Name, category and a valid price are required." }, { status: 400 });

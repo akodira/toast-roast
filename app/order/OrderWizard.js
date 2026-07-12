@@ -13,7 +13,6 @@ export default function OrderWizard({ categories, items, tables = [], settings }
   const [info, setInfo] = useState({
     tableNumber: qp.get("table") || "",
     name: qp.get("name") || "",
-    email: qp.get("email") || "",
     telephone: qp.get("phone") || "",
   });
   const [cat, setCat] = useState(null);
@@ -36,8 +35,6 @@ export default function OrderWizard({ categories, items, tables = [], settings }
   const validateInfo = () => {
     if (!info.tableNumber.trim()) return "Please enter your table number.";
     if (!info.name.trim()) return "Please enter your name.";
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(info.email) && info.email.trim())
-      return "That doesn't look like a valid email address — or just leave it blank.";
     if (!/^[\d+\-\s()]{7,}$/.test(info.telephone)) return "Please enter a valid telephone number.";
     return "";
   };
@@ -85,8 +82,6 @@ export default function OrderWizard({ categories, items, tables = [], settings }
             )}</div>
           <div className="field"><label htmlFor="nm">Customer Name *</label>
             <input id="nm" value={info.name} onChange={e => setInfo({ ...info, name: e.target.value })} /></div>
-          <div className="field"><label htmlFor="em">Email Address <span style={{ opacity: .6, fontWeight: 400 }}>(optional)</span></label>
-            <input id="em" type="email" value={info.email} onChange={e => setInfo({ ...info, email: e.target.value })} /></div>
           <div className="field"><label htmlFor="ph">Telephone Number *</label>
             <input id="ph" type="tel" value={info.telephone} onChange={e => setInfo({ ...info, telephone: e.target.value })} /></div>
           <button className="btn" onClick={next}>Continue</button>
@@ -170,7 +165,7 @@ export default function OrderWizard({ categories, items, tables = [], settings }
       {step === 5 && (
         <div className="card">
           <h3 style={{ marginBottom: ".8rem" }}>Invoice Preview</h3>
-          <p><strong>{info.name}</strong> · Table {info.tableNumber}<br />{info.email} · {info.telephone}</p>
+          <p><strong>{info.name}</strong> · Table {info.tableNumber}<br />{info.telephone}</p>
           <div className="table-wrap"><table className="inv">
             <thead><tr><th>Item</th><th>Qty</th><th className="num">Unit Price</th><th className="num">Total</th></tr></thead>
             <tbody>{cartLines.map(l => (

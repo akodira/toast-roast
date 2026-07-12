@@ -1,15 +1,18 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getDb, logActivity } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { requireRole, ROLE_ADMIN, ROLE_STAFF } from "@/lib/auth";
 
 export async function GET() {
+  const s = await requireRole([ROLE_ADMIN, ROLE_STAFF]);
+  if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = await getDb();
   const tables = await db.prepare("SELECT * FROM Tables ORDER BY DisplayOrder").all();
   return NextResponse.json({ tables });
 }
 export async function POST(req) {
-  const s = await getSession();
+  const s = await requireRole([ROLE_ADMIN]);
+  if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { Name, DisplayOrder = 0, IsActive = 1 } = await req.json();
   if (!Name?.trim()) return NextResponse.json({ error: "Table name/number is required." }, { status: 400 });
   const db = await getDb();

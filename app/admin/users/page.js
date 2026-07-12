@@ -35,7 +35,7 @@ export default function UsersPage() {
         <div className="field"><label>Password (min 8 chars)</label><input type="password" value={f.Password} onChange={e => setF({ ...f, Password: e.target.value })} /></div>
         <div className="field"><label>Role</label>
           <select value={f.RoleId} onChange={e => setF({ ...f, RoleId: +e.target.value })}>
-            <option value={1}>Admin</option><option value={2}>Staff</option>
+            <option value={1}>Admin</option><option value={2}>Staff</option><option value={3}>Editor</option>
           </select></div>
         <button className="btn" onClick={add}>Create User</button>
       </div>
@@ -43,7 +43,12 @@ export default function UsersPage() {
         <thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Active</th><th /></tr></thead>
         <tbody>{users.map(u => (
           <tr key={u.UserId}>
-            <td>{u.Username}</td><td>{u.FullName}</td><td>{u.RoleId === 1 ? "Admin" : "Staff"}</td>
+            <td>{u.Username}</td><td>{u.FullName}</td>
+            <td>
+              <select value={u.RoleId} onChange={e => update(u, { RoleId: +e.target.value })}>
+                <option value={1}>Admin</option><option value={2}>Staff</option><option value={3}>Editor</option>
+              </select>
+            </td>
             <td>{u.IsActive ? "Yes" : "Disabled"}</td>
             <td>
               <button className="btn small ghost" onClick={() => resetPw(u)}>Reset Password</button>{" "}

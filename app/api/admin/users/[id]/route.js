@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { getDb, logActivity } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { requireRole, ROLE_ADMIN } from "@/lib/auth";
 
 export async function PUT(req, { params }) {
-  const s = await getSession();
+  const s = await requireRole([ROLE_ADMIN]);
+  if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { FullName, RoleId, IsActive, Password } = await req.json();
   const db = await getDb();
   await db.prepare("UPDATE Users SET FullName=$1,RoleId=$2,IsActive=$3 WHERE UserId=$4").run(FullName || null, RoleId || 1, IsActive ? true : false, params.id);

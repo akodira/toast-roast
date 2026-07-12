@@ -1,18 +1,16 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getDb, logActivity, withTransaction } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { requireRole, ROLE_ADMIN, ROLE_STAFF } from "@/lib/auth";
 
 const round = (n) => Math.round(n * 100) / 100;
 
 export async function POST(req) {
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
-  const { tableNumber, name, email, telephone, items } = body;
+  const { tableNumber, name, telephone, items } = body;
   if (!tableNumber || !name || !telephone)
     return NextResponse.json({ error: "Table number, name and telephone are required." }, { status: 400 });
-  if (email && email.trim() && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
-    return NextResponse.json({ error: "Please enter a valid email address, or leave it blank." }, { status: 400 });
   if (!Array.isArray(items) || items.length === 0)
     return NextResponse.json({ error: "Your cart is empty." }, { status: 400 });
 
@@ -38,9 +36,16 @@ export async function POST(req) {
   const orderNumber = "TR-" + Date.now().toString(36).toUpperCase() + Math.floor(Math.random() * 90 + 10);
 
   await withTransaction(async (tdb) => {
-    const cust = await tdb.prepare("INSERT INTO Customers (Name,Email,Telephone) VALUES ($1,$2,$3) RETURNING CustomerId AS id").run(name.trim(), email?.trim() || null, telephone.trim());
+    // Find-or-create: the same phone+name combo (e.g. someone ordering a
+    // second round today) reuses their existing Customer row instead of
+    // creating a fresh duplicate every single order.
+    const existing = await tdb.prepare("SELECT CustomerId FROM Customers WHERE Telephone=$1 AND Name=$2 ORDER BY CustomerId DESC LIMIT 1")
+      .get(telephone.trim(), name.trim());
+    const customerId = existing
+      ? existing.CustomerId
+      : (await tdb.prepare("INSERT INTO Customers (Name,Telephone) VALUES ($1,$2) RETURNING CustomerId AS id").run(name.trim(), telephone.trim())).lastInsertRowid;
     const ord = await tdb.prepare(`INSERT INTO Orders (OrderNumber,CustomerId,TableNumber,Subtotal,TaxPercent,TaxAmount,ServicePercent,ServiceAmount,GrandTotal,Status)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'Pending') RETURNING OrderId AS id`).run(orderNumber, cust.lastInsertRowid, String(tableNumber).trim(), subtotal, taxP, taxAmount, svcP, serviceAmount, grandTotal);
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'Pending') RETURNING OrderId AS id`).run(orderNumber, customerId, String(tableNumber).trim(), subtotal, taxP, taxAmount, svcP, serviceAmount, grandTotal);
     for (const l of lines) {
       await tdb.prepare("INSERT INTO OrderDetails (OrderId,MenuItemId,ItemName,UnitPrice,Quantity,LineTotal) VALUES ($1,$2,$3,$4,$5,$6)")
         .run(ord.lastInsertRowid, l.id, l.name, l.price, l.qty, l.total);
@@ -51,7 +56,7 @@ export async function POST(req) {
 }
 
 export async function GET(req) {
-  const session = await getSession();
+  const session = await requireRole([ROLE_ADMIN, ROLE_STAFF]);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const status = new URL(req.url).searchParams.get("status");
   const db = await getDb();

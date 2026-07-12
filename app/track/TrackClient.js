@@ -37,7 +37,7 @@ export default function TrackClient() {
       {orders && orders.length === 0 && <p>No orders found for that number today.</p>}
 
       {orders && orders.length > 0 && orders.map(o => {
-        const orderMoreHref = `/order?table=${encodeURIComponent(o.TableNumber)}&name=${encodeURIComponent(o.CustomerName)}&email=${encodeURIComponent(o.Email || "")}&phone=${encodeURIComponent(o.Telephone)}`;
+        const orderMoreHref = `/order?table=${encodeURIComponent(o.TableNumber)}&name=${encodeURIComponent(o.CustomerName)}&phone=${encodeURIComponent(o.Telephone)}`;
         return (
           <div className="card" key={o.OrderId} style={{ marginBottom: "1.2rem" }}>
             <p>Order <strong>{o.OrderNumber}</strong> · Table {o.TableNumber} · {new Date(o.CreatedAt).toLocaleTimeString()} ·{" "}

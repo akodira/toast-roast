@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { getDb, logActivity } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { requireRole, ROLE_ADMIN } from "@/lib/auth";
 
 export async function PUT(req, { params }) {
-  const s = await getSession();
+  const s = await requireRole([ROLE_ADMIN]);
+  if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { Name, DisplayOrder = 0, IsActive = 1 } = await req.json();
   if (!Name?.trim()) return NextResponse.json({ error: "Table name/number is required." }, { status: 400 });
   const db = await getDb();
@@ -17,7 +18,8 @@ export async function PUT(req, { params }) {
   }
 }
 export async function DELETE(_req, { params }) {
-  const s = await getSession();
+  const s = await requireRole([ROLE_ADMIN]);
+  if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = await getDb();
   await db.prepare("DELETE FROM Tables WHERE TableId=$1").run(params.id);
   await logActivity(Number(s.sub), "TABLE_DELETE", `#${params.id}`);

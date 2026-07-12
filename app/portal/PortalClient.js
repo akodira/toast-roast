@@ -21,16 +21,17 @@ function buildCombinedInvoice(orders) {
   return { lines: Object.values(lineMap), subtotal, tax, svc, grand, taxPct, svcPct };
 }
 
-export default function PortalClient({ tables }) {
-  const [session, setSession] = useState(null); // { table, phone, name, email }
+export default function PortalClient() {
+  const [session, setSession] = useState(null); // { table, tableId, phone, name }
   const [loaded, setLoaded] = useState(false);
-  const [form, setForm] = useState({ table: "", phone: "" });
+  const [mode, setMode] = useState("claim"); // "claim" | "join"
+  const [tables, setTables] = useState([]);
+  const [form, setForm] = useState({ tableId: "", phone: "", name: "" });
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [orders, setOrders] = useState([]);
   const [tab, setTab] = useState("orders"); // "orders" | "invoice"
 
-  // Load any existing session from this device on first render.
   useEffect(() => {
     try {
       const raw = localStorage.getItem(SESSION_KEY);
@@ -39,12 +40,18 @@ export default function PortalClient({ tables }) {
     setLoaded(true);
   }, []);
 
-  // While "logged in", pull today's orders for this phone and keep them fresh.
+  const loadTables = async () => {
+    const res = await fetch("/api/public/tables");
+    const d = await res.json();
+    if (res.ok) setTables(d.tables || []);
+  };
+  useEffect(() => { if (!session) loadTables(); }, [session, mode]);
+
   useEffect(() => {
     if (!session) return;
     const load = async () => {
       try {
-        const res = await fetch(`/api/public/orders/lookup?phone=${encodeURIComponent(session.phone)}`);
+        const res = await fetch(`/api/public/orders/lookup?phone=${encodeURIComponent(session.phone)}&name=${encodeURIComponent(session.name)}`);
         const data = await res.json();
         if (res.ok) setOrders(data.orders || []);
       } catch { /* transient network error, try again next tick */ }
@@ -54,61 +61,86 @@ export default function PortalClient({ tables }) {
     return () => clearInterval(t);
   }, [session]);
 
-  const login = async () => {
-    if (!form.table) return setErr("Please select your table.");
+  const submit = async () => {
+    if (!form.tableId) return setErr("Please select a table.");
     if (!/^[\d+\-\s()]{7,}$/.test(form.phone)) return setErr("Please enter a valid phone number.");
+    if (!form.name.trim()) return setErr("Please enter your name.");
     setErr(""); setBusy(true);
-    // Recognize a returning customer today (by phone) and prefill their name/email.
-    let name = "", email = "";
-    try {
-      const res = await fetch(`/api/public/orders/lookup?phone=${encodeURIComponent(form.phone)}`);
-      const data = await res.json();
-      if (res.ok && data.orders?.[0]) { name = data.orders[0].CustomerName || ""; email = data.orders[0].Email || ""; }
-    } catch { /* fine, they'll just enter their name fresh in the order form */ }
-    const s = { table: form.table, phone: form.phone.trim(), name, email };
+    const url = mode === "claim" ? "/api/public/tables/claim" : "/api/public/tables/join";
+    const res = await fetch(url, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tableId: form.tableId, phone: form.phone.trim(), name: form.name.trim() }),
+    });
+    const d = await res.json();
+    setBusy(false);
+    if (!res.ok) { setErr(d.error); if (mode === "claim") loadTables(); return; }
+    const table = tables.find(t => t.TableId === +form.tableId);
+    const s = { table: table?.Name || "", tableId: form.tableId, phone: form.phone.trim(), name: form.name.trim() };
     localStorage.setItem(SESSION_KEY, JSON.stringify(s));
     setSession(s);
-    setBusy(false);
   };
 
   const logout = () => {
     localStorage.removeItem(SESSION_KEY);
     setSession(null);
     setOrders([]);
-    setForm({ table: "", phone: "" });
+    setForm({ tableId: "", phone: "", name: "" });
+    setErr("");
   };
 
   if (!loaded) return null;
 
   if (!session) {
+    const freeTables = tables.filter(t => !t.Occupied);
+    const occupiedTables = tables.filter(t => t.Occupied);
     return (
-      <div className="card" style={{ maxWidth: 420 }}>
-        <p style={{ marginBottom: "1rem" }}>Enter your table and phone number to start ordering, or to check on an order you already placed.</p>
+      <div className="card" style={{ maxWidth: 440 }}>
+        <div className="steps" style={{ marginBottom: "1.2rem" }}>
+          <button className={`step-dot ${mode === "claim" ? "on" : ""}`} style={{ border: "none", cursor: "pointer" }}
+            onClick={() => { setMode("claim"); setForm({ tableId: "", phone: "", name: "" }); setErr(""); }}>New Table</button>
+          <button className={`step-dot ${mode === "join" ? "on" : ""}`} style={{ border: "none", cursor: "pointer" }}
+            onClick={() => { setMode("join"); setForm({ tableId: "", phone: "", name: "" }); setErr(""); }}>Join Someone's Table</button>
+        </div>
+
+        {mode === "claim" ? (
+          <p style={{ marginBottom: "1rem" }}>Pick your table and register with your phone number to start ordering.</p>
+        ) : (
+          <p style={{ marginBottom: "1rem" }}>Already seated with someone who registered the table? Enter the table and the phone number <em>they</em> used to join them.</p>
+        )}
         {err && <p className="err" role="alert">{err}</p>}
+
         <div className="field">
           <label htmlFor="pt-table">Table</label>
-          <select id="pt-table" value={form.table} onChange={e => setForm({ ...form, table: e.target.value })}>
-            <option value="">Select your table…</option>
-            {tables.map(t => <option key={t.TableId} value={t.Name}>{t.Name}</option>)}
+          <select id="pt-table" value={form.tableId} onChange={e => setForm({ ...form, tableId: e.target.value })}>
+            <option value="">Select a table…</option>
+            {mode === "claim"
+              ? freeTables.map(t => <option key={t.TableId} value={t.TableId}>{t.Name}</option>)
+              : occupiedTables.map(t => <option key={t.TableId} value={t.TableId}>{t.Name}{t.OccupiedName ? ` — registered by ${t.OccupiedName}` : ""}</option>)}
           </select>
+          {mode === "claim" && freeTables.length === 0 && <p style={{ fontSize: ".8rem", opacity: .7, marginTop: ".3rem" }}>No free tables right now — if you're joining someone already seated, use "Join Someone's Table" above.</p>}
+          {mode === "join" && occupiedTables.length === 0 && <p style={{ fontSize: ".8rem", opacity: .7, marginTop: ".3rem" }}>No tables are currently registered.</p>}
         </div>
         <div className="field">
-          <label htmlFor="pt-phone">Phone Number</label>
-          <input id="pt-phone" type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}
-            onKeyDown={e => e.key === "Enter" && login()} />
+          <label htmlFor="pt-name">Your Name</label>
+          <input id="pt-name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
         </div>
-        <button className="btn" onClick={login} disabled={busy}>{busy ? "Checking…" : "Continue"}</button>
+        <div className="field">
+          <label htmlFor="pt-phone">{mode === "claim" ? "Phone Number" : "The Table's Registered Phone Number"}</label>
+          <input id="pt-phone" type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}
+            onKeyDown={e => e.key === "Enter" && submit()} />
+        </div>
+        <button className="btn" onClick={submit} disabled={busy}>{busy ? "Checking…" : mode === "claim" ? "Register Table" : "Join Table"}</button>
       </div>
     );
   }
 
-  const orderMoreHref = `/order?table=${encodeURIComponent(session.table)}&name=${encodeURIComponent(session.name || "")}&email=${encodeURIComponent(session.email || "")}&phone=${encodeURIComponent(session.phone)}`;
+  const orderMoreHref = `/order?table=${encodeURIComponent(session.table)}&name=${encodeURIComponent(session.name)}&phone=${encodeURIComponent(session.phone)}`;
 
   return (
     <div>
       <div className="card" style={{ marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <p style={{ fontWeight: 600 }}>{session.name ? `Welcome back, ${session.name}` : "Welcome"} · Table {session.table}</p>
+          <p style={{ fontWeight: 600 }}>Welcome, {session.name} · Table {session.table}</p>
           <p style={{ fontSize: ".82rem", opacity: .7 }}>{session.phone}</p>
         </div>
         <div style={{ display: "flex", gap: ".7rem" }}>
@@ -146,7 +178,7 @@ export default function PortalClient({ tables }) {
         const inv = buildCombinedInvoice(orders);
         return (
           <div className="card" style={{ maxWidth: 560 }}>
-            <p style={{ fontSize: ".82rem", opacity: .7, marginBottom: ".8rem" }}>Combined across {orders.length} order{orders.length > 1 ? "s" : ""} placed today at Table {session.table}.</p>
+            <p style={{ fontSize: ".82rem", opacity: .7, marginBottom: ".8rem" }}>Combined across {orders.length} order{orders.length > 1 ? "s" : ""} placed today by {session.name} at Table {session.table}.</p>
             <table className="inv">
               <thead><tr><th>Item</th><th>Qty</th><th className="num">Unit Price</th><th className="num">Total</th></tr></thead>
               <tbody>{inv.lines.map(l => (
