@@ -74,6 +74,37 @@ h1, h2, h3, .display { font-family: var(--font-display); font-weight: 400; lette
 .badge-out { font-size: .68rem; background: var(--sand); color: var(--rust-deep); border-radius: 4px; padding: .1rem .45rem; margin-inline-start: .4rem; vertical-align: middle; }
 
 .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0 3rem; }
+
+/* Full-bleed photo showcase for a single category, matching brand mood board */
+.menu-showcase {
+  position: relative;
+  min-height: 560px;
+  border-radius: 22px;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center right;
+  background-color: var(--sand);
+  margin-bottom: 2.5rem;
+  box-shadow: 0 10px 40px rgba(62,42,32,.15);
+}
+.menu-showcase::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(100deg, var(--cream) 0%, var(--cream) 40%, rgba(237,224,210,.72) 52%, transparent 68%);
+}
+.menu-showcase.no-photo::before { background: var(--cream); }
+.menu-showcase .showcase-info { position: relative; z-index: 2; padding: 3.2rem 2.5rem; max-width: 460px; }
+.menu-showcase .showcase-info h2 { font-size: 2.6rem; color: var(--rust-deep); margin-bottom: 1.6rem; }
+.menu-showcase .showcase-row { display: flex; justify-content: space-between; gap: 1rem; padding: .5rem 0; font-weight: 500; color: var(--ink); }
+.menu-showcase .showcase-row .pr { font-weight: 700; color: var(--rust-deep); white-space: nowrap; }
+.menu-showcase .showcase-row .desc { display: block; font-size: .78rem; opacity: .75; font-weight: 400; }
+.menu-showcase .showcase-note { position: absolute; bottom: 1.6rem; left: 2.5rem; z-index: 2; font-size: .7rem; font-weight: 700; letter-spacing: .02em; opacity: .75; color: var(--rust-deep); }
+@media (max-width: 700px) {
+  .menu-showcase { min-height: 0; background-image: none !important; }
+  .menu-showcase::before { background: var(--cream); }
+  .menu-showcase .showcase-info { max-width: 100%; padding: 2rem 1.4rem 3rem; }
+  .menu-showcase .showcase-info h2 { font-size: 2rem; }
+}
 .filters { display: flex; gap: .6rem; flex-wrap: wrap; margin-bottom: 2rem; }
 .chip { border: 1.5px solid var(--rust); background: transparent; color: var(--rust-deep); border-radius: 999px; padding: .35rem 1rem; font-size: .85rem; font-weight: 500; }
 .chip.on { background: var(--rust); color: var(--white); }

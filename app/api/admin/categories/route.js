@@ -10,10 +10,10 @@ export async function GET() {
 }
 export async function POST(req) {
   const s = await getSession();
-  const { Name, DisplayOrder = 0, IsActive = 1 } = await req.json();
+  const { Name, DisplayOrder = 0, IsActive = 1, ImageUrl = null } = await req.json();
   if (!Name?.trim()) return NextResponse.json({ error: "Category name is required." }, { status: 400 });
   const db = await getDb();
-  const r = await db.prepare("INSERT INTO Categories (Name,DisplayOrder,IsActive) VALUES ($1,$2,$3) RETURNING CategoryId AS id").run(Name.trim(), DisplayOrder, IsActive ? true : false);
+  const r = await db.prepare("INSERT INTO Categories (Name,DisplayOrder,IsActive,ImageUrl) VALUES ($1,$2,$3,$4) RETURNING CategoryId AS id").run(Name.trim(), DisplayOrder, IsActive ? true : false, ImageUrl || null);
   await logActivity(Number(s.sub), "CATEGORY_CREATE", Name);
   return NextResponse.json({ ok: true, id: r.lastInsertRowid });
 }

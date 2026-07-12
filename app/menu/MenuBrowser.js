@@ -1,19 +1,21 @@
 "use client";
 import { useMemo, useState } from "react";
 
-export default function MenuBrowser({ categories, items }) {
+export default function MenuBrowser({ categories, items, footerNote }) {
   const [q, setQ] = useState("");
-  const [cat, setCat] = useState(0);
+  const [cat, setCat] = useState(categories[0]?.CategoryId || 0);
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
     return items.filter(i =>
-      (!cat || i.CategoryId === cat) &&
       (!term || i.Name.toLowerCase().includes(term) || (i.Description || "").toLowerCase().includes(term))
     );
-  }, [q, cat, items]);
+  }, [q, items]);
 
-  const shown = categories.filter(c => filtered.some(i => i.CategoryId === c.CategoryId));
+  const searching = q.trim().length > 0;
+  const activeCategory = categories.find(c => c.CategoryId === cat);
+  const showAllGrid = searching || cat === 0;
+  const shownCats = categories.filter(c => filtered.some(i => i.CategoryId === c.CategoryId));
 
   return (
     <>
@@ -25,24 +27,47 @@ export default function MenuBrowser({ categories, items }) {
           {categories.map(c => <option key={c.CategoryId} value={c.CategoryId}>{c.Name}</option>)}
         </select>
       </div>
-      {shown.length === 0 && <p>No items match your search — try a different word.</p>}
-      {shown.map(c => (
-        <div className="menu-cat" key={c.CategoryId}>
-          <h3>{c.Name}</h3>
-          <div className="menu-grid">
-            {filtered.filter(i => i.CategoryId === c.CategoryId).map(i => (
-              <div className={`menu-line ${i.IsAvailable ? "" : "unavailable"}`} key={i.MenuItemId}>
-                <span className="nm">
-                  {i.Name}{!i.IsAvailable && <span className="badge-out">Out of stock</span>}
-                  {i.Description && <span className="desc">{i.Description}</span>}
-                </span>
-                <span className="dots" />
+
+      {/* Single-category showcase — the primary browsing experience */}
+      {!showAllGrid && activeCategory && (
+        <div className={`menu-showcase ${activeCategory.ImageUrl ? "" : "no-photo"}`}
+          style={activeCategory.ImageUrl ? { backgroundImage: `url(${activeCategory.ImageUrl})` } : undefined}>
+          <div className="showcase-info">
+            <h2>{activeCategory.Name}</h2>
+            {items.filter(i => i.CategoryId === cat).map(i => (
+              <div className="showcase-row" key={i.MenuItemId}>
+                <span className="nm">{i.Name}{!i.IsAvailable && " (out of stock)"}{i.Description && <span className="desc">{i.Description}</span>}</span>
                 <span className="pr">{i.Price.toFixed(2)}</span>
               </div>
             ))}
           </div>
+          {footerNote && <p className="showcase-note">{footerNote}</p>}
         </div>
-      ))}
+      )}
+
+      {/* Full-list / search results fallback */}
+      {showAllGrid && (
+        <>
+          {shownCats.length === 0 && <p>No items match your search — try a different word.</p>}
+          {shownCats.map(c => (
+            <div className="menu-cat" key={c.CategoryId}>
+              <h3>{c.Name}</h3>
+              <div className="menu-grid">
+                {filtered.filter(i => i.CategoryId === c.CategoryId).map(i => (
+                  <div className={`menu-line ${i.IsAvailable ? "" : "unavailable"}`} key={i.MenuItemId}>
+                    <span className="nm">
+                      {i.Name}{!i.IsAvailable && <span className="badge-out">Out of stock</span>}
+                      {i.Description && <span className="desc">{i.Description}</span>}
+                    </span>
+                    <span className="dots" />
+                    <span className="pr">{i.Price.toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </>
+      )}
     </>
   );
 }
