@@ -47,6 +47,9 @@ export default function CategoriesPage() {
         <div className="field">
           <label>Background Photo (shown behind this category on the Menu page)</label>
           <input type="file" accept="image/*" onChange={upload} />
+          <p style={{ fontSize: ".78rem", opacity: .7, marginTop: ".3rem" }}>
+            For a sharp, well-framed result: use a <strong>landscape/wide</strong> photo (not portrait), at least <strong>1600px wide</strong>. A phone camera photo (usually 3000px+) works great — avoid screenshots or images downloaded from WhatsApp/social media, which are heavily compressed and will look soft here.
+          </p>
           {f.ImageUrl && <img src={f.ImageUrl} alt="" style={{ width: 140, marginTop: ".5rem", borderRadius: 8 }} />}
           {f.ImageUrl && <div><button className="btn small ghost" style={{ marginTop: ".4rem" }} onClick={() => setF(v => ({ ...v, ImageUrl: "" }))}>Remove Photo</button></div>}
         </div>

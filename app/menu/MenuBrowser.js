@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
+import Image from "next/image";
 
 export default function MenuBrowser({ categories, items, footerNote }) {
   const [q, setQ] = useState("");
@@ -30,8 +31,18 @@ export default function MenuBrowser({ categories, items, footerNote }) {
 
       {/* Single-category showcase — the primary browsing experience */}
       {!showAllGrid && activeCategory && (
-        <div className={`menu-showcase ${activeCategory.ImageUrl ? "" : "no-photo"}`}
-          style={activeCategory.ImageUrl ? { backgroundImage: `url(${activeCategory.ImageUrl})`, backgroundPosition: `center ${activeCategory.ImagePosition || "center"}` } : undefined}>
+        <div className={`menu-showcase ${activeCategory.ImageUrl ? "" : "no-photo"}`}>
+          {activeCategory.ImageUrl && (
+            <Image
+              src={activeCategory.ImageUrl}
+              alt=""
+              fill
+              sizes="(max-width: 700px) 100vw, 1100px"
+              quality={90}
+              style={{ objectFit: "cover", objectPosition: `center ${activeCategory.ImagePosition || "center"}` }}
+              priority
+            />
+          )}
           <div className="showcase-info">
             <h2>{activeCategory.Name}</h2>
             {items.filter(i => i.CategoryId === cat).map(i => (

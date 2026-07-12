@@ -81,8 +81,6 @@ h1, h2, h3, .display { font-family: var(--font-display); font-weight: 400; lette
   min-height: 560px;
   border-radius: 22px;
   overflow: hidden;
-  background-size: cover;
-  background-position: center right;
   background-color: var(--sand);
   margin-bottom: 2.5rem;
   box-shadow: 0 10px 40px rgba(62,42,32,.15);
@@ -90,6 +88,7 @@ h1, h2, h3, .display { font-family: var(--font-display); font-weight: 400; lette
 .menu-showcase::before {
   content: "";
   position: absolute; inset: 0;
+  z-index: 1;
   background: linear-gradient(100deg, var(--cream) 0%, var(--cream) 40%, rgba(237,224,210,.72) 52%, transparent 68%);
 }
 .menu-showcase.no-photo::before { background: var(--cream); }
@@ -100,7 +99,7 @@ h1, h2, h3, .display { font-family: var(--font-display); font-weight: 400; lette
 .menu-showcase .showcase-row .desc { display: block; font-size: .78rem; opacity: .75; font-weight: 400; }
 .menu-showcase .showcase-note { position: absolute; bottom: 1.6rem; left: 2.5rem; z-index: 2; font-size: .7rem; font-weight: 700; letter-spacing: .02em; opacity: .75; color: var(--rust-deep); }
 @media (max-width: 700px) {
-  .menu-showcase { min-height: 0; background-image: none !important; }
+  .menu-showcase { min-height: 0; }
   .menu-showcase::before { background: var(--cream); }
   .menu-showcase .showcase-info { max-width: 100%; padding: 2rem 1.4rem 3rem; }
   .menu-showcase .showcase-info h2 { font-size: 2rem; }
