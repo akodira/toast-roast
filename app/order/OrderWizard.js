@@ -82,19 +82,11 @@ export default function OrderWizard({ categories, items, tables = [], settings }
 
       {step === 1 && (
         <div className="card" style={{ maxWidth: 480 }}>
-          <div className="field"><label htmlFor="tbl">Table Number *</label>
-            {tables.length > 0 ? (
-              <select id="tbl" value={info.tableNumber} onChange={e => setInfo({ ...info, tableNumber: e.target.value })}>
-                <option value="">Select your table…</option>
-                {tables.map(t => <option key={t.TableId} value={t.Name}>{t.Name}</option>)}
-              </select>
-            ) : (
-              <input id="tbl" value={info.tableNumber} onChange={e => setInfo({ ...info, tableNumber: e.target.value })} />
-            )}</div>
-          <div className="field"><label htmlFor="nm">Customer Name *</label>
-            <input id="nm" value={info.name} onChange={e => setInfo({ ...info, name: e.target.value })} /></div>
-          <div className="field"><label htmlFor="ph">Telephone Number *</label>
-            <input id="ph" type="tel" value={info.telephone} onChange={e => setInfo({ ...info, telephone: e.target.value })} /></div>
+          <p style={{ marginBottom: "1.2rem" }}>Ordering as, from your table registration:</p>
+          <div className="field"><label>Table</label><p style={{ fontWeight: 600 }}>{info.tableNumber}</p></div>
+          <div className="field"><label>Name</label><p style={{ fontWeight: 600 }}>{info.name}</p></div>
+          <div className="field"><label>Telephone</label><p style={{ fontWeight: 600 }}>{info.telephone}</p></div>
+          <p style={{ fontSize: ".82rem", opacity: .7, marginBottom: "1rem" }}>Not you, or wrong table? <a href="/portal">Go back to My Orders</a> to switch.</p>
           <button className="btn" onClick={next}>Continue</button>
         </div>
       )}
