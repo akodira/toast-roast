@@ -27,6 +27,7 @@ export default function PortalClient() {
   const [mode, setMode] = useState("claim"); // "claim" | "join"
   const [tables, setTables] = useState([]);
   const [form, setForm] = useState({ tableId: "", phone: "", name: "" });
+  const [foundTable, setFoundTable] = useState(null); // result of phone lookup in join mode
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [orders, setOrders] = useState([]);
@@ -79,21 +80,46 @@ export default function PortalClient() {
     return () => clearInterval(t);
   }, [session]);
 
-  const submit = async () => {
+  const findTable = async () => {
+    if (!/^[\d+\-\s()]{7,}$/.test(form.phone)) return setErr("Please enter a valid phone number.");
+    setErr(""); setBusy(true);
+    const res = await fetch(`/api/public/tables/find?phone=${encodeURIComponent(form.phone.trim())}`);
+    const d = await res.json();
+    setBusy(false);
+    if (!res.ok) { setErr(d.error); setFoundTable(null); return; }
+    setFoundTable(d.table);
+  };
+
+  const submitClaim = async () => {
     if (!form.tableId) return setErr("Please select a table.");
     if (!/^[\d+\-\s()]{7,}$/.test(form.phone)) return setErr("Please enter a valid phone number.");
     if (!form.name.trim()) return setErr("Please enter your name.");
     setErr(""); setBusy(true);
-    const url = mode === "claim" ? "/api/public/tables/claim" : "/api/public/tables/join";
-    const res = await fetch(url, {
+    const res = await fetch("/api/public/tables/claim", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ tableId: form.tableId, phone: form.phone.trim(), name: form.name.trim() }),
     });
     const d = await res.json();
     setBusy(false);
-    if (!res.ok) { setErr(d.error); if (mode === "claim") loadTables(); return; }
+    if (!res.ok) { setErr(d.error); loadTables(); return; }
     const table = tables.find(t => t.TableId === +form.tableId);
     const s = { table: table?.Name || "", tableId: form.tableId, phone: form.phone.trim(), name: form.name.trim() };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+    setSession(s);
+  };
+
+  const submitJoin = async () => {
+    if (!foundTable) return;
+    if (!form.name.trim()) return setErr("Please enter your name.");
+    setErr(""); setBusy(true);
+    const res = await fetch("/api/public/tables/join", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tableId: foundTable.TableId, phone: form.phone.trim(), name: form.name.trim() }),
+    });
+    const d = await res.json();
+    setBusy(false);
+    if (!res.ok) { setErr(d.error); setFoundTable(null); return; }
+    const s = { table: foundTable.Name, tableId: foundTable.TableId, phone: form.phone.trim(), name: form.name.trim() };
     localStorage.setItem(SESSION_KEY, JSON.stringify(s));
     setSession(s);
   };
@@ -110,45 +136,67 @@ export default function PortalClient() {
 
   if (!session) {
     const freeTables = tables.filter(t => !t.Occupied);
-    const occupiedTables = tables.filter(t => t.Occupied);
     return (
       <div className="card" style={{ maxWidth: 440 }}>
         <div className="steps" style={{ marginBottom: "1.2rem" }}>
           <button className={`step-dot ${mode === "claim" ? "on" : ""}`} style={{ border: "none", cursor: "pointer" }}
-            onClick={() => { setMode("claim"); setForm({ tableId: "", phone: "", name: "" }); setErr(""); }}>New Table</button>
+            onClick={() => { setMode("claim"); setForm({ tableId: "", phone: "", name: "" }); setFoundTable(null); setErr(""); }}>New Order</button>
           <button className={`step-dot ${mode === "join" ? "on" : ""}`} style={{ border: "none", cursor: "pointer" }}
-            onClick={() => { setMode("join"); setForm({ tableId: "", phone: "", name: "" }); setErr(""); }}>Join Someone's Table</button>
+            onClick={() => { setMode("join"); setForm({ tableId: "", phone: "", name: "" }); setFoundTable(null); setErr(""); }}>Join Current Table</button>
         </div>
-
-        {mode === "claim" ? (
-          <p style={{ marginBottom: "1rem" }}>Pick your table and register with your phone number to start ordering.</p>
-        ) : (
-          <p style={{ marginBottom: "1rem" }}>Already seated with someone who registered the table? Enter the table and the phone number <em>they</em> used to join them.</p>
-        )}
         {err && <p className="err" role="alert">{err}</p>}
 
-        <div className="field">
-          <label htmlFor="pt-table">Table</label>
-          <select id="pt-table" value={form.tableId} onChange={e => setForm({ ...form, tableId: e.target.value })}>
-            <option value="">Select a table…</option>
-            {mode === "claim"
-              ? freeTables.map(t => <option key={t.TableId} value={t.TableId}>{t.Name}</option>)
-              : occupiedTables.map(t => <option key={t.TableId} value={t.TableId}>{t.Name}{t.OccupiedName ? ` — registered by ${t.OccupiedName}` : ""}</option>)}
-          </select>
-          {mode === "claim" && freeTables.length === 0 && <p style={{ fontSize: ".8rem", opacity: .7, marginTop: ".3rem" }}>No free tables right now — if you're joining someone already seated, use "Join Someone's Table" above.</p>}
-          {mode === "join" && occupiedTables.length === 0 && <p style={{ fontSize: ".8rem", opacity: .7, marginTop: ".3rem" }}>No tables are currently registered yet. If someone at your table just registered, tap Refresh below.</p>}
-          <button type="button" className="btn small ghost" style={{ marginTop: ".4rem" }} onClick={loadTables}>Refresh Table List</button>
-        </div>
-        <div className="field">
-          <label htmlFor="pt-name">Your Name</label>
-          <input id="pt-name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
-        </div>
-        <div className="field">
-          <label htmlFor="pt-phone">{mode === "claim" ? "Phone Number" : "The Table's Registered Phone Number"}</label>
-          <input id="pt-phone" type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}
-            onKeyDown={e => e.key === "Enter" && submit()} />
-        </div>
-        <button className="btn" onClick={submit} disabled={busy}>{busy ? "Checking…" : mode === "claim" ? "Register Table" : "Join Table"}</button>
+        {mode === "claim" && (
+          <>
+            <p style={{ marginBottom: "1rem" }}>Pick your table and register with your phone number to start ordering.</p>
+            <div className="field">
+              <label htmlFor="pt-table">Table</label>
+              <select id="pt-table" value={form.tableId} onChange={e => setForm({ ...form, tableId: e.target.value })}>
+                <option value="">Select a table…</option>
+                {freeTables.map(t => <option key={t.TableId} value={t.TableId}>{t.Name}</option>)}
+              </select>
+              {freeTables.length === 0 && <p style={{ fontSize: ".8rem", opacity: .7, marginTop: ".3rem" }}>No free tables right now — if you're joining someone already seated, use "Join Current Table" above.</p>}
+              <button type="button" className="btn small ghost" style={{ marginTop: ".4rem" }} onClick={loadTables}>Refresh</button>
+            </div>
+            <div className="field">
+              <label htmlFor="pt-name">Your Name</label>
+              <input id="pt-name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+            </div>
+            <div className="field">
+              <label htmlFor="pt-phone">Phone Number</label>
+              <input id="pt-phone" type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}
+                onKeyDown={e => e.key === "Enter" && submitClaim()} />
+            </div>
+            <button className="btn" onClick={submitClaim} disabled={busy}>{busy ? "Checking…" : "Register Table"}</button>
+          </>
+        )}
+
+        {mode === "join" && !foundTable && (
+          <>
+            <p style={{ marginBottom: "1rem" }}>Already seated with someone? Enter the phone number they registered the table with — we'll find it for you.</p>
+            <div className="field">
+              <label htmlFor="pt-find-phone">Registered Phone Number</label>
+              <input id="pt-find-phone" type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}
+                onKeyDown={e => e.key === "Enter" && findTable()} />
+            </div>
+            <button className="btn" onClick={findTable} disabled={busy}>{busy ? "Searching…" : "Find My Table"}</button>
+          </>
+        )}
+
+        {mode === "join" && foundTable && (
+          <>
+            <p style={{ marginBottom: "1rem" }}>
+              Found it — <strong>Table {foundTable.Name}</strong>{foundTable.OccupiedName ? `, registered by ${foundTable.OccupiedName}` : ""}. Add your name to join and order separately.
+            </p>
+            <div className="field">
+              <label htmlFor="pt-join-name">Your Name</label>
+              <input id="pt-join-name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
+                onKeyDown={e => e.key === "Enter" && submitJoin()} />
+            </div>
+            <button className="btn" onClick={submitJoin} disabled={busy}>{busy ? "Joining…" : "Join Table"}</button>{" "}
+            <button className="btn ghost" onClick={() => { setFoundTable(null); setErr(""); }}>Back</button>
+          </>
+        )}
       </div>
     );
   }
