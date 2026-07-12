@@ -2,15 +2,15 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 const ALLOWED = { "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp" };
-const BUCKET = process.env.SUPABASE_STORAGE_BUCKET || "uploads";
+const BUCKET = (process.env.SUPABASE_STORAGE_BUCKET || "uploads").trim();
 
 // Uses the service role key (server-side only, never exposed to the browser)
 // so uploads work regardless of bucket RLS policies. The bucket itself must
 // be set to "Public" in the Supabase dashboard so getPublicUrl() works.
 function getSupabase() {
-  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false },
-  });
+  const url = (process.env.SUPABASE_URL || "").trim().replace(/\/+$/, ""); // strip trailing slash(es)
+  const key = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+  return createClient(url, key, { auth: { persistSession: false } });
 }
 
 export async function POST(req) {
@@ -33,7 +33,7 @@ export async function POST(req) {
     contentType: file.type,
     upsert: false,
   });
-  if (error) return NextResponse.json({ error: `Upload failed: ${error.message}` }, { status: 500 });
+  if (error) return NextResponse.json({ error: `Upload failed: ${error.message} (bucket: "${BUCKET}")` }, { status: 500 });
 
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(name);
   return NextResponse.json({ ok: true, url: data.publicUrl });
