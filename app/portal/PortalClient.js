@@ -33,11 +33,24 @@ export default function PortalClient() {
   const [tab, setTab] = useState("orders"); // "orders" | "invoice"
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(SESSION_KEY);
-      if (raw) setSession(JSON.parse(raw));
-    } catch { /* ignore corrupt/blocked storage, just show the login form */ }
-    setLoaded(true);
+    (async () => {
+      try {
+        const raw = localStorage.getItem(SESSION_KEY);
+        if (raw) {
+          const s = JSON.parse(raw);
+          // Don't blindly trust a saved session — confirm the table is
+          // still actually registered to this phone number server-side
+          // (it may have been released by staff, or belong to old data).
+          const res = await fetch("/api/public/tables/join", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tableId: s.tableId, phone: s.phone, name: s.name }),
+          });
+          if (res.ok) setSession(s);
+          else localStorage.removeItem(SESSION_KEY);
+        }
+      } catch { /* ignore corrupt/blocked storage, just show the login form */ }
+      setLoaded(true);
+    })();
   }, []);
 
   const loadTables = async () => {
@@ -148,6 +161,9 @@ export default function PortalClient() {
           <button className="btn ghost small" onClick={logout}>Not you? Switch table</button>
         </div>
       </div>
+      <p style={{ fontSize: ".82rem", opacity: .7, marginBottom: "1.2rem" }}>
+        Others at Table {session.table}? They can order separately too — at <strong>/portal</strong>, choose "Join Someone's Table," pick Table {session.table}, and enter this phone number: <strong>{session.phone}</strong>.
+      </p>
 
       <div className="steps" style={{ marginBottom: "1.2rem" }}>
         <button className={`step-dot ${tab === "orders" ? "on" : ""}`} style={{ border: "none", cursor: "pointer" }} onClick={() => setTab("orders")}>Today's Orders</button>

@@ -17,30 +17,36 @@ const ALL_LINKS = [
   ["/admin/users", "Users", [ROLE_ADMIN]],
 ];
 
-const DEFAULT_PAGE = { [ROLE_ADMIN]: "/admin", [ROLE_STAFF]: "/admin/orders", [ROLE_EDITOR]: "/admin/menu" };
+// Priority order for where to land someone with multiple roles — an
+// Admin+Staff user lands on the full Dashboard, not just Orders.
+function defaultPageFor(roles) {
+  if (roles.includes(ROLE_ADMIN)) return "/admin";
+  if (roles.includes(ROLE_STAFF)) return "/admin/orders";
+  if (roles.includes(ROLE_EDITOR)) return "/admin/menu";
+  return "/admin/login";
+}
 
 export default function AdminShell({ children }) {
   const path = usePathname();
   const router = useRouter();
-  const [role, setRole] = useState(null);
+  const [roles, setRoles] = useState(null);
 
   useEffect(() => {
-    fetch("/api/auth/me").then(r => r.ok ? r.json() : Promise.reject()).then(d => setRole(d.role))
+    fetch("/api/auth/me").then(r => r.ok ? r.json() : Promise.reject()).then(d => setRoles(d.roles || []))
       .catch(() => router.push("/admin/login"));
   }, [router]);
 
-  // Once we know the role, bounce away from pages this role can't use —
-  // hiding the nav link isn't a security boundary (the API routes are the
-  // real one), but landing on a page with nothing you're allowed to see is
-  // just confusing, so send them somewhere useful instead.
+  // Once we know the roles, bounce away from pages none of this user's
+  // roles can use — hiding the nav link isn't the real security boundary
+  // (the API routes are), but landing on an empty page is just confusing.
   useEffect(() => {
-    if (!role) return;
+    if (!roles) return;
     const allowed = ALL_LINKS.find(([href]) => href === path)?.[2];
-    if (allowed && !allowed.includes(role)) router.replace(DEFAULT_PAGE[role] || "/admin/login");
-  }, [role, path, router]);
+    if (allowed && !allowed.some(r => roles.includes(r))) router.replace(defaultPageFor(roles));
+  }, [roles, path, router]);
 
   const logout = async () => { await fetch("/api/auth/logout", { method: "POST" }); router.push("/admin/login"); };
-  const links = role ? ALL_LINKS.filter(([, , roles]) => roles.includes(role)) : [];
+  const links = roles ? ALL_LINKS.filter(([, , allowed]) => allowed.some(r => roles.includes(r))) : [];
 
   return (
     <div className="admin-shell">

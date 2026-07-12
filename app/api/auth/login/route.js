@@ -10,7 +10,9 @@ export async function POST(req) {
   const user = await db.prepare("SELECT * FROM Users WHERE Username=$1 AND IsActive=true").get(username);
   if (!user || !bcrypt.compareSync(password, user.PasswordHash))
     return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
-  const token = await createSession(user);
+  const roleRows = await db.prepare("SELECT RoleId FROM UserRoles WHERE UserId=$1").all(user.UserId);
+  const roleIds = roleRows.length ? roleRows.map(r => r.RoleId) : [user.RoleId];
+  const token = await createSession(user, roleIds);
   await logActivity(user.UserId, "LOGIN", `User ${username} signed in`);
   const res = NextResponse.json({ ok: true });
   res.cookies.set("tr_session", token, { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 8 });
