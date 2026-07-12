@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 const fmt = (n) => n.toFixed(2);
-const SESSION_KEY = "tr_portal_session";
 
 function buildCombinedInvoice(orders) {
   const lineMap = {};
@@ -22,8 +21,7 @@ function buildCombinedInvoice(orders) {
 }
 
 export default function PortalClient() {
-  const [session, setSession] = useState(null); // { table, tableId, phone, name }
-  const [loaded, setLoaded] = useState(false);
+  const [session, setSession] = useState(null); // { table, tableId, phone, name } — lives only in memory for this tab
   const [mode, setMode] = useState("claim"); // "claim" | "join"
   const [tables, setTables] = useState([]);
   const [form, setForm] = useState({ tableId: "", phone: "", name: "" });
@@ -32,27 +30,6 @@ export default function PortalClient() {
   const [busy, setBusy] = useState(false);
   const [orders, setOrders] = useState([]);
   const [tab, setTab] = useState("orders"); // "orders" | "invoice"
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const raw = localStorage.getItem(SESSION_KEY);
-        if (raw) {
-          const s = JSON.parse(raw);
-          // Don't blindly trust a saved session — confirm the table is
-          // still actually registered to this phone number server-side
-          // (it may have been released by staff, or belong to old data).
-          const res = await fetch("/api/public/tables/join", {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ tableId: s.tableId, phone: s.phone, name: s.name }),
-          });
-          if (res.ok) setSession(s);
-          else localStorage.removeItem(SESSION_KEY);
-        }
-      } catch { /* ignore corrupt/blocked storage, just show the login form */ }
-      setLoaded(true);
-    })();
-  }, []);
 
   const loadTables = async () => {
     const res = await fetch("/api/public/tables");
@@ -104,7 +81,6 @@ export default function PortalClient() {
     if (!res.ok) { setErr(d.error); loadTables(); return; }
     const table = tables.find(t => t.TableId === +form.tableId);
     const s = { table: table?.Name || "", tableId: form.tableId, phone: form.phone.trim(), name: form.name.trim() };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(s));
     setSession(s);
   };
 
@@ -120,19 +96,15 @@ export default function PortalClient() {
     setBusy(false);
     if (!res.ok) { setErr(d.error); setFoundTable(null); return; }
     const s = { table: foundTable.Name, tableId: foundTable.TableId, phone: form.phone.trim(), name: form.name.trim() };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(s));
     setSession(s);
   };
 
   const logout = () => {
-    localStorage.removeItem(SESSION_KEY);
     setSession(null);
     setOrders([]);
     setForm({ tableId: "", phone: "", name: "" });
     setErr("");
   };
-
-  if (!loaded) return null;
 
   if (!session) {
     const freeTables = tables.filter(t => !t.Occupied);
@@ -216,7 +188,7 @@ export default function PortalClient() {
         </div>
       </div>
       <p style={{ fontSize: ".82rem", opacity: .7, marginBottom: "1.2rem" }}>
-        Others at Table {session.table}? They can order separately too — at <strong>/portal</strong>, choose "Join Someone's Table," pick Table {session.table}, and enter this phone number: <strong>{session.phone}</strong>.
+        Others at Table {session.table}? They can order separately too — at <strong>/portal</strong>, choose "Join Current Table," enter this phone number: <strong>{session.phone}</strong>, and add their own name.
       </p>
 
       <div className="steps" style={{ marginBottom: "1.2rem" }}>
