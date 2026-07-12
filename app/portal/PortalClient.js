@@ -65,6 +65,11 @@ export default function PortalClient() {
     setBusy(false);
     if (!res.ok) { setErr(d.error); setFoundTable(null); return; }
     setFoundTable(d.table);
+    // Pre-fill with the name already on file for this table — if you're the
+    // person who registered it, this means you can just confirm and go
+    // straight back to your own orders, no retyping/exact-match needed.
+    // Someone else joining just edits it to their own name.
+    setForm(f => ({ ...f, name: d.table.OccupiedName || "" }));
   };
 
   const submitClaim = async () => {
@@ -158,12 +163,15 @@ export default function PortalClient() {
         {mode === "join" && foundTable && (
           <>
             <p style={{ marginBottom: "1rem" }}>
-              Found it — <strong>Table {foundTable.Name}</strong>{foundTable.OccupiedName ? `, registered by ${foundTable.OccupiedName}` : ""}. Add your name to join and order separately.
+              Found it — <strong>Table {foundTable.Name}</strong>{foundTable.OccupiedName ? `, registered by ${foundTable.OccupiedName}` : ""}.
             </p>
             <div className="field">
               <label htmlFor="pt-join-name">Your Name</label>
               <input id="pt-join-name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
                 onKeyDown={e => e.key === "Enter" && submitJoin()} />
+              <p style={{ fontSize: ".78rem", opacity: .7, marginTop: ".3rem" }}>
+                {foundTable.OccupiedName ? "That's you? Leave this as-is and tap Join to see your own orders. Someone else at the table? Change it to your own name to order separately." : ""}
+              </p>
             </div>
             <button className="btn" onClick={submitJoin} disabled={busy}>{busy ? "Joining…" : "Join Table"}</button>{" "}
             <button className="btn ghost" onClick={() => { setFoundTable(null); setErr(""); }}>Back</button>
