@@ -35,17 +35,15 @@ export default function OrderStatusLive({ initialOrder }) {
         ))}</tbody>
       </table>
       <div className="totals">
-        <div className="row"><span>Subtotal</span><span>{fmt(o.Subtotal)}</span></div>
-        <div className="row"><span>Tax ({o.TaxPercent}%)</span><span>{fmt(o.TaxAmount)}</span></div>
-        <div className="row"><span>Service ({o.ServicePercent}%)</span><span>{fmt(o.ServiceAmount)}</span></div>
-        <div className="row grand"><span>Grand Total</span><span>{fmt(o.GrandTotal)}</span></div>
+        <div className="row grand"><span>Subtotal</span><span>{fmt(o.Subtotal)}</span></div>
       </div>
       <p style={{ marginTop: "1rem", fontSize: ".82rem", opacity: .75 }}>
-        Status updates automatically. Want another round? It'll be a separate order/ticket — this one stays as-is.
+        Status updates automatically. This is just this order's items — tax and service are applied once across all your orders today.
+        See the <Link href="/portal">Total Invoice</Link> tab for your combined bill.
       </p>
       <div style={{ display: "flex", gap: "1rem", marginTop: "1rem", flexWrap: "wrap" }}>
         <Link href={orderMoreHref} className="btn">Order More Items</Link>
-        <Link href="/track" className="btn ghost">Track All My Orders</Link>
+        <Link href="/portal" className="btn ghost">My Table / Total Invoice</Link>
         <Link href="/menu" className="btn ghost">Back to Menu</Link>
       </div>
     </div>

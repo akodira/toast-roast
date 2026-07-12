@@ -18,11 +18,12 @@ export default function MenuBrowser({ categories, items }) {
   return (
     <>
       <input className="search-box" placeholder="Search the menu…" value={q} onChange={e => setQ(e.target.value)} aria-label="Search menu items" />
-      <div className="filters">
-        <button className={`chip ${cat === 0 ? "on" : ""}`} onClick={() => setCat(0)}>All</button>
-        {categories.map(c => (
-          <button key={c.CategoryId} className={`chip ${cat === c.CategoryId ? "on" : ""}`} onClick={() => setCat(c.CategoryId)}>{c.Name}</button>
-        ))}
+      <div className="field" style={{ maxWidth: 360 }}>
+        <label htmlFor="menu-cat-select">Category</label>
+        <select id="menu-cat-select" value={cat} onChange={e => setCat(+e.target.value)}>
+          <option value={0}>All Categories</option>
+          {categories.map(c => <option key={c.CategoryId} value={c.CategoryId}>{c.Name}</option>)}
+        </select>
       </div>
       {shown.length === 0 && <p>No items match your search — try a different word.</p>}
       {shown.map(c => (

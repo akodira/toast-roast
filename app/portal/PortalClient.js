@@ -5,6 +5,22 @@ import Link from "next/link";
 const fmt = (n) => n.toFixed(2);
 const SESSION_KEY = "tr_portal_session";
 
+function buildCombinedInvoice(orders) {
+  const lineMap = {};
+  let subtotal = 0, tax = 0, svc = 0, grand = 0, taxPct = 0, svcPct = 0;
+  for (const o of orders) {
+    subtotal += o.Subtotal; tax += o.TaxAmount; svc += o.ServiceAmount; grand += o.GrandTotal;
+    taxPct = o.TaxPercent; svcPct = o.ServicePercent;
+    for (const i of o.items) {
+      const key = i.ItemName + "|" + i.UnitPrice;
+      if (!lineMap[key]) lineMap[key] = { name: i.ItemName, price: i.UnitPrice, qty: 0, total: 0 };
+      lineMap[key].qty += i.Quantity;
+      lineMap[key].total += i.LineTotal;
+    }
+  }
+  return { lines: Object.values(lineMap), subtotal, tax, svc, grand, taxPct, svcPct };
+}
+
 export default function PortalClient({ tables }) {
   const [session, setSession] = useState(null); // { table, phone, name, email }
   const [loaded, setLoaded] = useState(false);
@@ -12,6 +28,7 @@ export default function PortalClient({ tables }) {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [orders, setOrders] = useState([]);
+  const [tab, setTab] = useState("orders"); // "orders" | "invoice"
 
   // Load any existing session from this device on first render.
   useEffect(() => {
@@ -100,20 +117,51 @@ export default function PortalClient({ tables }) {
         </div>
       </div>
 
-      <h3 style={{ marginBottom: "1rem" }}>Today's Orders</h3>
-      {orders.length === 0 && <p>No orders yet today — tap "Start New Order" above to place your first one.</p>}
-      {orders.map(o => (
-        <div className="card" key={o.OrderId} style={{ marginBottom: "1.2rem" }}>
-          <p>Order <strong>{o.OrderNumber}</strong> · Table {o.TableNumber} · {new Date(o.CreatedAt).toLocaleTimeString()} ·{" "}
-            <span className={`status-pill st-${o.Status}`}>{o.Status}</span>
-          </p>
-          <ul style={{ margin: ".6rem 0", paddingLeft: "1.1rem", fontSize: ".9rem" }}>
-            {o.items.map(i => <li key={i.OrderDetailId}>{i.Quantity}× {i.ItemName}</li>)}
-          </ul>
-          <p style={{ fontWeight: 600 }}>Total: {fmt(o.GrandTotal)}</p>
-          <Link href={`/order/confirm/${o.OrderNumber}`} className="btn small ghost">View Full Invoice</Link>
-        </div>
-      ))}
+      <div className="steps" style={{ marginBottom: "1.2rem" }}>
+        <button className={`step-dot ${tab === "orders" ? "on" : ""}`} style={{ border: "none", cursor: "pointer" }} onClick={() => setTab("orders")}>Today's Orders</button>
+        <button className={`step-dot ${tab === "invoice" ? "on" : ""}`} style={{ border: "none", cursor: "pointer" }} onClick={() => setTab("invoice")}>Total Invoice</button>
+      </div>
+
+      {tab === "orders" && (
+        <>
+          {orders.length === 0 && <p>No orders yet today — tap "Start New Order" above to place your first one.</p>}
+          {orders.map(o => (
+            <div className="card" key={o.OrderId} style={{ marginBottom: "1.2rem" }}>
+              <p>Order <strong>{o.OrderNumber}</strong> · Table {o.TableNumber} · {new Date(o.CreatedAt).toLocaleTimeString()} ·{" "}
+                <span className={`status-pill st-${o.Status}`}>{o.Status}</span>
+              </p>
+              <ul style={{ margin: ".6rem 0", paddingLeft: "1.1rem", fontSize: ".9rem" }}>
+                {o.items.map(i => <li key={i.OrderDetailId}>{i.Quantity}× {i.ItemName} — {fmt(i.LineTotal)}</li>)}
+              </ul>
+              <p style={{ fontWeight: 600 }}>Subtotal: {fmt(o.Subtotal)}</p>
+              <p style={{ fontSize: ".78rem", opacity: .65, marginBottom: ".6rem" }}>Tax &amp; service are applied once on the combined Total Invoice tab, not per order.</p>
+              <Link href={`/order/confirm/${o.OrderNumber}`} className="btn small ghost">View Full Invoice</Link>
+            </div>
+          ))}
+        </>
+      )}
+
+      {tab === "invoice" && (() => {
+        if (orders.length === 0) return <p>No orders yet today.</p>;
+        const inv = buildCombinedInvoice(orders);
+        return (
+          <div className="card" style={{ maxWidth: 560 }}>
+            <p style={{ fontSize: ".82rem", opacity: .7, marginBottom: ".8rem" }}>Combined across {orders.length} order{orders.length > 1 ? "s" : ""} placed today at Table {session.table}.</p>
+            <table className="inv">
+              <thead><tr><th>Item</th><th>Qty</th><th className="num">Total</th></tr></thead>
+              <tbody>{inv.lines.map(l => (
+                <tr key={l.name + l.price}><td>{l.name}</td><td>{l.qty}</td><td className="num">{fmt(l.total)}</td></tr>
+              ))}</tbody>
+            </table>
+            <div className="totals">
+              <div className="row"><span>Subtotal</span><span>{fmt(inv.subtotal)}</span></div>
+              <div className="row"><span>Tax ({inv.taxPct}%)</span><span>{fmt(inv.tax)}</span></div>
+              <div className="row"><span>Service ({inv.svcPct}%)</span><span>{fmt(inv.svc)}</span></div>
+              <div className="row grand"><span>Grand Total</span><span>{fmt(inv.grand)}</span></div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
