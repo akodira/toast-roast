@@ -19,7 +19,7 @@ export default async function Home() {
           <h1>{content.hero_title}</h1>
           <p className="lead">{content.hero_subtitle}</p>
           <div className="cta-row">
-            <Link href="/order" className="btn">Order to Your Table</Link>
+            <Link href="/portal" className="btn">Order to Your Table</Link>
             <Link href="/menu" className="btn ghost">Browse the Menu</Link>
           </div>
         </section>

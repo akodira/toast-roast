@@ -17,7 +17,7 @@ export function Header({ content }) {
           <Link href="/menu">Menu</Link>
           <Link href="/about">About Us</Link>
           <Link href="/contact">Contact</Link>
-          <Link href="/order" className="btn small">Order Now</Link>
+          <Link href="/portal" className="btn small">My Table / Order</Link>
         </nav>
       </div>
     </header>

@@ -9,10 +9,10 @@ export async function POST(req) {
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   const { tableNumber, name, email, telephone, items } = body;
-  if (!tableNumber || !name || !email || !telephone)
-    return NextResponse.json({ error: "Table number, name, email and telephone are required." }, { status: 400 });
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
-    return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
+  if (!tableNumber || !name || !telephone)
+    return NextResponse.json({ error: "Table number, name and telephone are required." }, { status: 400 });
+  if (email && email.trim() && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
+    return NextResponse.json({ error: "Please enter a valid email address, or leave it blank." }, { status: 400 });
   if (!Array.isArray(items) || items.length === 0)
     return NextResponse.json({ error: "Your cart is empty." }, { status: 400 });
 
@@ -38,7 +38,7 @@ export async function POST(req) {
   const orderNumber = "TR-" + Date.now().toString(36).toUpperCase() + Math.floor(Math.random() * 90 + 10);
 
   await withTransaction(async (tdb) => {
-    const cust = await tdb.prepare("INSERT INTO Customers (Name,Email,Telephone) VALUES ($1,$2,$3) RETURNING CustomerId AS id").run(name.trim(), email.trim(), telephone.trim());
+    const cust = await tdb.prepare("INSERT INTO Customers (Name,Email,Telephone) VALUES ($1,$2,$3) RETURNING CustomerId AS id").run(name.trim(), email?.trim() || null, telephone.trim());
     const ord = await tdb.prepare(`INSERT INTO Orders (OrderNumber,CustomerId,TableNumber,Subtotal,TaxPercent,TaxAmount,ServicePercent,ServiceAmount,GrandTotal,Status)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'Pending') RETURNING OrderId AS id`).run(orderNumber, cust.lastInsertRowid, String(tableNumber).trim(), subtotal, taxP, taxAmount, svcP, serviceAmount, grandTotal);
     for (const l of lines) {

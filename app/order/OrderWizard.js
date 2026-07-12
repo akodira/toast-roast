@@ -1,15 +1,21 @@
 "use client";
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const fmt = (n) => n.toFixed(2);
 
 export default function OrderWizard({ categories, items, tables = [], settings }) {
   const router = useRouter();
+  const qp = useSearchParams();
   const taxP = parseFloat(settings.tax_percent);
   const svcP = parseFloat(settings.service_percent);
   const [step, setStep] = useState(1);
-  const [info, setInfo] = useState({ tableNumber: "", name: "", email: "", telephone: "" });
+  const [info, setInfo] = useState({
+    tableNumber: qp.get("table") || "",
+    name: qp.get("name") || "",
+    email: qp.get("email") || "",
+    telephone: qp.get("phone") || "",
+  });
   const [cat, setCat] = useState(null);
   const [cart, setCart] = useState({}); // id -> qty
   const [err, setErr] = useState("");
@@ -30,7 +36,8 @@ export default function OrderWizard({ categories, items, tables = [], settings }
   const validateInfo = () => {
     if (!info.tableNumber.trim()) return "Please enter your table number.";
     if (!info.name.trim()) return "Please enter your name.";
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(info.email)) return "Please enter a valid email address.";
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(info.email) && info.email.trim())
+      return "That doesn't look like a valid email address — or just leave it blank.";
     if (!/^[\d+\-\s()]{7,}$/.test(info.telephone)) return "Please enter a valid telephone number.";
     return "";
   };
@@ -78,7 +85,7 @@ export default function OrderWizard({ categories, items, tables = [], settings }
             )}</div>
           <div className="field"><label htmlFor="nm">Customer Name *</label>
             <input id="nm" value={info.name} onChange={e => setInfo({ ...info, name: e.target.value })} /></div>
-          <div className="field"><label htmlFor="em">Email Address *</label>
+          <div className="field"><label htmlFor="em">Email Address <span style={{ opacity: .6, fontWeight: 400 }}>(optional)</span></label>
             <input id="em" type="email" value={info.email} onChange={e => setInfo({ ...info, email: e.target.value })} /></div>
           <div className="field"><label htmlFor="ph">Telephone Number *</label>
             <input id="ph" type="tel" value={info.telephone} onChange={e => setInfo({ ...info, telephone: e.target.value })} /></div>

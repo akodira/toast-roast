@@ -29,7 +29,7 @@ export default function OrdersPage() {
               <td>{new Date(o.CreatedAt).toLocaleString()}</td>
               <td>{o.TableNumber}</td>
               <td>{o.CustomerName}</td>
-              <td>{o.Telephone}<br /><small>{o.Email}</small></td>
+              <td>{o.Telephone}{o.Email && <><br /><small>{o.Email}</small></>}</td>
               <td>{o.items.map(i => <div key={i.OrderDetailId}>{i.Quantity}× {i.ItemName}</div>)}</td>
               <td><strong>{o.GrandTotal.toFixed(2)}</strong></td>
               <td>
