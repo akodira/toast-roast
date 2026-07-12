@@ -19,7 +19,7 @@ export default async function Home() {
           <h1>{content.hero_title}</h1>
           <p className="lead" dangerouslySetInnerHTML={{ __html: content.hero_subtitle }} />
           <div className="cta-row">
-            <Link href="/portal" className="btn">Order to Your Table</Link>
+            <Link href="/portal" className="btn">My Orders</Link>
             <Link href="/menu" className="btn ghost">Browse the Menu</Link>
           </div>
         </section>

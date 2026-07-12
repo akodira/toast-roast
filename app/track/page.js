@@ -1,19 +1,8 @@
-import { Header, Footer, getContent } from "@/components/SiteChrome";
-import TrackClient from "./TrackClient";
-export const dynamic = "force-dynamic";
-export const metadata = { title: "My Orders — Toast & Roast" };
+import { redirect } from "next/navigation";
 
-export default async function TrackPage() {
-  const content = await getContent();
-  return (
-    <>
-      <Header content={content} />
-      <main className="section container">
-        <h2>My Orders</h2>
-        <p className="intro">Enter the phone number you ordered with to see today's order status, invoices, and to order more.</p>
-        <TrackClient />
-      </main>
-      <Footer content={content} />
-    </>
-  );
+// /track was merged into /portal (single unified "My Orders" flow —
+// registration + viewing live in one place now). Keep this route around
+// so old bookmarks/links still land somewhere useful.
+export default function TrackPage() {
+  redirect("/portal");
 }
