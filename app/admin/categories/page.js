@@ -27,7 +27,14 @@ export default function CategoriesPage() {
     const fd = new FormData(); fd.append("file", file);
     const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
     const d = await res.json();
-    if (res.ok) setF(v => ({ ...v, ImageUrl: d.url })); else setMsg(d.error);
+    if (!res.ok) return setMsg(d.error);
+    setF(v => ({ ...v, ImageUrl: d.url }));
+    if (editId) {
+      // Save immediately — don't let the photo get lost if "Save Changes" is missed.
+      await fetch(`/api/admin/categories/${editId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...f, ImageUrl: d.url }) });
+      setMsg("Photo uploaded and saved.");
+      load();
+    }
   };
   return (
     <AdminShell>
