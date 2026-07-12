@@ -10,7 +10,7 @@ export const metadata = {
 // Simple hex darken, used to derive a hover/deep shade from the admin's
 // chosen primary color (mirrors the original --rust vs --rust-deep gap).
 function darken(hex, amt) {
-  const n = parseInt((hex || "#A9502F").replace("#", ""), 16);
+  const n = parseInt((hex || "#C0502A").replace("#", ""), 16);
   const clamp = (v) => Math.max(0, Math.min(255, v));
   const r = clamp((n >> 16) - amt), g = clamp(((n >> 8) & 0xff) - amt), b = clamp((n & 0xff) - amt);
   return "#" + ((r << 16) | (g << 8) | b).toString(16).padStart(6, "0");
@@ -18,9 +18,9 @@ function darken(hex, amt) {
 
 export default async function RootLayout({ children }) {
   const content = await getContent();
-  const primary = content.theme_primary_color || "#A9502F";
-  const fontHeading = content.theme_font_heading || "Prata";
-  const fontBody = content.theme_font_body || "Poppins";
+  const primary = content.theme_primary_color || "#C0502A";
+  const fontHeading = content.theme_font_heading || "Playfair Display";
+  const fontBody = content.theme_font_body || "Inter";
   const deep = darken(primary, 40);
   const fontsHref = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontHeading)}&family=${encodeURIComponent(fontBody)}:wght@400;500;600;700&display=swap`;
 
