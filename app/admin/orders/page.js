@@ -13,6 +13,11 @@ export default function OrdersPage() {
     await fetch(`/api/orders/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
     load();
   };
+  const del = async (id, orderNumber) => {
+    if (!confirm(`Permanently delete order ${orderNumber}? This can't be undone.`)) return;
+    await fetch(`/api/orders/${id}`, { method: "DELETE" });
+    load();
+  };
   return (
     <AdminShell>
       <h1>Orders</h1>
@@ -20,9 +25,9 @@ export default function OrdersPage() {
         {STATUSES.map(s => <button key={s} className={`chip ${filter === s ? "on" : ""}`} onClick={() => setFilter(s)}>{s}</button>)}
       </div>
       <div className="table-wrap"><table className="adm">
-        <thead><tr><th>Order #</th><th>Date & Time</th><th>Table</th><th>Customer</th><th>Contact</th><th>Items</th><th>Total</th><th>Status</th></tr></thead>
+        <thead><tr><th>Order #</th><th>Date & Time</th><th>Table</th><th>Customer</th><th>Contact</th><th>Items</th><th>Total</th><th>Status</th><th /></tr></thead>
         <tbody>
-          {orders.length === 0 && <tr><td colSpan={8}>No orders yet — new orders appear here automatically.</td></tr>}
+          {orders.length === 0 && <tr><td colSpan={9}>No orders yet — new orders appear here automatically.</td></tr>}
           {orders.map(o => (
             <tr key={o.OrderId}>
               <td><strong>{o.OrderNumber}</strong></td>
@@ -38,6 +43,7 @@ export default function OrdersPage() {
                   {STATUSES.slice(1).map(s => <option key={s}>{s}</option>)}
                 </select>
               </td>
+              <td><button className="btn small danger" onClick={() => del(o.OrderId, o.OrderNumber)}>Delete</button></td>
             </tr>
           ))}
         </tbody>

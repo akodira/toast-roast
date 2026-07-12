@@ -131,7 +131,7 @@ export default function PortalClient({ tables }) {
                 <span className={`status-pill st-${o.Status}`}>{o.Status}</span>
               </p>
               <ul style={{ margin: ".6rem 0", paddingLeft: "1.1rem", fontSize: ".9rem" }}>
-                {o.items.map(i => <li key={i.OrderDetailId}>{i.Quantity}× {i.ItemName} — {fmt(i.LineTotal)}</li>)}
+                {o.items.map(i => <li key={i.OrderDetailId}>{i.Quantity}× {i.ItemName} @ {fmt(i.UnitPrice)} — {fmt(i.LineTotal)}</li>)}
               </ul>
               <p style={{ fontWeight: 600 }}>Subtotal: {fmt(o.Subtotal)}</p>
               <p style={{ fontSize: ".78rem", opacity: .65, marginBottom: ".6rem" }}>Tax &amp; service are applied once on the combined Total Invoice tab, not per order.</p>
@@ -148,9 +148,9 @@ export default function PortalClient({ tables }) {
           <div className="card" style={{ maxWidth: 560 }}>
             <p style={{ fontSize: ".82rem", opacity: .7, marginBottom: ".8rem" }}>Combined across {orders.length} order{orders.length > 1 ? "s" : ""} placed today at Table {session.table}.</p>
             <table className="inv">
-              <thead><tr><th>Item</th><th>Qty</th><th className="num">Total</th></tr></thead>
+              <thead><tr><th>Item</th><th>Qty</th><th className="num">Unit Price</th><th className="num">Total</th></tr></thead>
               <tbody>{inv.lines.map(l => (
-                <tr key={l.name + l.price}><td>{l.name}</td><td>{l.qty}</td><td className="num">{fmt(l.total)}</td></tr>
+                <tr key={l.name + l.price}><td>{l.name}</td><td>{l.qty}</td><td className="num">{fmt(l.price)}</td><td className="num">{fmt(l.total)}</td></tr>
               ))}</tbody>
             </table>
             <div className="totals">

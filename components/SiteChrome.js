@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { cache } from "react";
 import { getDb } from "@/lib/db";
 
-export async function getContent() {
+export const getContent = cache(async function getContent() {
   const db = await getDb();
   const rows = await db.prepare("SELECT * FROM WebsiteContent").all();
   return Object.fromEntries(rows.map(r => [r.ContentKey, r.ContentValue]));
-}
+});
 
 export function Header({ content }) {
   return (
@@ -34,7 +35,7 @@ export function Footer({ content }) {
           <div><h4>Contact</h4><p>{content.contact_phone}<br/>{content.contact_email}</p></div>
           <div><h4>Follow</h4><p><a href={content.facebook_url}>Facebook</a> · <a href={content.instagram_url}>Instagram</a></p></div>
         </div>
-        {content.footer_note && <p className="footer-note">{content.footer_note}</p>}
+        {content.footer_note && <p className="footer-note" dangerouslySetInnerHTML={{ __html: content.footer_note }} />}
         <p className="fine">© {new Date().getFullYear()} {content.site_name}.</p>
       </div>
     </footer>

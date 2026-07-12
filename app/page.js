@@ -17,7 +17,7 @@ export default async function Home() {
         <section className="hero">
           <p className="sub">{content.tagline}</p>
           <h1>{content.hero_title}</h1>
-          <p className="lead">{content.hero_subtitle}</p>
+          <p className="lead" dangerouslySetInnerHTML={{ __html: content.hero_subtitle }} />
           <div className="cta-row">
             <Link href="/portal" className="btn">Order to Your Table</Link>
             <Link href="/menu" className="btn ghost">Browse the Menu</Link>
@@ -26,7 +26,7 @@ export default async function Home() {
 
         <div className="rust-panel">
           <section className="section container">
-            <h2>House Favourites</h2>
+            <h2 dangerouslySetInnerHTML={{ __html: content.house_favourites_title }} />
             <div className="menu-grid">
               {picks.map(p => (
                 <div className="menu-line" key={p.MenuItemId}>
