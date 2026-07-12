@@ -58,7 +58,12 @@ export default function PortalClient() {
     const d = await res.json();
     if (res.ok) setTables(d.tables || []);
   };
-  useEffect(() => { if (!session) loadTables(); }, [session, mode]);
+  useEffect(() => {
+    if (session) return;
+    loadTables();
+    const t = setInterval(loadTables, 5000);
+    return () => clearInterval(t);
+  }, [session, mode]);
 
   useEffect(() => {
     if (!session) return;
@@ -131,7 +136,8 @@ export default function PortalClient() {
               : occupiedTables.map(t => <option key={t.TableId} value={t.TableId}>{t.Name}{t.OccupiedName ? ` — registered by ${t.OccupiedName}` : ""}</option>)}
           </select>
           {mode === "claim" && freeTables.length === 0 && <p style={{ fontSize: ".8rem", opacity: .7, marginTop: ".3rem" }}>No free tables right now — if you're joining someone already seated, use "Join Someone's Table" above.</p>}
-          {mode === "join" && occupiedTables.length === 0 && <p style={{ fontSize: ".8rem", opacity: .7, marginTop: ".3rem" }}>No tables are currently registered.</p>}
+          {mode === "join" && occupiedTables.length === 0 && <p style={{ fontSize: ".8rem", opacity: .7, marginTop: ".3rem" }}>No tables are currently registered yet. If someone at your table just registered, tap Refresh below.</p>}
+          <button type="button" className="btn small ghost" style={{ marginTop: ".4rem" }} onClick={loadTables}>Refresh Table List</button>
         </div>
         <div className="field">
           <label htmlFor="pt-name">Your Name</label>

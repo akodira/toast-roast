@@ -6,8 +6,15 @@ import { requireRole, ROLE_ADMIN } from "@/lib/auth";
 export async function PUT(req, { params }) {
   const s = await requireRole([ROLE_ADMIN]);
   if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { FullName, RoleIds, IsActive, Password } = await req.json();
+  const { Username, FullName, RoleIds, IsActive, Password } = await req.json();
   const db = await getDb();
+
+  if (Username !== undefined) {
+    if (!Username.trim()) return NextResponse.json({ error: "Username can't be empty." }, { status: 400 });
+    const clash = await db.prepare("SELECT UserId FROM Users WHERE Username=$1 AND UserId!=$2").get(Username.trim(), params.id);
+    if (clash) return NextResponse.json({ error: "Username already exists." }, { status: 400 });
+    await db.prepare("UPDATE Users SET Username=$1 WHERE UserId=$2").run(Username.trim(), params.id);
+  }
 
   if (FullName !== undefined || IsActive !== undefined) {
     await db.prepare("UPDATE Users SET FullName=COALESCE($1,FullName), IsActive=COALESCE($2,IsActive) WHERE UserId=$3")

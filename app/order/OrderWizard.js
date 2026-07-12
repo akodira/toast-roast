@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const fmt = (n) => n.toFixed(2);
@@ -15,6 +15,15 @@ export default function OrderWizard({ categories, items, tables = [], settings }
     name: qp.get("name") || "",
     telephone: qp.get("phone") || "",
   });
+
+  // Ordering requires registering your table first — this page should
+  // only ever be reached via a "Start New Order" / "Order More" link from
+  // /portal, which supplies these three. A bare visit (no query params)
+  // means someone skipped registration, so send them there instead.
+  useEffect(() => {
+    if (!qp.get("table") || !qp.get("name") || !qp.get("phone")) router.replace("/portal");
+  }, [qp, router]);
+
   const [cat, setCat] = useState(null);
   const [cart, setCart] = useState({}); // id -> qty
   const [err, setErr] = useState("");
@@ -61,6 +70,8 @@ export default function OrderWizard({ categories, items, tables = [], settings }
   };
 
   const stepNames = ["Your Details", "Categories", "Choose Items", "Cart", "Invoice"];
+
+  if (!qp.get("table") || !qp.get("name") || !qp.get("phone")) return null; // redirecting to /portal
 
   return (
     <div>

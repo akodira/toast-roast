@@ -15,6 +15,14 @@ export async function POST(req) {
     return NextResponse.json({ error: "Your cart is empty." }, { status: 400 });
 
   const db = await getDb();
+
+  // The real security boundary: an order is only accepted if this table is
+  // actually registered to this phone number (via Portal claim or join).
+  // Client-side redirects to /portal are just UX — this is what actually
+  // stops a random visitor from ordering to an arbitrary table.
+  const table = await db.prepare("SELECT OccupiedBy FROM Tables WHERE Name=$1 AND IsActive=true").get(String(tableNumber).trim());
+  if (!table || !table.OccupiedBy || table.OccupiedBy.trim() !== telephone.trim())
+    return NextResponse.json({ error: "This table isn't registered to your phone number. Please register or join it at /portal first." }, { status: 403 });
   const settingsRows = await db.prepare("SELECT * FROM Settings").all();
   const settings = Object.fromEntries(settingsRows.map(s => [s.SettingKey, s.SettingValue]));
   const taxP = parseFloat(settings.tax_percent || "14");
