@@ -110,6 +110,7 @@ table.inv td.num, table.inv th.num { text-align: right; }
 .site-footer .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
 .site-footer h4 { font-family: var(--font-display); margin-bottom: .6rem; }
 .site-footer .fine { font-size: .78rem; opacity: .8; border-top: 1px solid rgba(243,234,224,.25); padding-top: 1rem; }
+.site-footer .footer-note { text-align: center; font-weight: 700; font-size: 1.05rem; margin: 1.2rem 0 .6rem; color: var(--cream-2); }
 
 /* Admin */
 .admin-shell { display: flex; min-height: 100vh; }

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import AdminShell from "../AdminShell";
 
-const blank = { CategoryId: "", Name: "", Description: "", Price: "", ImageUrl: "", IsAvailable: 1, IsActive: 1, DisplayOrder: 0 };
+const blank = { CategoryId: "", Name: "", Description: "", Price: "", ImageUrl: "", IsAvailable: 1, IsActive: 1, DisplayOrder: 0, IsFeatured: 0 };
 
 export default function MenuAdmin() {
   const [items, setItems] = useState([]);
@@ -53,7 +53,8 @@ export default function MenuAdmin() {
         <div className="field"><label>Display Order</label><input type="number" value={f.DisplayOrder} onChange={e => setF({ ...f, DisplayOrder: +e.target.value })} /></div>
         <div className="field">
           <label><input type="checkbox" checked={!!f.IsAvailable} onChange={e => setF({ ...f, IsAvailable: e.target.checked ? 1 : 0 })} /> Available</label>{" "}
-          <label><input type="checkbox" checked={!!f.IsActive} onChange={e => setF({ ...f, IsActive: e.target.checked ? 1 : 0 })} /> Active</label>
+          <label><input type="checkbox" checked={!!f.IsActive} onChange={e => setF({ ...f, IsActive: e.target.checked ? 1 : 0 })} /> Active</label>{" "}
+          <label><input type="checkbox" checked={!!f.IsFeatured} onChange={e => setF({ ...f, IsFeatured: e.target.checked ? 1 : 0 })} /> Featured on Homepage</label>
         </div>
         <button className="btn" onClick={save}>{editId ? "Save Changes" : "Add Item"}</button>
         {editId && <button className="btn ghost" style={{ marginLeft: ".6rem" }} onClick={() => { setEditId(null); setF(blank); }}>Cancel</button>}
@@ -64,11 +65,11 @@ export default function MenuAdmin() {
           {cats.map(c => <option key={c.CategoryId} value={c.CategoryId}>{c.Name}</option>)}
         </select></div>
       <div className="table-wrap"><table className="adm">
-        <thead><tr><th>Category</th><th>Name</th><th>Price</th><th>Available</th><th>Active</th><th /></tr></thead>
+        <thead><tr><th>Category</th><th>Name</th><th>Price</th><th>Available</th><th>Active</th><th>Featured</th><th /></tr></thead>
         <tbody>{shown.map(i => (
           <tr key={i.MenuItemId}>
             <td>{catName(i.CategoryId)}</td><td>{i.Name}</td><td>{i.Price.toFixed(2)}</td>
-            <td>{i.IsAvailable ? "Yes" : "Out of stock"}</td><td>{i.IsActive ? "Yes" : "No"}</td>
+            <td>{i.IsAvailable ? "Yes" : "Out of stock"}</td><td>{i.IsActive ? "Yes" : "No"}</td><td>{i.IsFeatured ? "★" : ""}</td>
             <td>
               <button className="btn small ghost" onClick={() => { setEditId(i.MenuItemId); setF(i); window.scrollTo(0, 0); }}>Edit</button>{" "}
               <button className="btn small danger" onClick={() => del(i.MenuItemId)}>Delete</button>

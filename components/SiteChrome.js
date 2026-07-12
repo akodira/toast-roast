@@ -30,11 +30,12 @@ export function Footer({ content }) {
       <div className="container">
         <div className="cols">
           <div><h4>{content.site_name}</h4><p>{content.tagline}</p></div>
-          <div><h4>Visit Us</h4><p>{content.contact_address}<br/>{content.opening_hours}</p></div>
+          <div><h4>Visit Us</h4><p>{content.contact_address}<br/>{content.opening_hours}{content.map_url && <><br/><a href={content.map_url} target="_blank" rel="noopener noreferrer">View on Map →</a></>}</p></div>
           <div><h4>Contact</h4><p>{content.contact_phone}<br/>{content.contact_email}</p></div>
           <div><h4>Follow</h4><p><a href={content.facebook_url}>Facebook</a> · <a href={content.instagram_url}>Instagram</a></p></div>
         </div>
-        <p className="fine">{content.footer_note} © {new Date().getFullYear()} {content.site_name}.</p>
+        {content.footer_note && <p className="footer-note">{content.footer_note}</p>}
+        <p className="fine">© {new Date().getFullYear()} {content.site_name}.</p>
       </div>
     </footer>
   );

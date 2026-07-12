@@ -96,11 +96,12 @@ export default function OrderWizard({ categories, items, tables = [], settings }
       {step === 2 && (
         <>
           <p style={{ marginBottom: "1rem" }}>Pick a category to start adding items — you can switch anytime.</p>
-          <div className="filters">
-            {categories.map(c => (
-              <button key={c.CategoryId} className={`chip ${cat === c.CategoryId ? "on" : ""}`}
-                onClick={() => { setCat(c.CategoryId); setStep(3); }}>{c.Name}</button>
-            ))}
+          <div className="field" style={{ maxWidth: 360 }}>
+            <label htmlFor="cat-select">Category</label>
+            <select id="cat-select" value={cat || ""} onChange={e => { setCat(+e.target.value); setStep(3); }}>
+              <option value="">Select a category…</option>
+              {categories.map(c => <option key={c.CategoryId} value={c.CategoryId}>{c.Name}</option>)}
+            </select>
           </div>
           <button className="btn ghost" onClick={() => setStep(1)}>Back</button>
         </>
@@ -108,10 +109,11 @@ export default function OrderWizard({ categories, items, tables = [], settings }
 
       {step === 3 && (
         <>
-          <div className="filters">
-            {categories.map(c => (
-              <button key={c.CategoryId} className={`chip ${cat === c.CategoryId ? "on" : ""}`} onClick={() => setCat(c.CategoryId)}>{c.Name}</button>
-            ))}
+          <div className="field" style={{ maxWidth: 360 }}>
+            <label htmlFor="cat-select-3">Category</label>
+            <select id="cat-select-3" value={cat || ""} onChange={e => setCat(+e.target.value)}>
+              {categories.map(c => <option key={c.CategoryId} value={c.CategoryId}>{c.Name}</option>)}
+            </select>
           </div>
           <div className="menu-grid">
             {items.filter(i => i.CategoryId === cat && i.IsAvailable).map(i => (

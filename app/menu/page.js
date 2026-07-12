@@ -15,7 +15,6 @@ export default async function MenuPage() {
       <main className="section container">
         <h2>Main Menu</h2>
         <MenuBrowser categories={categories} items={items} />
-        <p style={{ marginTop: "2rem", fontSize: ".85rem", opacity: .8 }}>{content.footer_note}</p>
       </main>
       <Footer content={content} />
     </>

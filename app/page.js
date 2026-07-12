@@ -9,7 +9,7 @@ export default async function Home() {
   const db = await getDb();
   const cats = await db.prepare("SELECT * FROM Categories WHERE IsActive=true ORDER BY DisplayOrder LIMIT 8").all();
   const picks = await db.prepare(`SELECT m.*, c.Name CatName FROM MenuItems m JOIN Categories c ON c.CategoryId=m.CategoryId
-    WHERE m.IsActive=true AND m.IsAvailable=true AND m.Name IN ('Creamy Chicken Casserole','Grilled Fillet 250gm','Nutella Lotus','Seafood Platter','Toast & Roast Burger','V60')`).all();
+    WHERE m.IsActive=true AND m.IsAvailable=true AND m.IsFeatured=true ORDER BY m.DisplayOrder`).all();
   return (
     <>
       <Header content={content} />
@@ -44,7 +44,6 @@ export default async function Home() {
             {cats.map(c => <Link key={c.CategoryId} href="/menu" className="chip">{c.Name}</Link>)}
             <Link href="/menu" className="chip on">Full menu →</Link>
           </div>
-          <p>{content.footer_note}</p>
         </section>
       </main>
       <Footer content={content} />
