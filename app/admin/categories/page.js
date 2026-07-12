@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import AdminShell from "../AdminShell";
 
-const blank = { Name: "", DisplayOrder: 0, IsActive: 1, ImageUrl: "" };
+const blank = { Name: "", DisplayOrder: 0, IsActive: 1, ImageUrl: "", ImagePosition: "center" };
 
 export default function CategoriesPage() {
   const [cats, setCats] = useState([]);
@@ -50,6 +50,17 @@ export default function CategoriesPage() {
           {f.ImageUrl && <img src={f.ImageUrl} alt="" style={{ width: 140, marginTop: ".5rem", borderRadius: 8 }} />}
           {f.ImageUrl && <div><button className="btn small ghost" style={{ marginTop: ".4rem" }} onClick={() => setF(v => ({ ...v, ImageUrl: "" }))}>Remove Photo</button></div>}
         </div>
+        {f.ImageUrl && (
+          <div className="field">
+            <label>Photo Focus Point (which part stays visible if the photo gets cropped)</label>
+            <select value={f.ImagePosition || "center"} onChange={e => setF({ ...f, ImagePosition: e.target.value })}>
+              <option value="top">Top</option>
+              <option value="center">Center</option>
+              <option value="bottom">Bottom</option>
+            </select>
+            <p style={{ fontSize: ".78rem", opacity: .7, marginTop: ".3rem" }}>Tall/portrait photos get cropped to fit this wide panel — use this to pick which part shows. For best results, use a wide/landscape photo instead.</p>
+          </div>
+        )}
         <div className="field"><label><input type="checkbox" checked={!!f.IsActive} onChange={e => setF({ ...f, IsActive: e.target.checked ? 1 : 0 })} /> Active</label></div>
         <button className="btn" onClick={save}>{editId ? "Save Changes" : "Add Category"}</button>
         {editId && <button className="btn ghost" style={{ marginLeft: ".6rem" }} onClick={() => { setEditId(null); setF(blank); }}>Cancel</button>}

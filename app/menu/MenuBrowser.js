@@ -31,7 +31,7 @@ export default function MenuBrowser({ categories, items, footerNote }) {
       {/* Single-category showcase — the primary browsing experience */}
       {!showAllGrid && activeCategory && (
         <div className={`menu-showcase ${activeCategory.ImageUrl ? "" : "no-photo"}`}
-          style={activeCategory.ImageUrl ? { backgroundImage: `url(${activeCategory.ImageUrl})` } : undefined}>
+          style={activeCategory.ImageUrl ? { backgroundImage: `url(${activeCategory.ImageUrl})`, backgroundPosition: `center ${activeCategory.ImagePosition || "center"}` } : undefined}>
           <div className="showcase-info">
             <h2>{activeCategory.Name}</h2>
             {items.filter(i => i.CategoryId === cat).map(i => (

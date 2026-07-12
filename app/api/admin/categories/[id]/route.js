@@ -4,10 +4,10 @@ import { getSession } from "@/lib/auth";
 
 export async function PUT(req, { params }) {
   const s = await getSession();
-  const { Name, DisplayOrder = 0, IsActive = 1, ImageUrl = null } = await req.json();
+  const { Name, DisplayOrder = 0, IsActive = 1, ImageUrl = null, ImagePosition = "center" } = await req.json();
   if (!Name?.trim()) return NextResponse.json({ error: "Category name is required." }, { status: 400 });
   const db = await getDb();
-  await db.prepare("UPDATE Categories SET Name=$1,DisplayOrder=$2,IsActive=$3,ImageUrl=$4 WHERE CategoryId=$5").run(Name.trim(), DisplayOrder, IsActive ? true : false, ImageUrl || null, params.id);
+  await db.prepare("UPDATE Categories SET Name=$1,DisplayOrder=$2,IsActive=$3,ImageUrl=$4,ImagePosition=$5 WHERE CategoryId=$6").run(Name.trim(), DisplayOrder, IsActive ? true : false, ImageUrl || null, ImagePosition || "center", params.id);
   await logActivity(Number(s.sub), "CATEGORY_UPDATE", `#${params.id} ${Name}`);
   return NextResponse.json({ ok: true });
 }
