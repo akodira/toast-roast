@@ -34,7 +34,9 @@ export default function TrackClient() {
         <p style={{ marginTop: ".7rem", fontSize: ".8rem", opacity: .7 }}>Shows today's orders only, matched to the phone number you ordered with.</p>
       </div>
 
-      {orders && orders.length === 0 && <p>No orders found for that number today.</p>}
+      {orders && orders.length === 0 && (
+        <p>No orders found for that number today. First time ordering? <Link href="/portal">Register your table to start an order →</Link></p>
+      )}
 
       {orders && orders.length > 0 && orders.map(o => {
         const orderMoreHref = `/order?table=${encodeURIComponent(o.TableNumber)}&name=${encodeURIComponent(o.CustomerName)}&phone=${encodeURIComponent(o.Telephone)}`;
