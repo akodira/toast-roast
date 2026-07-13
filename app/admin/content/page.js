@@ -83,6 +83,23 @@ export default function ContentPage() {
       </div>
 
       <div className="card" style={{ maxWidth: 640, marginBottom: "1.5rem" }}>
+        <h2 style={{ fontSize: "1rem", marginBottom: ".8rem" }}>Invoice / Receipt Branding</h2>
+        <p style={{ fontSize: ".8rem", opacity: .7, marginBottom: "1rem" }}>Shown at the top of every printed/downloaded invoice in Admin → Invoices.</p>
+        <div className="field">
+          <label>Logo</label>
+          <p style={{ fontSize: ".76rem", opacity: .65, marginBottom: ".3rem" }}>If left empty, the invoice shows your Site Name as text instead.</p>
+          <input type="file" accept="image/*" onChange={e => e.target.files[0] && upload("invoice_logo", e.target.files[0])} />
+          {c.invoice_logo && <img src={c.invoice_logo} alt="" style={{ height: 60, marginTop: ".5rem", borderRadius: 4 }} />}
+          {c.invoice_logo && <div><button className="btn small ghost" style={{ marginTop: ".4rem" }} onClick={() => removeImage("invoice_logo")}>Remove Logo</button></div>}
+        </div>
+        <div className="field"><label>Branch / Location Line</label>
+          <input value={c.invoice_branch_line || ""} onChange={e => setC({ ...c, invoice_branch_line: e.target.value })} /></div>
+        <div className="field"><label>Footer Note (e.g. "Thank you for dining with us")</label>
+          <input value={c.invoice_footer_note || ""} onChange={e => setC({ ...c, invoice_footer_note: e.target.value })} /></div>
+        <button className="btn" onClick={save}>Save Invoice Branding</button>
+      </div>
+
+      <div className="card" style={{ maxWidth: 640, marginBottom: "1.5rem" }}>
         <h2 style={{ fontSize: "1rem", marginBottom: ".8rem" }}>Homepage Photos</h2>
         <p style={{ fontSize: ".8rem", opacity: .7, marginBottom: "1rem" }}>Landscape or portrait photos work best depending on the slot — leave any of these empty and that section falls back to a plain background, nothing breaks.</p>
         {IMAGE_FIELDS.map(([key, label, hint]) => (
