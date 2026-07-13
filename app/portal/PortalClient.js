@@ -204,7 +204,7 @@ export default function PortalClient() {
     <div>
       <div className="card" style={{ marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <p style={{ fontWeight: 600 }}>Welcome, {session.name} · Table {session.table}</p>
+          <p style={{ fontWeight: 600 }}>Table No. {session.table} &nbsp;·&nbsp; My Name: {session.name}</p>
           <p style={{ fontSize: ".82rem", opacity: .7 }}>{session.phone}</p>
         </div>
         <div style={{ display: "flex", gap: ".7rem" }}>
@@ -212,9 +212,6 @@ export default function PortalClient() {
           <button className="btn ghost small" onClick={logout}>Not you? Switch table</button>
         </div>
       </div>
-      <p style={{ fontSize: ".82rem", opacity: .7, marginBottom: "1.2rem" }}>
-        Others at Table {session.table}? They can order separately too — at <strong>/portal</strong>, choose "Join Current Table," enter this phone number: <strong>{session.phone}</strong>, and add their own name.
-      </p>
 
       <div className="steps" style={{ marginBottom: "1.2rem" }}>
         <button className={`step-dot ${tab === "orders" ? "on" : ""}`} style={{ border: "none", cursor: "pointer" }} onClick={() => setTab("orders")}>Today's Orders</button>
