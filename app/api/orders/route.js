@@ -20,7 +20,7 @@ export async function POST(req) {
   // actually registered to this phone number (via Portal claim or join).
   // Client-side redirects to /portal are just UX — this is what actually
   // stops a random visitor from ordering to an arbitrary table.
-  const table = await db.prepare("SELECT OccupiedBy FROM Tables WHERE Name=$1 AND IsActive=true").get(String(tableNumber).trim());
+  const table = await db.prepare("SELECT TableId, OccupiedBy, OccupiedAt FROM Tables WHERE Name=$1 AND IsActive=true").get(String(tableNumber).trim());
   if (!table || !table.OccupiedBy || table.OccupiedBy.trim() !== telephone.trim())
     return NextResponse.json({ error: "This table isn't registered to your phone number. Please register or join it at /portal first." }, { status: 403 });
   const settingsRows = await db.prepare("SELECT * FROM Settings").all();
@@ -58,6 +58,12 @@ export async function POST(req) {
       await tdb.prepare("INSERT INTO OrderDetails (OrderId,MenuItemId,ItemName,UnitPrice,Quantity,LineTotal) VALUES ($1,$2,$3,$4,$5,$6)")
         .run(ord.lastInsertRowid, l.id, l.name, l.price, l.qty, l.total);
     }
+    // One invoice per (table occupancy, customer) — created on their first
+    // order this sitting, reused for every order after. This is what lets
+    // staff mark "this customer's invoice" paid and auto-release the table
+    // once everyone at it has paid.
+    await tdb.prepare(`INSERT INTO Invoices (TableId,CustomerId,OccupiedAt) VALUES ($1,$2,$3)
+      ON CONFLICT (TableId,CustomerId,OccupiedAt) DO NOTHING`).run(table.TableId, customerId, table.OccupiedAt);
     return ord.lastInsertRowid;
   });
   return NextResponse.json({ ok: true, orderNumber });

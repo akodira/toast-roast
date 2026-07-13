@@ -9,6 +9,7 @@ const ROLE_ADMIN = 1, ROLE_STAFF = 2, ROLE_EDITOR = 3;
 const ALL_LINKS = [
   ["/admin", "Dashboard", [ROLE_ADMIN]],
   ["/admin/orders", "Orders", [ROLE_ADMIN, ROLE_STAFF]],
+  ["/admin/invoices", "Invoices", [ROLE_ADMIN, ROLE_STAFF]],
   ["/admin/tables", "Tables", [ROLE_ADMIN, ROLE_STAFF]],
   ["/admin/menu", "Menu Items", [ROLE_ADMIN, ROLE_EDITOR]],
   ["/admin/categories", "Categories", [ROLE_ADMIN, ROLE_EDITOR]],
