@@ -26,6 +26,7 @@ export default function PortalClient() {
   const [tables, setTables] = useState([]);
   const [form, setForm] = useState({ tableId: "", phone: "", name: "" });
   const [foundTable, setFoundTable] = useState(null); // result of phone lookup in join mode
+  const [joiningAsNew, setJoiningAsNew] = useState(false); // true once "I'm someone else" is chosen
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [orders, setOrders] = useState([]);
@@ -65,6 +66,7 @@ export default function PortalClient() {
     setBusy(false);
     if (!res.ok) { setErr(d.error); setFoundTable(null); return; }
     setFoundTable(d.table);
+    setJoiningAsNew(false);
     // Pre-fill with the name already on file for this table — if you're the
     // person who registered it, this means you can just confirm and go
     // straight back to your own orders, no retyping/exact-match needed.
@@ -89,18 +91,19 @@ export default function PortalClient() {
     setSession(s);
   };
 
-  const submitJoin = async () => {
+  const submitJoin = async (nameOverride) => {
     if (!foundTable) return;
-    if (!form.name.trim()) return setErr("Please enter your name.");
+    const joinName = (nameOverride ?? form.name).trim();
+    if (!joinName) return setErr("Please enter your name.");
     setErr(""); setBusy(true);
     const res = await fetch("/api/public/tables/join", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tableId: foundTable.TableId, phone: form.phone.trim(), name: form.name.trim() }),
+      body: JSON.stringify({ tableId: foundTable.TableId, phone: form.phone.trim(), name: joinName }),
     });
     const d = await res.json();
     setBusy(false);
     if (!res.ok) { setErr(d.error); setFoundTable(null); return; }
-    const s = { table: foundTable.Name, tableId: foundTable.TableId, phone: form.phone.trim(), name: form.name.trim() };
+    const s = { table: foundTable.Name, tableId: foundTable.TableId, phone: form.phone.trim(), name: joinName };
     setSession(s);
   };
 
@@ -117,9 +120,9 @@ export default function PortalClient() {
       <div className="card" style={{ maxWidth: 440 }}>
         <div className="steps" style={{ marginBottom: "1.2rem" }}>
           <button className={`step-dot ${mode === "claim" ? "on" : ""}`} style={{ border: "none", cursor: "pointer" }}
-            onClick={() => { setMode("claim"); setForm({ tableId: "", phone: "", name: "" }); setFoundTable(null); setErr(""); }}>New Order</button>
+            onClick={() => { setMode("claim"); setForm({ tableId: "", phone: "", name: "" }); setFoundTable(null); setJoiningAsNew(false); setErr(""); }}>New Order</button>
           <button className={`step-dot ${mode === "join" ? "on" : ""}`} style={{ border: "none", cursor: "pointer" }}
-            onClick={() => { setMode("join"); setForm({ tableId: "", phone: "", name: "" }); setFoundTable(null); setErr(""); }}>Join Current Table</button>
+            onClick={() => { setMode("join"); setForm({ tableId: "", phone: "", name: "" }); setFoundTable(null); setJoiningAsNew(false); setErr(""); }}>Join Current Table</button>
         </div>
         {err && <p className="err" role="alert">{err}</p>}
 
@@ -160,21 +163,35 @@ export default function PortalClient() {
           </>
         )}
 
-        {mode === "join" && foundTable && (
+        {mode === "join" && foundTable && !joiningAsNew && (
           <>
-            <p style={{ marginBottom: "1rem" }}>
-              Found it — <strong>Table {foundTable.Name}</strong>{foundTable.OccupiedName ? `, registered by ${foundTable.OccupiedName}` : ""}.
+            <p style={{ marginBottom: "1.2rem" }}>
+              Found it — <strong>Table {foundTable.Name}</strong>{foundTable.OccupiedName ? `, registered by ${foundTable.OccupiedName}` : ""}. Is this you, or someone else at the table?
             </p>
+            {foundTable.OccupiedName && (
+              <button className="btn" style={{ display: "block", width: "100%", marginBottom: ".7rem" }}
+                onClick={() => submitJoin(foundTable.OccupiedName)} disabled={busy}>
+                {busy ? "Loading…" : `Continue as ${foundTable.OccupiedName} — view my orders`}
+              </button>
+            )}
+            <button className="btn ghost" style={{ display: "block", width: "100%", marginBottom: ".7rem" }}
+              onClick={() => { setForm(f => ({ ...f, name: "" })); setJoiningAsNew(true); }}>
+              I'm someone else at this table
+            </button>
+            <button className="btn ghost" onClick={() => { setFoundTable(null); setJoiningAsNew(false); setErr(""); }}>Back</button>
+          </>
+        )}
+
+        {mode === "join" && foundTable && joiningAsNew && (
+          <>
+            <p style={{ marginBottom: "1rem" }}>Joining <strong>Table {foundTable.Name}</strong> as a new customer — your orders will be tracked separately from {foundTable.OccupiedName || "the table's"}.</p>
             <div className="field">
               <label htmlFor="pt-join-name">Your Name</label>
               <input id="pt-join-name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-                onKeyDown={e => e.key === "Enter" && submitJoin()} />
-              <p style={{ fontSize: ".78rem", opacity: .7, marginTop: ".3rem" }}>
-                {foundTable.OccupiedName ? "That's you? Leave this as-is and tap Join to see your own orders. Someone else at the table? Change it to your own name to order separately." : ""}
-              </p>
+                onKeyDown={e => e.key === "Enter" && submitJoin()} autoFocus />
             </div>
-            <button className="btn" onClick={submitJoin} disabled={busy}>{busy ? "Joining…" : "Join Table"}</button>{" "}
-            <button className="btn ghost" onClick={() => { setFoundTable(null); setErr(""); }}>Back</button>
+            <button className="btn" onClick={() => submitJoin()} disabled={busy}>{busy ? "Joining…" : "Join Table"}</button>{" "}
+            <button className="btn ghost" onClick={() => setJoiningAsNew(false)}>Back</button>
           </>
         )}
       </div>
