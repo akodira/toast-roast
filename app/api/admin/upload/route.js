@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { requireRole, ROLE_ADMIN, ROLE_EDITOR } from "@/lib/auth";
 
-const ALLOWED = { "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp" };
+const ALLOWED = {
+  "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp",
+  "application/pdf": ".pdf",   // menu PDF download
+};
+// PDFs are legitimately bigger than photos — a print menu can easily exceed
+// the 3 MB image cap, so give them their own limit rather than rejecting.
+const MAX_BYTES = { "application/pdf": 15 * 1024 * 1024 };
+const DEFAULT_MAX = 3 * 1024 * 1024;
 const BUCKET = (process.env.SUPABASE_STORAGE_BUCKET || "uploads").trim();
 
 // Uses the service role key (server-side only, never exposed to the browser)
@@ -14,12 +22,16 @@ function getSupabase() {
 }
 
 export async function POST(req) {
+  if (!(await requireRole([ROLE_ADMIN, ROLE_EDITOR]))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const form = await req.formData();
   const file = form.get("file");
   if (!file || typeof file === "string") return NextResponse.json({ error: "No file uploaded." }, { status: 400 });
   const ext = ALLOWED[file.type];
-  if (!ext) return NextResponse.json({ error: "Only JPG, PNG or WEBP images are allowed." }, { status: 400 });
-  if (file.size > 3 * 1024 * 1024) return NextResponse.json({ error: "Image must be under 3 MB." }, { status: 400 });
+  if (!ext) return NextResponse.json({ error: "Only JPG, PNG, WEBP images or a PDF are allowed." }, { status: 400 });
+  const max = MAX_BYTES[file.type] ?? DEFAULT_MAX;
+  if (file.size > max)
+    return NextResponse.json({ error: `File must be under ${Math.round(max / 1024 / 1024)} MB.` }, { status: 400 });
 
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Image storage isn't configured yet (missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)." }, { status: 500 });

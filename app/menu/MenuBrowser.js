@@ -29,32 +29,73 @@ export default function MenuBrowser({ categories, items }) {
         </select>
       </div>
 
-      {/* Single-category showcase — the primary browsing experience */}
-      {!showAllGrid && activeCategory && (
-        <div className={`menu-showcase ${activeCategory.ImageUrl ? "" : "no-photo"}`}>
-          {activeCategory.ImageUrl && (
-            <Image
-              src={activeCategory.ImageUrl}
-              alt=""
-              fill
-              sizes="(max-width: 700px) 100vw, 1100px"
-              quality={90}
-              style={{ objectFit: "cover", objectPosition: `center ${activeCategory.ImagePosition || "center"}` }}
-              priority
-            />
-          )}
+      {/* Single-category showcase */}
+      {!showAllGrid && activeCategory && (() => {
+        const split  = activeCategory.ImageLayout === "split";
+        const fit    = activeCategory.ImageFit === "contain" ? "contain" : "cover";
+        const fx     = activeCategory.ImageFocusX ?? 50;
+        const fy     = activeCategory.ImageFocusY ?? 50;
+        const hasImg = !!activeCategory.ImageUrl;
+        const rows   = items.filter(i => i.CategoryId === cat);
+
+        const info = (
           <div className="showcase-info">
             <h2>{activeCategory.Name}</h2>
-            {items.filter(i => i.CategoryId === cat).map(i => (
+            {rows.map(i => (
               <div className="showcase-row" key={i.MenuItemId}>
-                <span className="nm">{i.Name}{!i.IsAvailable && " (out of stock)"}{i.Description && <span className="desc">{i.Description}</span>}</span>
+                <span className="nm">
+                  {i.Name}{!i.IsAvailable && " (out of stock)"}
+                  {i.Description && <span className="desc">{i.Description}</span>}
+                </span>
                 <span className="pr">{i.Price.toFixed(2)}</span>
               </div>
             ))}
+            {split && activeCategory.Note?.trim() && <p className="showcase-note">{activeCategory.Note}</p>}
           </div>
-          {activeCategory.Note?.trim() && <p className="showcase-note">{activeCategory.Note}</p>}
-        </div>
-      )}
+        );
+
+        // SPLIT: photo gets its own column, nothing covering it.
+        if (split) {
+          return (
+            <div className={`menu-showcase layout-split ${hasImg ? "" : "no-photo"}`}>
+              {info}
+              {hasImg && (
+                <div className="showcase-media">
+                  <Image
+                    src={activeCategory.ImageUrl}
+                    alt={activeCategory.Name}
+                    fill
+                    sizes="(max-width: 860px) 100vw, 640px"
+                    quality={90}
+                    className={fit === "contain" ? "fit-contain" : "fit-cover"}
+                    style={{ objectPosition: `${fx}% ${fy}%` }}
+                    priority
+                  />
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        // OVERLAY: original look — text floats over the photo behind a scrim.
+        return (
+          <div className={`menu-showcase ${hasImg ? "" : "no-photo"}`}>
+            {hasImg && (
+              <Image
+                src={activeCategory.ImageUrl}
+                alt={activeCategory.Name}
+                fill
+                sizes="(max-width: 700px) 100vw, 1100px"
+                quality={90}
+                style={{ objectFit: fit, objectPosition: `${fx}% ${fy}%` }}
+                priority
+              />
+            )}
+            {info}
+            {activeCategory.Note?.trim() && <p className="showcase-note">{activeCategory.Note}</p>}
+          </div>
+        );
+      })()}
 
       {/* Full-list / search results fallback */}
       {showAllGrid && (

@@ -384,6 +384,42 @@ table.inv .num, table.inv th.num { text-align: right; }
   .cart-remove { grid-column: 2; justify-self: end; }
 }
 
+
+/* ---------- Menu showcase: image layout modes ----------
+   OVERLAY (default): text floats over the photo behind a cream gradient.
+   Great for photos with empty space on the left.
+
+   SPLIT: text and photo get their own columns — nothing overlaps the image,
+   so an edge-to-edge photo (a full spread of dishes) stays fully visible.
+   This is the fix for photos where the subject runs the whole width. */
+.menu-showcase.layout-split {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  align-items: stretch; background: #FDFBF8;
+}
+.menu-showcase.layout-split::before { display: none; }  /* no scrim over the photo */
+.menu-showcase.layout-split .showcase-info { max-width: none; padding: 2.8rem 2.4rem; }
+.menu-showcase.layout-split .showcase-media {
+  position: relative; min-height: 100%; background: var(--cream-2); overflow: hidden;
+}
+.menu-showcase.layout-split .showcase-media img { width: 100%; height: 100%; display: block; }
+.menu-showcase.layout-split .showcase-note { position: static; margin-top: 1.4rem; padding: 0; }
+
+/* "Fit whole image" — nothing cropped. Letterboxed against a tonal backdrop. */
+.showcase-media img.fit-contain { object-fit: contain; background: var(--cream-2); }
+/* "Fill" — crops to fill; the focus point decides what survives the crop. */
+.showcase-media img.fit-cover { object-fit: cover; }
+
+@media (max-width: 860px) {
+  .menu-showcase.layout-split { grid-template-columns: 1fr; }
+  .menu-showcase.layout-split .showcase-media { min-height: 240px; }
+}
+
+.menu-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;
+}
+.menu-head h2 { margin-bottom: 0; }
+
 /* ---------- Admin shell ---------- */
 .admin-shell { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
 .admin-side { background: var(--espresso); color: rgba(255,255,255,.72); padding: 1.5rem 1rem; }

@@ -130,6 +130,27 @@ export default function ContentPage() {
       </div>
 
       <div className="card" style={{ maxWidth: 640, marginBottom: "1.5rem" }}>
+        <h2 style={{ fontSize: "1rem", marginBottom: ".8rem" }}>Downloadable Menu (PDF)</h2>
+        <p style={{ fontSize: ".8rem", opacity: .7, marginBottom: "1rem" }}>
+          Upload a PDF and a <strong>Download Menu (PDF)</strong> button appears at the top of the Menu page.
+          Remove it and the button disappears. Max 15 MB.
+        </p>
+        <div className="field">
+          <input type="file" accept="application/pdf" onChange={e => e.target.files[0] && upload("menu_pdf", e.target.files[0])} />
+          {c.menu_pdf && (
+            <p style={{ marginTop: ".6rem" }}>
+              <a href={c.menu_pdf} target="_blank" rel="noopener noreferrer" style={{ color: "var(--rust-deep)", fontWeight: 600 }}>
+                View current menu PDF →
+              </a>
+            </p>
+          )}
+          {c.menu_pdf && (
+            <div><button className="btn small ghost" style={{ marginTop: ".5rem" }} onClick={() => removeImage("menu_pdf")}>Remove PDF</button></div>
+          )}
+        </div>
+      </div>
+
+      <div className="card" style={{ maxWidth: 640, marginBottom: "1.5rem" }}>
         <h2 style={{ fontSize: "1rem", marginBottom: ".8rem" }}>Social &amp; Map Links</h2>
         <p style={{ fontSize: ".8rem", opacity: .7, marginBottom: "1rem" }}>
           Paste a link and its icon appears in the footer automatically. Leave a field empty to hide that icon.

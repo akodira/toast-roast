@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 import AdminShell from "../AdminShell";
 
-const blank = { Name: "", DisplayOrder: 0, IsActive: 1, ImageUrl: "", ImagePosition: "center", Note: "" };
+const blank = { Name: "", DisplayOrder: 0, IsActive: 1, ImageUrl: "", Note: "",
+  ImageLayout: "overlay", ImageFit: "cover", ImageFocusX: 50, ImageFocusY: 50 };
 
 export default function CategoriesPage() {
   const [cats, setCats] = useState([]);
@@ -62,16 +63,70 @@ export default function CategoriesPage() {
           {f.ImageUrl && <div><button className="btn small ghost" style={{ marginTop: ".4rem" }} onClick={() => setF(v => ({ ...v, ImageUrl: "" }))}>Remove Photo</button></div>}
         </div>
         {f.ImageUrl && (
-          <div className="field">
-            <label>Photo Focus Point (which part stays visible if the photo gets cropped)</label>
-            <select value={f.ImagePosition || "center"} onChange={e => setF({ ...f, ImagePosition: e.target.value })}>
-              <option value="top">Top</option>
-              <option value="center">Center</option>
-              <option value="bottom">Bottom</option>
-            </select>
-            <p style={{ fontSize: ".78rem", opacity: .7, marginTop: ".3rem" }}>Tall/portrait photos get cropped to fit this wide panel — use this to pick which part shows. For best results, use a wide/landscape photo instead.</p>
-          </div>
+          <>
+            <div className="field">
+              <label>Image Layout</label>
+              <select value={f.ImageLayout || "overlay"} onChange={e => setF({ ...f, ImageLayout: e.target.value })}>
+                <option value="overlay">Overlay — text sits on top of the photo</option>
+                <option value="split">Split — photo gets its own half, nothing covering it</option>
+              </select>
+              <p style={{ fontSize: ".76rem", opacity: .65, marginTop: ".3rem" }}>
+                Use <strong>Split</strong> when the photo is full of dishes edge-to-edge — nothing gets hidden behind the text.
+                Use <strong>Overlay</strong> when the photo has empty space on the left for the text to sit in.
+              </p>
+            </div>
+
+            <div className="field">
+              <label>Image Fit</label>
+              <select value={f.ImageFit || "cover"} onChange={e => setF({ ...f, ImageFit: e.target.value })}>
+                <option value="cover">Fill the box (crops the edges)</option>
+                <option value="contain">Fit whole image (nothing cropped)</option>
+              </select>
+            </div>
+
+            {f.ImageFit !== "contain" && (
+              <div className="field">
+                <label>Focus Point — what stays visible when the photo is cropped</label>
+                <div style={{ display: "grid", gap: ".6rem" }}>
+                  <label style={{ fontWeight: 400, fontSize: ".82rem" }}>
+                    Horizontal: {f.ImageFocusX ?? 50}% {(f.ImageFocusX ?? 50) < 34 ? "(left)" : (f.ImageFocusX ?? 50) > 66 ? "(right)" : "(centre)"}
+                    <input type="range" min="0" max="100" step="5" value={f.ImageFocusX ?? 50}
+                      onChange={e => setF({ ...f, ImageFocusX: +e.target.value })} />
+                  </label>
+                  <label style={{ fontWeight: 400, fontSize: ".82rem" }}>
+                    Vertical: {f.ImageFocusY ?? 50}% {(f.ImageFocusY ?? 50) < 34 ? "(top)" : (f.ImageFocusY ?? 50) > 66 ? "(bottom)" : "(centre)"}
+                    <input type="range" min="0" max="100" step="5" value={f.ImageFocusY ?? 50}
+                      onChange={e => setF({ ...f, ImageFocusY: +e.target.value })} />
+                  </label>
+                </div>
+              </div>
+            )}
+
+            <div className="field">
+              <label>Preview</label>
+              <div style={{
+                position: "relative", height: 150, borderRadius: 8, overflow: "hidden",
+                border: "1px solid var(--line)", background: "var(--cream-2)",
+              }}>
+                <img src={f.ImageUrl} alt="" style={{
+                  width: "100%", height: "100%",
+                  objectFit: f.ImageFit === "contain" ? "contain" : "cover",
+                  objectPosition: `${f.ImageFocusX ?? 50}% ${f.ImageFocusY ?? 50}%`,
+                }} />
+                {f.ImageLayout !== "split" && (
+                  <div style={{
+                    position: "absolute", inset: 0,
+                    background: "linear-gradient(100deg, var(--cream) 0%, var(--cream) 34%, rgba(248,244,239,.8) 54%, rgba(248,244,239,0) 82%)",
+                  }} />
+                )}
+              </div>
+              <p style={{ fontSize: ".76rem", opacity: .65, marginTop: ".3rem" }}>
+                Roughly how it will appear on the Menu page. In Overlay, the cream area is where the dish list sits.
+              </p>
+            </div>
+          </>
         )}
+
         <div className="field"><label><input type="checkbox" checked={!!f.IsActive} onChange={e => setF({ ...f, IsActive: e.target.checked ? 1 : 0 })} /> Active</label></div>
         <button className="btn" onClick={save}>{editId ? "Save Changes" : "Add Category"}</button>
         {editId && <button className="btn ghost" style={{ marginLeft: ".6rem" }} onClick={() => { setEditId(null); setF(blank); }}>Cancel</button>}
