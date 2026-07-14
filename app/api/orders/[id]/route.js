@@ -38,7 +38,13 @@ export async function DELETE(_req, { params }) {
   // behind — this is what was making the dashboard's "Customers" count
   // include people with zero actual orders.
   const remaining = await db.prepare("SELECT COUNT(*) c FROM Orders WHERE CustomerId=$1").get(existing.CustomerId);
-  if (Number(remaining.c) === 0) await db.prepare("DELETE FROM Customers WHERE CustomerId=$1").run(existing.CustomerId);
+  if (Number(remaining.c) === 0) {
+    // Invoices has a FK to Customers — the customer's now-empty invoice must
+    // be removed first, or this DELETE raises invoices_customerid_fkey and
+    // the request 500s. An invoice with no orders has nothing to bill.
+    await db.prepare("DELETE FROM Invoices WHERE CustomerId=$1").run(existing.CustomerId);
+    await db.prepare("DELETE FROM Customers WHERE CustomerId=$1").run(existing.CustomerId);
+  }
   await logActivity(Number(session.sub), "ORDER_DELETE", `Order #${params.id}`);
   return NextResponse.json({ ok: true });
 }
