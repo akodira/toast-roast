@@ -187,6 +187,42 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
 .cat.on { background: var(--cream-2); color: var(--ink); font-weight: 600; box-shadow: inset 3px 0 0 var(--rust); }
 .cat .ic { width: 18px; display: grid; place-items: center; color: var(--copper-dk); flex-shrink: 0; }
 
+
+/* ---------- Homepage menu list (Style 7) ---------- */
+.s7 { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 2rem 1.9rem 1.5rem; }
+.s7-head { display: flex; align-items: center; justify-content: center; gap: .9rem; margin-bottom: 1.6rem; }
+.s7-head .arw { color: var(--copper); opacity: .75; font-size: 1rem; }
+.s7-head h3 { font-family: var(--font-display); font-size: 1.9rem; font-weight: 600; }
+
+.s7-row { display: grid; grid-template-columns: 26px auto 1fr auto auto; align-items: center; gap: .85rem; padding: .72rem 0; }
+.s7-row + .s7-row { border-top: 1px solid #F1EAE1; }
+.s7-ico { width: 26px; display: grid; place-items: center; color: var(--copper-dk); flex-shrink: 0; }
+.s7-name { font-weight: 600; font-size: .97rem; min-width: 0; }
+.s7-desc { display: block; font-weight: 400; font-size: .79rem; color: var(--muted); margin-top: .1rem; }
+/* dot leaders sit in their own flexible track, so they stretch rather than
+   squeezing the dish name */
+.s7-dots { border-bottom: 1px dotted #CFC2B2; align-self: end; margin-bottom: .42rem; min-width: 2rem; }
+.s7-price { font-weight: 700; font-size: .92rem; color: var(--copper-dk); white-space: nowrap; }
+.s7-add {
+  width: 30px; height: 30px; border-radius: 50%; border: none; flex-shrink: 0;
+  background: var(--espresso); color: #fff; font-size: 1.05rem; line-height: 1;
+  cursor: pointer; display: grid; place-items: center; transition: background .15s, transform .15s;
+}
+.s7-add:hover { background: var(--rust); transform: translateY(-1px); }
+
+.s7-note { display: flex; gap: .85rem; align-items: center; margin-top: 1.4rem; background: var(--cream-2); border-radius: 10px; padding: .9rem 1.1rem; }
+.s7-note .ni { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; background: var(--rust); color: #fff; }
+.s7-note p { font-size: .78rem; color: var(--muted); line-height: 1.5; }
+
+/* Below 700px the dot leaders crush the dish name — drop them and let the
+   name wrap. Same list, no compromise. */
+@media (max-width: 700px) {
+  .s7 { padding: 1.4rem 1.1rem 1.2rem; }
+  .s7-row { grid-template-columns: 26px 1fr auto auto; }
+  .s7-dots { display: none; }
+  .s7-head h3 { font-size: 1.5rem; }
+}
+
 /* ---------- Join Your Table ---------- */
 .join { display: grid; grid-template-columns: 1fr 1fr; border-radius: var(--radius); overflow: hidden; background: var(--forest); color: #E7E1D8; }
 .join-form { padding: 3rem 2.5rem; text-align: center; }
