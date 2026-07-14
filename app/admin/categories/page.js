@@ -10,6 +10,10 @@ export default function CategoriesPage() {
   const [f, setF] = useState(blank);
   const [editId, setEditId] = useState(null);
   const [msg, setMsg] = useState("");
+  // Bumping this remounts the file input, clearing the filename the browser
+  // holds onto — React state alone can't reset an uncontrolled input.
+  const [fileKey, setFileKey] = useState(0);
+  const resetForm = () => { setF(blank); setEditId(null); setFileKey(k => k + 1); };
   const load = () => fetch("/api/admin/categories").then(r => r.json()).then(d => setCats(d.categories));
   useEffect(() => { load(); }, []);
   const save = async () => {
@@ -17,7 +21,7 @@ export default function CategoriesPage() {
     const res = await fetch(url, { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(f) });
     const d = await res.json();
     setMsg(res.ok ? "Saved." : d.error);
-    if (res.ok) { setF(blank); setEditId(null); load(); }
+    if (res.ok) { resetForm(); load(); }
   };
   const del = async (id) => {
     if (!confirm("Delete this category and all its items?")) return;
@@ -55,7 +59,7 @@ export default function CategoriesPage() {
         </div>
         <div className="field">
           <label>Background Photo (shown behind this category on the Menu page)</label>
-          <input type="file" accept="image/*" onChange={upload} />
+          <input key={fileKey} type="file" accept="image/*" onChange={upload} />
           <p style={{ fontSize: ".78rem", opacity: .7, marginTop: ".3rem" }}>
             For a sharp, well-framed result: use a <strong>landscape/wide</strong> photo (not portrait), at least <strong>1600px wide</strong>. A phone camera photo (usually 3000px+) works great — avoid screenshots or images downloaded from WhatsApp/social media, which are heavily compressed and will look soft here.
           </p>
@@ -129,7 +133,7 @@ export default function CategoriesPage() {
 
         <div className="field"><label><input type="checkbox" checked={!!f.IsActive} onChange={e => setF({ ...f, IsActive: e.target.checked ? 1 : 0 })} /> Active</label></div>
         <button className="btn" onClick={save}>{editId ? "Save Changes" : "Add Category"}</button>
-        {editId && <button className="btn ghost" style={{ marginLeft: ".6rem" }} onClick={() => { setEditId(null); setF(blank); }}>Cancel</button>}
+        {editId && <button className="btn ghost" style={{ marginLeft: ".6rem" }} onClick={resetForm}>Cancel</button>}
       </div>
       <div className="table-wrap"><table className="adm">
         <thead><tr><th>Order</th><th>Name</th><th>Photo</th><th>Active</th><th /></tr></thead>

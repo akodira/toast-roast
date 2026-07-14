@@ -11,6 +11,8 @@ export default function MenuAdmin() {
   const [editId, setEditId] = useState(null);
   const [filterCat, setFilterCat] = useState("");
   const [msg, setMsg] = useState("");
+  const [fileKey, setFileKey] = useState(0);
+  const resetForm = () => { setF(blank); setEditId(null); setFileKey(k => k + 1); };
   const load = () => {
     fetch("/api/admin/items").then(r => r.json()).then(d => setItems(d.items));
     fetch("/api/admin/categories").then(r => r.json()).then(d => setCats(d.categories));
@@ -22,7 +24,7 @@ export default function MenuAdmin() {
     const res = await fetch(url, { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(f) });
     const d = await res.json();
     setMsg(res.ok ? "Saved." : d.error);
-    if (res.ok) { setF(blank); setEditId(null); load(); }
+    if (res.ok) { resetForm(); load(); }
   };
   const del = async (id) => { if (!confirm("Delete this item?")) return; await fetch(`/api/admin/items/${id}`, { method: "DELETE" }); load(); };
   const upload = async (e) => {
@@ -55,7 +57,7 @@ export default function MenuAdmin() {
         <div className="field"><label>Item Name</label><input value={f.Name} onChange={e => setF({ ...f, Name: e.target.value })} /></div>
         <div className="field"><label>Description</label><textarea value={f.Description || ""} onChange={e => setF({ ...f, Description: e.target.value })} /></div>
         <div className="field"><label>Price</label><input type="number" step="0.01" value={f.Price} onChange={e => setF({ ...f, Price: e.target.value })} /></div>
-        <div className="field"><label>Image</label><input type="file" accept="image/*" onChange={upload} />
+        <div className="field"><label>Image</label><input key={fileKey} type="file" accept="image/*" onChange={upload} />
           {f.ImageUrl && <img src={f.ImageUrl} alt="" style={{ width: 90, marginTop: ".5rem", borderRadius: 8 }} />}</div>
         <div className="field"><label>Display Order</label><input type="number" value={f.DisplayOrder} onChange={e => setF({ ...f, DisplayOrder: +e.target.value })} /></div>
         <div className="field">
@@ -64,7 +66,7 @@ export default function MenuAdmin() {
           <label><input type="checkbox" checked={!!f.IsFeatured} onChange={e => setF({ ...f, IsFeatured: e.target.checked ? 1 : 0 })} /> Featured on Homepage</label>
         </div>
         <button className="btn" onClick={save}>{editId ? "Save Changes" : "Add Item"}</button>
-        {editId && <button className="btn ghost" style={{ marginLeft: ".6rem" }} onClick={() => { setEditId(null); setF(blank); }}>Cancel</button>}
+        {editId && <button className="btn ghost" style={{ marginLeft: ".6rem" }} onClick={resetForm}>Cancel</button>}
       </div>
       <div className="field" style={{ maxWidth: 300 }}><label>Filter by category</label>
         <select value={filterCat} onChange={e => setFilterCat(e.target.value)}>
