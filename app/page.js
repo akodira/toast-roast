@@ -18,7 +18,11 @@ export default async function Home() {
   const db = await getDb();
 
   const cats = await db.prepare("SELECT * FROM Categories WHERE IsActive=true ORDER BY DisplayOrder").all();
-  const items = await db.prepare("SELECT * FROM MenuItems WHERE IsActive=true AND IsAvailable=true ORDER BY DisplayOrder").all();
+  // CatName is needed for the no-photo fallback card (shows the item's
+  // category under the monogram), so join it rather than SELECT *.
+  const items = await db.prepare(`SELECT m.*, c.Name AS CatName FROM MenuItems m
+    JOIN Categories c ON c.CategoryId = m.CategoryId
+    WHERE m.IsActive=true AND m.IsAvailable=true ORDER BY m.DisplayOrder`).all();
   const picks = items.filter(i => i.IsFeatured).slice(0, 4);
 
   const features = [1, 2, 3, 4]

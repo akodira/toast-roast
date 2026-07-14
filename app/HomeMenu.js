@@ -38,8 +38,8 @@ export default function HomeMenu({ categories, items }) {
         {shown.length === 0 ? (
           <p style={{ color: "var(--muted)" }}>No items in this category yet.</p>
         ) : (
-          <div className="cards">
-            {shown.map(i => <ItemCard key={i.MenuItemId} item={i} />)}
+          <div className="cards compact-grid">
+            {shown.map(i => <ItemCard key={i.MenuItemId} item={i} compact />)}
           </div>
         )}
         <div className="menu-more">
@@ -56,16 +56,31 @@ export default function HomeMenu({ categories, items }) {
   );
 }
 
-export function ItemCard({ item, badge }) {
+export function ItemCard({ item, badge, compact = false }) {
   return (
-    <article className="card-item">
-      <div className="card-img">
-        {badge && <span className="badge">{badge}</span>}
-        {item.ImageUrl && <img src={item.ImageUrl} alt={item.Name} />}
-      </div>
+    <article className={`card-item${compact ? " compact" : ""}`}>
+      {/* Photos are reserved for Popular Items — carrying a photo for all
+          200+ menu items isn't maintainable, and a half-photographed menu
+          looks broken rather than minimal. */}
+      {!compact && (
+        item.ImageUrl ? (
+          <div className="card-img has-photo">
+            {badge && <span className="badge">{badge}</span>}
+            <img src={item.ImageUrl} alt={item.Name} />
+          </div>
+        ) : (
+          <div className="card-img no-photo">
+            {badge && <span className="badge">{badge}</span>}
+            <div>
+              <span className="mono">{item.Name.trim().charAt(0).toUpperCase()}</span>
+              {item.CatName && <span className="cat-tag">{item.CatName}</span>}
+            </div>
+          </div>
+        )
+      )}
       <div className="card-body">
         <h4>{item.Name}</h4>
-        <p className="desc">{item.Description || ""}</p>
+        {item.Description && <p className="desc">{item.Description}</p>}
         <div className="card-foot">
           <span className="price">EGP {item.Price.toFixed(2)}</span>
           <Link href="/portal" className="add" aria-label={`Order ${item.Name}`}>+</Link>

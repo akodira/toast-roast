@@ -122,12 +122,41 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
   display: flex; flex-direction: column; transition: transform .18s, box-shadow .18s;
 }
 .card-item:hover { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(42,33,27,.10); }
-.card-img { height: 175px; position: relative; overflow: hidden; background: linear-gradient(150deg, #EADFD1, #C79E72 55%, #8A5F38); }
+.card-img { height: 175px; position: relative; overflow: hidden; background: var(--cream-2); }
 .card-img img { width: 100%; height: 100%; object-fit: cover; }
-.card-img::after {
+.card-img.has-photo::after {
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background: radial-gradient(130% 100% at 70% 100%, rgba(23,18,15,.22), transparent 60%);
 }
+
+/* Typographic fallback when an item has no photo. A bare gradient reads as
+   "image failed to load"; an intentional monogram card reads as a design
+   choice — so a menu with zero photos still looks finished. */
+.card-img.no-photo {
+  display: grid; place-items: center; text-align: center;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255,255,255,.55), transparent 60%),
+    linear-gradient(150deg, var(--cream-2), #E2D3C0);
+  border-bottom: 1px solid var(--line);
+}
+.card-img.no-photo .mono {
+  font-family: var(--font-display); font-size: 2.6rem; line-height: 1;
+  color: var(--copper-dk); opacity: .55;
+}
+.card-img.no-photo .cat-tag {
+  display: block; margin-top: .45rem;
+  font-size: .62rem; letter-spacing: .2em; text-transform: uppercase;
+  font-weight: 700; color: var(--muted);
+}
+
+/* Compact card — used in "Our Menu", where photos aren't worth the upkeep
+   across 200+ items. Text-only, so it never looks half-finished. */
+.card-item.compact { border-left: 3px solid transparent; }
+.card-item.compact:hover { border-left-color: var(--rust); }
+.card-item.compact .card-body { padding: 1.1rem 1.2rem; }
+.card-item.compact .card-body h4 { font-size: 1rem; }
+.cards.compact-grid { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 700px) { .cards.compact-grid { grid-template-columns: 1fr; } }
 .badge {
   position: absolute; top: .6rem; left: .6rem; z-index: 2;
   background: rgba(23,18,15,.82); color: #fff;
