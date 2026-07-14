@@ -522,19 +522,15 @@ table.r-items td.qty, table.r-items th.qty { width: 2.2rem; text-align: center; 
    place instead of ejecting a fixed page.
    --------------------------------------------------------- */
 @media print {
-  /* NOTE: `size: 80mm auto` is INVALID CSS — the `size` property takes
-     `auto`, one length, or two lengths, but never a length mixed with
-     `auto`. Browsers drop the whole declaration, silently falling back to
-     Legal/A4. This static fallback is valid; lib/printReceipt.js then
-     replaces the height at print time with the receipt's real height so the
-     cutter fires right after the last line instead of feeding blank paper. */
+  /* Fallback page size for any stray Ctrl+P. The real print path
+     (lib/printReceipt.js) clones the receipt to a top-level node and injects
+     an exact `80mm x <measured>mm` page, because:
+       - `size: 80mm auto` is INVALID CSS — browsers drop it and fall back to
+         Legal/A4, which is what produced an 8.5x14in receipt;
+       - hiding `body *` and re-showing a receipt nested inside the modal
+         produced a correctly-sized but BLANK page. */
   @page { size: 80mm 200mm; margin: 0; }
 
-  /* Nothing but the receipt goes to the paper. */
-  body * { visibility: hidden !important; }
-  .receipt, .receipt * { visibility: visible !important; }
-
-  /* The modal chrome must not print, or reserve space. */
   .receipt-modal-actions,
   .admin-shell .admin-side,
   .site-header, .site-footer { display: none !important; }
@@ -545,17 +541,11 @@ table.r-items td.qty, table.r-items th.qty { width: 2.2rem; text-align: center; 
     overflow: visible !important; display: block !important;
   }
 
-  html, body {
-    width: 80mm !important; margin: 0 !important; padding: 0 !important;
-    background: #fff !important;
-  }
+  html, body { background: #fff !important; }
 
   .receipt {
-    /* Centre the 72mm ink area on the 80mm roll — `left: 0` dumped all 8mm of
-       slack on the right, printing the receipt off-centre. `margin: 0 auto`
-       splits it 4mm/4mm. Side padding trimmed to 1mm so the content box is
-       70mm rather than 68mm: at 2mm the longest lines were wrapping. */
-    position: static !important;
+    /* 72mm ink area centred on the 80mm roll (4mm each side). 1mm side padding
+       keeps the content box at 70mm — at 2mm the longest lines wrapped. */
     width: 72mm !important; max-width: 72mm !important;
     margin: 0 auto !important;
     padding: 2mm 1mm 6mm !important;   /* 6mm tail so the cutter clears the text */
@@ -564,7 +554,8 @@ table.r-items td.qty, table.r-items th.qty { width: 2.2rem; text-align: center; 
     font-size: 11.5px !important; line-height: 1.35 !important;
   }
 
-  /* 1-bit safe: kill every grey, tint and shadow. */
+  /* Thermal heads are 1-bit: greys and shadows dither into mush. Force pure
+     black on white. */
   .receipt *, .receipt .r-meta, .receipt .r-branch,
   .receipt .r-tagline, .receipt .r-footer,
   .receipt table.r-items th {
