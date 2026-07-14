@@ -4,16 +4,16 @@ import AdminShell from "../AdminShell";
 
 export default function TablesPage() {
   const [tables, setTables] = useState([]);
-  const [role, setRole] = useState(null); // 1=Admin, 2=Staff, 3=Editor
+  const [roles, setRoles] = useState(null); // e.g. [1] Admin, [2] Staff — a user can hold several
   const [f, setF] = useState({ Name: "", DisplayOrder: 0, IsActive: 1 });
   const [editId, setEditId] = useState(null);
   const [msg, setMsg] = useState("");
   const load = () => fetch("/api/admin/tables").then(r => r.json()).then(d => setTables(d.tables || []));
   useEffect(() => {
     load();
-    fetch("/api/auth/me").then(r => r.json()).then(d => setRole(d.role));
+    fetch("/api/auth/me").then(r => r.json()).then(d => setRoles(d.roles || []));
   }, []);
-  const isAdmin = role === 1;
+  const isAdmin = Array.isArray(roles) && roles.includes(1);
 
   const save = async () => {
     const url = editId ? `/api/admin/tables/${editId}` : "/api/admin/tables";
