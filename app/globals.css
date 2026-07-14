@@ -448,10 +448,10 @@ table.inv .num, table.inv th.num { text-align: right; }
 .r-call { font-size: .85rem; margin: .7rem 0 .3rem; }
 table.r-items { width: 100%; border-collapse: collapse; font-size: .82rem; margin-top: .5rem; }
 table.r-items th { text-align: left; font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; color: #444; font-weight: 700; padding-bottom: .4rem; border-bottom: 1px solid #ccc; }
-table.r-items th.item { text-align: center; }
+table.r-items th.item { text-align: left; }
 table.r-items th.num, table.r-items td.num { text-align: right; width: 3.6rem; white-space: nowrap; }
 table.r-items td { padding: .35rem 0; vertical-align: top; }
-table.r-items td.qty, table.r-items th.qty { width: 1.6rem; padding-right: .3rem; }
+table.r-items td.qty, table.r-items th.qty { width: 2.2rem; text-align: center; padding: 0 .35rem; }
 .r-totals { margin-top: .6rem; }
 .r-totals .row { display: flex; justify-content: space-between; font-size: .82rem; padding: .25rem 0; }
 .r-totals .row.bold { font-weight: 700; }

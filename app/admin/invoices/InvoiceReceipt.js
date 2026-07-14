@@ -29,12 +29,12 @@ export default function InvoiceReceipt({ invoice, lines, subtotal, tax, service,
       <div className="r-call">Customer: <strong>{invoice.CustomerName}</strong></div>
 
       <table className="r-items">
-        <thead><tr><th className="qty">Qty</th><th className="item">Item</th><th className="num">Price</th><th className="num">Total</th></tr></thead>
+        <thead><tr><th className="item">Item</th><th className="qty">Qty</th><th className="num">Price</th><th className="num">Total</th></tr></thead>
         <tbody>
           {lines.map(l => (
             <tr key={l.name + l.price}>
-              <td className="qty">{l.qty}</td>
               <td>{l.name}</td>
+              <td className="qty">{l.qty}</td>
               <td className="num">{fmt(l.price)}</td>
               <td className="num">{fmt(l.total)}</td>
             </tr>
