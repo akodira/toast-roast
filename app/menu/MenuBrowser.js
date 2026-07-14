@@ -52,7 +52,7 @@ export default function MenuBrowser({ categories, items, footerNote }) {
               </div>
             ))}
           </div>
-          {footerNote && <p className="showcase-note">{footerNote}</p>}
+          {footerNote?.trim() && <p className="showcase-note">{footerNote}</p>}
         </div>
       )}
 

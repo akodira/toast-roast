@@ -16,6 +16,7 @@ const FIELDS = [
   ["contact_phone","Phone","input"],["contact_email","Email","input"],
   ["opening_hours","Opening Hours","input"],
   ["footer_note","Footer Note (HTML allowed: <b>bold</b>, <i>italic</i>)","input"],
+  ["menu_note","Menu Page Note — under the item list. Leave blank to hide it.","input"],
 ];
 
 const FEATURE_FIELDS = [1, 2, 3, 4];
