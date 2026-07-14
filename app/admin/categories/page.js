@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import AdminShell from "../AdminShell";
 
-const blank = { Name: "", DisplayOrder: 0, IsActive: 1, ImageUrl: "", ImagePosition: "center" };
+const blank = { Name: "", DisplayOrder: 0, IsActive: 1, ImageUrl: "", ImagePosition: "center", Note: "" };
 
 export default function CategoriesPage() {
   const [cats, setCats] = useState([]);
@@ -45,6 +45,14 @@ export default function CategoriesPage() {
         <div className="field"><label>Name</label><input value={f.Name} onChange={e => setF({ ...f, Name: e.target.value })} /></div>
         <div className="field"><label>Display Order</label><input type="number" value={f.DisplayOrder} onChange={e => setF({ ...f, DisplayOrder: +e.target.value })} /></div>
         <div className="field">
+          <label>Category Note</label>
+          <p style={{ fontSize: ".76rem", opacity: .65, marginBottom: ".3rem" }}>
+            Shown under this category's items on the Menu page — e.g. a VAT line, an allergen warning, or a serving note. Leave blank to show nothing.
+          </p>
+          <input value={f.Note || ""} onChange={e => setF({ ...f, Note: e.target.value })}
+            placeholder="e.g. All prices are subject to a 12% service charge and 14% VAT." />
+        </div>
+        <div className="field">
           <label>Background Photo (shown behind this category on the Menu page)</label>
           <input type="file" accept="image/*" onChange={upload} />
           <p style={{ fontSize: ".78rem", opacity: .7, marginTop: ".3rem" }}>
@@ -76,7 +84,7 @@ export default function CategoriesPage() {
             <td>{c.ImageUrl ? <img src={c.ImageUrl} alt="" style={{ width: 50, borderRadius: 6 }} /> : "—"}</td>
             <td>{c.IsActive ? "Yes" : "No"}</td>
             <td>
-              <button className="btn small ghost" onClick={() => { setEditId(c.CategoryId); setF({ ...blank, ...c, ImageUrl: c.ImageUrl || "" }); window.scrollTo(0, 0); }}>Edit</button>{" "}
+              <button className="btn small ghost" onClick={() => { setEditId(c.CategoryId); setF({ ...blank, ...c, ImageUrl: c.ImageUrl || "", Note: c.Note || "" }); window.scrollTo(0, 0); }}>Edit</button>{" "}
               <button className="btn small danger" onClick={() => del(c.CategoryId)}>Delete</button>
             </td>
           </tr>

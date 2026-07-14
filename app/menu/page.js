@@ -14,7 +14,7 @@ export default async function MenuPage() {
       <Header content={content} />
       <main className="section container">
         <h2>Main Menu</h2>
-        <MenuBrowser categories={categories} items={items} footerNote={content.menu_note} />
+        <MenuBrowser categories={categories} items={items} />
       </main>
       <Footer content={content} />
     </>

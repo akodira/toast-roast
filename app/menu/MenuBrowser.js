@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 
-export default function MenuBrowser({ categories, items, footerNote }) {
+export default function MenuBrowser({ categories, items }) {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState(categories[0]?.CategoryId || 0);
 
@@ -52,7 +52,7 @@ export default function MenuBrowser({ categories, items, footerNote }) {
               </div>
             ))}
           </div>
-          {footerNote?.trim() && <p className="showcase-note">{footerNote}</p>}
+          {activeCategory.Note?.trim() && <p className="showcase-note">{activeCategory.Note}</p>}
         </div>
       )}
 
