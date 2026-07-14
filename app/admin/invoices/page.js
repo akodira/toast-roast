@@ -10,7 +10,7 @@ export default function InvoicesPage() {
   const [filter, setFilter] = useState("unpaid");
   const [msg, setMsg] = useState("");
   const [modal, setModal] = useState(null); // { invoice, lines, subtotal, tax, service, grand, orderCount, branding }
-  const [pendingAction, setPendingAction] = useState(null); // "png" | "pdf" | null
+  const [pendingAction, setPendingAction] = useState(null); // "png" | "pdf" | "print" | null
   const [busy, setBusy] = useState(false);
 
   const load = () => fetch(`/api/admin/invoices?status=${filter === "all" ? "" : filter}`)
@@ -49,6 +49,14 @@ export default function InvoicesPage() {
   useEffect(() => {
     if (!modal || !pendingAction) return;
     const run = async () => {
+      // Print goes through the browser to the OS printer driver — the 80mm
+      // thermal layout lives in the @media print block in globals.css.
+      if (pendingAction === "print") {
+        setPendingAction(null);
+        // let the receipt paint before the print dialog freezes the page
+        setTimeout(() => window.print(), 150);
+        return;
+      }
       const html2canvas = (await import("html2canvas")).default;
       const el = document.getElementById("receipt-capture");
       const canvas = await html2canvas(el, { scale: 2, backgroundColor: "#ffffff" });
@@ -118,7 +126,8 @@ export default function InvoicesPage() {
                 <button className="btn small ghost" onClick={() => togglePaid(inv)}>{inv.IsPaid ? "Mark Unpaid" : "Mark Paid"}</button>{" "}
                 <button className="btn small ghost" disabled={busy} onClick={() => openReceipt(inv.InvoiceId, "view")}>View</button>{" "}
                 <button className="btn small ghost" disabled={busy} onClick={() => openReceipt(inv.InvoiceId, "png")}>PNG</button>{" "}
-                <button className="btn small ghost" disabled={busy} onClick={() => openReceipt(inv.InvoiceId, "pdf")}>PDF</button>
+                <button className="btn small ghost" disabled={busy} onClick={() => openReceipt(inv.InvoiceId, "pdf")}>PDF</button>{" "}
+                <button className="btn small" disabled={busy} onClick={() => openReceipt(inv.InvoiceId, "print")}>Print</button>
               </td>
             </tr>
           ))}
@@ -131,6 +140,7 @@ export default function InvoicesPage() {
             <div className="receipt-modal-actions">
               <button className="btn small" onClick={() => downloadFromModal("png")}>Download PNG</button>
               <button className="btn small" onClick={() => downloadFromModal("pdf")}>Download PDF</button>
+              <button className="btn small" onClick={() => setTimeout(() => window.print(), 50)}>Print (80mm)</button>
               <button className="btn small ghost" onClick={() => setModal(null)}>Close</button>
             </div>
             <InvoiceReceipt {...modal} />
