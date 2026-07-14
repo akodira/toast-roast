@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function MenuBrowser({ categories, items }) {
   const [q, setQ] = useState("");
@@ -48,6 +49,9 @@ export default function MenuBrowser({ categories, items }) {
                   {i.Description && <span className="desc">{i.Description}</span>}
                 </span>
                 <span className="pr">{i.Price.toFixed(2)}</span>
+                {i.IsAvailable
+                  ? <Link href="/portal" className="showcase-add" aria-label={`Order ${i.Name}`}>+</Link>
+                  : <span />}
               </div>
             ))}
             {split && activeCategory.Note?.trim() && <p className="showcase-note">{activeCategory.Note}</p>}

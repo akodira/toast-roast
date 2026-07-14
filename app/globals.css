@@ -372,7 +372,20 @@ table.inv .num, table.inv th.num { text-align: right; }
 .menu-showcase.no-photo::before { background: var(--cream); }
 .menu-showcase .showcase-info { position: relative; z-index: 2; padding: 3.2rem 2.8rem; max-width: 470px; }
 .menu-showcase .showcase-info h2 { font-size: 2.4rem; color: var(--ink); margin-bottom: 1.6rem; }
-.menu-showcase .showcase-row { display: flex; justify-content: space-between; gap: 1.5rem; padding: .62rem 0; font-weight: 500; border-bottom: 1px solid rgba(42,33,27,.09); }
+.menu-showcase .showcase-row {
+  display: grid; grid-template-columns: 1fr auto auto;
+  align-items: center; gap: 1.1rem; padding: .62rem 0;
+  font-weight: 500; border-bottom: 1px solid rgba(42,33,27,.09);
+}
+/* Order button on each dish — mirrors the homepage "+". It routes to /portal
+   because ordering requires a registered table; it is not a cart add. */
+.showcase-add {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  background: var(--espresso); color: #fff; font-size: 1rem; line-height: 1;
+  display: grid; place-items: center; text-decoration: none;
+  transition: background .15s, transform .15s;
+}
+.showcase-add:hover { background: var(--rust); transform: translateY(-1px); }
 .menu-showcase .showcase-row:last-of-type { border-bottom: none; }
 .menu-showcase .showcase-row .pr { font-weight: 700; color: var(--copper-dk); white-space: nowrap; }
 .menu-showcase .showcase-row .desc { display: block; font-size: .78rem; color: var(--muted); font-weight: 400; }
