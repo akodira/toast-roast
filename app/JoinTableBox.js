@@ -18,7 +18,7 @@ export default function JoinTableBox({ content }) {
   return (
     <div className="join-form">
       <h3>{content.join_title || "Join Your Table"}</h3>
-      <div className="rule"><i /><span>❦</span><i /></div>
+      <div className="rule"><i /><span className="dot" /><i /></div>
       <p>{content.join_text || "Enter the host's phone number to find your table and start ordering."}</p>
 
       <div className="phone-row">

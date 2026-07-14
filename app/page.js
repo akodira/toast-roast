@@ -35,7 +35,6 @@ export default async function Home() {
           <div className="container">
             <div className="hero-copy">
               <h1 dangerouslySetInnerHTML={{ __html: content.hero_title }} />
-              <div className="hero-leaf">❦</div>
               <p className="lead" dangerouslySetInnerHTML={{ __html: content.hero_subtitle }} />
               <div className="cta-row">
                 <Link href="/menu" className="btn">
@@ -62,7 +61,7 @@ export default async function Home() {
             <div className="container">
               <div className="sec-head">
                 <h2>{content.popular_title || "Popular Items"}</h2>
-                <div className="rule"><i /><span>❦</span><i /></div>
+                <div className="rule"><i /><span className="dot" /><i /></div>
               </div>
               <div className="pop-grid">
                 {picks.map(i => <ItemCard key={i.MenuItemId} item={i} badge="Popular" />)}
@@ -75,7 +74,7 @@ export default async function Home() {
           <div className="container">
             <div className="sec-head">
               <h2>{content.menu_title || "Our Menu"}</h2>
-              <div className="rule"><i /><span>❦</span><i /></div>
+              <div className="rule"><i /><span className="dot" /><i /></div>
             </div>
             <HomeMenu categories={cats} items={items} />
           </div>

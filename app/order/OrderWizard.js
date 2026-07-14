@@ -137,28 +137,39 @@ export default function OrderWizard({ categories, items, tables = [], settings }
 
       {step === 4 && (
         <div className="card">
-          <h3 style={{ marginBottom: "1rem" }}>Shopping Cart</h3>
-          {cartLines.length === 0 ? <p>Your cart is empty.</p> : (
-            <div className="table-wrap"><table className="inv">
-              <thead><tr><th>Item</th><th>Qty</th><th className="num">Unit Price</th><th className="num">Total</th><th /></tr></thead>
-              <tbody>
+          <h3 style={{ marginBottom: "1.2rem" }}>Shopping Cart</h3>
+          {cartLines.length === 0 ? <p style={{ color: "var(--muted)" }}>Your cart is empty.</p> : (
+            <>
+              <div className="cart-list">
                 {cartLines.map(l => (
-                  <tr key={l.MenuItemId}>
-                    <td>{l.Name}</td>
-                    <td><span className="qty-ctl">
-                      <button onClick={() => setQty(l.MenuItemId, -1)} aria-label="Decrease">−</button>
-                      <span>{l.qty}</span>
-                      <button onClick={() => setQty(l.MenuItemId, 1)} aria-label="Increase">+</button>
-                    </span></td>
-                    <td className="num">{fmt(l.Price)}</td>
-                    <td className="num">{fmt(l.total)}</td>
-                    <td><button className="btn small danger" onClick={() => setCart(c => ({ ...c, [l.MenuItemId]: 0 }))}>Remove</button></td>
-                  </tr>
+                  <div className="cart-line" key={l.MenuItemId}>
+                    <div className="cart-info">
+                      <span className="cart-name">{l.Name}</span>
+                      <span className="cart-unit">{fmt(l.Price)} each</span>
+                    </div>
+                    <span className="qty-ctl">
+                      <button onClick={() => setQty(l.MenuItemId, -1)} aria-label={`Decrease ${l.Name}`}>−</button>
+                      <span className="qty-val">{l.qty}</span>
+                      <button onClick={() => setQty(l.MenuItemId, 1)} aria-label={`Increase ${l.Name}`}>+</button>
+                    </span>
+                    <span className="cart-total">{fmt(l.total)}</span>
+                    <button className="cart-remove" onClick={() => setCart(c => ({ ...c, [l.MenuItemId]: 0 }))}
+                      aria-label={`Remove ${l.Name}`} title="Remove">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <path d="M18 6 6 18M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
                 ))}
-              </tbody>
-            </table></div>
+              </div>
+              <div className="cart-sum">
+                <span>Subtotal</span>
+                <strong>{fmt(subtotal)}</strong>
+              </div>
+              <p className="cart-note">Tax and service are added at the next step.</p>
+            </>
           )}
-          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginTop: "1rem" }}>
+          <div className="cta-row" style={{ marginTop: "1.4rem" }}>
             <button className="btn ghost" onClick={() => setStep(3)}>Continue Shopping</button>
             <button className="btn" onClick={next} disabled={cartLines.length === 0}>Review Invoice</button>
           </div>
@@ -167,26 +178,51 @@ export default function OrderWizard({ categories, items, tables = [], settings }
 
       {step === 5 && (
         <div className="card">
-          <h3 style={{ marginBottom: ".8rem" }}>Invoice Preview</h3>
-          <p><strong>{info.name}</strong> · Table {info.tableNumber}<br />{info.telephone}</p>
-          <div className="table-wrap"><table className="inv">
-            <thead><tr><th>Item</th><th>Qty</th><th className="num">Unit Price</th><th className="num">Total</th></tr></thead>
+          <h3 style={{ marginBottom: "1.2rem" }}>Invoice Preview</h3>
+
+          <div className="inv-who">
+            <div>
+              <span className="inv-who-label">Customer</span>
+              <strong>{info.name}</strong>
+            </div>
+            <div>
+              <span className="inv-who-label">Table</span>
+              <strong>{info.tableNumber}</strong>
+            </div>
+            <div>
+              <span className="inv-who-label">Phone</span>
+              <strong>{info.telephone}</strong>
+            </div>
+          </div>
+
+          <table className="inv">
+            <thead><tr><th>Item</th><th className="num">Qty</th><th className="num">Unit Price</th><th className="num">Total</th></tr></thead>
             <tbody>{cartLines.map(l => (
-              <tr key={l.MenuItemId}><td>{l.Name}</td><td>{l.qty}</td><td className="num">{fmt(l.Price)}</td><td className="num">{fmt(l.total)}</td></tr>
+              <tr key={l.MenuItemId}>
+                <td>{l.Name}</td>
+                <td className="num">{l.qty}</td>
+                <td className="num">{fmt(l.Price)}</td>
+                <td className="num">{fmt(l.total)}</td>
+              </tr>
             ))}</tbody>
-          </table></div>
+          </table>
+
           <div className="totals">
             <div className="row"><span>Subtotal</span><span>{fmt(subtotal)}</span></div>
             <div className="row"><span>Tax ({taxP}%)</span><span>{fmt(tax)}</span></div>
             <div className="row"><span>Service ({svcP}%)</span><span>{fmt(service)}</span></div>
-            <div className="row grand"><span>Grand Total</span><span>{fmt(grand)} {settings.currency}</span></div>
+            <div className="row grand"><span>Grand Total</span><span>{fmt(grand)} EGP</span></div>
           </div>
-          <div style={{ display: "flex", gap: "1rem", marginTop: "1.2rem", flexWrap: "wrap" }}>
+
+          {err && <p className="err" style={{ marginTop: "1rem" }}>{err}</p>}
+
+          <div className="cta-row" style={{ marginTop: "1.4rem" }}>
             <button className="btn ghost" onClick={() => setStep(4)}>Back to Cart</button>
             <button className="btn" onClick={submit} disabled={busy}>{busy ? "Submitting…" : "Submit Order"}</button>
           </div>
         </div>
       )}
+
     </div>
   );
 }
