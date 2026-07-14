@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import AdminShell from "../AdminShell";
 import InvoiceReceipt from "./InvoiceReceipt";
+import { printReceipt } from "@/lib/printReceipt";
 
 const fmt = (n) => n.toFixed(2);
 
@@ -53,8 +54,9 @@ export default function InvoicesPage() {
       // thermal layout lives in the @media print block in globals.css.
       if (pendingAction === "print") {
         setPendingAction(null);
-        // let the receipt paint before the print dialog freezes the page
-        setTimeout(() => window.print(), 150);
+        // Let the receipt paint, then measure it so the page is exactly as
+        // long as the content (see lib/printReceipt.js).
+        setTimeout(() => printReceipt(), 150);
         return;
       }
       const html2canvas = (await import("html2canvas")).default;
@@ -140,7 +142,7 @@ export default function InvoicesPage() {
             <div className="receipt-modal-actions">
               <button className="btn small" onClick={() => downloadFromModal("png")}>Download PNG</button>
               <button className="btn small" onClick={() => downloadFromModal("pdf")}>Download PDF</button>
-              <button className="btn small" onClick={() => setTimeout(() => window.print(), 50)}>Print (80mm)</button>
+              <button className="btn small" onClick={() => printReceipt()}>Print (80mm)</button>
               <button className="btn small ghost" onClick={() => setModal(null)}>Close</button>
             </div>
             <InvoiceReceipt {...modal} />
