@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import AdminShell from "../AdminShell";
+import { SOCIAL_LINKS } from "@/components/socials";
 
 const FIELDS = [
   ["site_name","Site Name","input"],["tagline","Tagline (under the logo)","input"],
@@ -12,10 +13,8 @@ const FIELDS = [
   ["join_text","\"Join Your Table\" Description","textarea"],
   ["about_html","About Us (HTML allowed)","textarea"],
   ["contact_address","Address","input"],
-  ["map_url","Google Maps Link (shown under Address)","input"],
   ["contact_phone","Phone","input"],["contact_email","Email","input"],
   ["opening_hours","Opening Hours","input"],
-  ["facebook_url","Facebook URL","input"],["instagram_url","Instagram URL","input"],
   ["footer_note","Footer Note (HTML allowed: <b>bold</b>, <i>italic</i>)","input"],
 ];
 
@@ -128,6 +127,28 @@ export default function ContentPage() {
           </div>
         ))}
         <button className="btn" onClick={save}>Save Features</button>
+      </div>
+
+      <div className="card" style={{ maxWidth: 640, marginBottom: "1.5rem" }}>
+        <h2 style={{ fontSize: "1rem", marginBottom: ".8rem" }}>Social &amp; Map Links</h2>
+        <p style={{ fontSize: ".8rem", opacity: .7, marginBottom: "1rem" }}>
+          Paste a link and its icon appears in the footer automatically. Leave a field empty to hide that icon.
+          The map link is also shown next to your address on the Contact page.
+        </p>
+        {SOCIAL_LINKS.map(({ key, label, path }) => (
+          <div className="field" key={key}>
+            <label style={{ display: "flex", alignItems: "center", gap: ".45rem" }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={path} /></svg>
+              {label}
+            </label>
+            <input
+              value={c[key] || ""}
+              placeholder="https://…"
+              onChange={e => setC({ ...c, [key]: e.target.value })}
+            />
+          </div>
+        ))}
+        <button className="btn" onClick={save}>Save Links</button>
       </div>
 
       <div className="card" style={{ maxWidth: 640 }}>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cache } from "react";
 import { getDb } from "@/lib/db";
+import { SOCIAL_LINKS } from "./socials";
 
 export const getContent = cache(async function getContent() {
   const db = await getDb();
@@ -55,10 +56,8 @@ export function Header({ content, onHero = false }) {
 }
 
 export function Footer({ content }) {
-  const socials = [
-    [content.facebook_url, "Facebook", <path key="f" d="M13.5 9H16V6h-2.5C11.6 6 10 7.6 10 9.5V11H8v3h2v7h3v-7h2.2l.8-3H13v-1.5c0-.3.2-.5.5-.5Z" />],
-    [content.instagram_url, "Instagram", <path key="i" d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7ZM3 8a5 5 0 0 1 5-5h8a5 5 0 0 1 5 5v8a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V8Zm14-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z" />],
-  ].filter(([url]) => url);
+  // Only render an icon if the admin has actually set a URL for it.
+  const socials = SOCIAL_LINKS.filter(s => content[s.key]?.trim());
 
   return (
     <footer className="site-footer">
@@ -68,9 +67,12 @@ export function Footer({ content }) {
             <Brand content={content} />
             {socials.length > 0 && (
               <div className="socials">
-                {socials.map(([url, label, path]) => (
-                  <a key={label} href={url} className="soc" aria-label={label} target="_blank" rel="noopener noreferrer">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">{path}</svg>
+                {socials.map(s => (
+                  <a key={s.key} href={content[s.key]} className="soc" aria-label={s.label} title={s.label}
+                     target="_blank" rel="noopener noreferrer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d={s.path} />
+                    </svg>
                   </a>
                 ))}
               </div>
