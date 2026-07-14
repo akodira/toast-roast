@@ -117,6 +117,11 @@ export default function MenuBrowser({ categories, items }) {
                     </span>
                     <span className="dots" />
                     <span className="pr">{i.Price.toFixed(2)}</span>
+                    {/* keep the + here too — without it, "All Categories" and search
+                        results were a dead end while single-category rows could order */}
+                    {i.IsAvailable
+                      ? <Link href="/portal" className="showcase-add" aria-label={`Order ${i.Name}`}>+</Link>
+                      : <span />}
                   </div>
                 ))}
               </div>

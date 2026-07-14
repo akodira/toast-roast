@@ -349,9 +349,9 @@ table.inv .num, table.inv th.num { text-align: right; }
 .menu-cat { margin-bottom: 2.6rem; }
 .menu-cat h3 { font-size: 1.6rem; margin-bottom: 1rem; color: var(--ink); }
 .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0 3rem; }
-.menu-line { display: flex; align-items: baseline; gap: .6rem; padding: .5rem 0; }
+.menu-line { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: .6rem; padding: .5rem 0; }
 .menu-line .nm { font-weight: 500; }
-.menu-line .dots { flex: 1; border-bottom: 1px dotted var(--line); transform: translateY(-4px); }
+.menu-line .dots { border-bottom: 1px dotted var(--line); align-self: end; margin-bottom: .45rem; min-width: 1.5rem; }
 .menu-line .pr { font-weight: 700; color: var(--copper-dk); white-space: nowrap; }
 .menu-line .desc { display: block; font-size: .8rem; color: var(--muted); font-weight: 400; }
 .menu-line.unavailable { opacity: .45; }
