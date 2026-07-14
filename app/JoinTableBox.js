@@ -26,14 +26,13 @@ export default function JoinTableBox({ content }) {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
             <rect x="6" y="2" width="12" height="20" rx="2" /><path d="M12 18h.01" />
           </svg>
-          +20
         </span>
         <input
           type="tel"
           value={phone}
           onChange={e => setPhone(e.target.value)}
           onKeyDown={e => e.key === "Enter" && go()}
-          placeholder="Enter host's phone number"
+          placeholder="e.g. 01001401276"
           aria-label="Host's phone number"
         />
       </div>

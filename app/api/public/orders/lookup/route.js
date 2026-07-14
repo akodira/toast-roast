@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { phoneKey, PHONE_KEY_SQL } from "@/lib/phone";
 
 // Public: find today's orders by phone number (digits-only match, so
 // "+20 100 123 4567" and "01001234567" both work). Restricted to today
@@ -13,14 +14,14 @@ export async function GET(req) {
   const url = new URL(req.url);
   const phoneRaw = url.searchParams.get("phone") || "";
   const name = (url.searchParams.get("name") || "").trim();
-  const phone = phoneRaw.replace(/\D/g, "");
+  const phone = phoneKey(phoneRaw);
   if (phone.length < 6) return NextResponse.json({ error: "Enter a valid phone number." }, { status: 400 });
 
   const db = await getDb();
   const sql = `
     SELECT o.*, c.Name CustomerName, c.Telephone FROM Orders o
     JOIN Customers c ON c.CustomerId = o.CustomerId
-    WHERE regexp_replace(c.Telephone, '\\D', '', 'g') = $1
+    WHERE ${PHONE_KEY_SQL("c.Telephone")} = $1
       AND o.CreatedAt::date = CURRENT_DATE
       ${name ? "AND c.Name = $2" : ""}
     ORDER BY o.OrderId DESC

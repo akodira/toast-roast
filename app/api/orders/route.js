@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getDb, logActivity, withTransaction } from "@/lib/db";
+import { phonesMatch } from "@/lib/phone";
 import { requireRole, ROLE_ADMIN, ROLE_STAFF } from "@/lib/auth";
 
 const round = (n) => Math.round(n * 100) / 100;
@@ -21,7 +22,7 @@ export async function POST(req) {
   // Client-side redirects to /portal are just UX — this is what actually
   // stops a random visitor from ordering to an arbitrary table.
   const table = await db.prepare("SELECT TableId, OccupiedBy, OccupiedAt FROM Tables WHERE Name=$1 AND IsActive=true").get(String(tableNumber).trim());
-  if (!table || !table.OccupiedBy || table.OccupiedBy.trim() !== telephone.trim())
+  if (!table || !table.OccupiedBy || !phonesMatch(table.OccupiedBy, telephone))
     return NextResponse.json({ error: "This table isn't registered to your phone number. Please register or join it at /portal first." }, { status: 403 });
   const settingsRows = await db.prepare("SELECT * FROM Settings").all();
   const settings = Object.fromEntries(settingsRows.map(s => [s.SettingKey, s.SettingValue]));
