@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 import AdminShell from "../AdminShell";
 
 const FIELDS = [
-  ["site_name","Site Name","input"],["tagline","Tagline","input"],
-  ["hero_title","Home Hero Title (HTML allowed: <i>italic</i> for emphasis)","textarea"],
-  ["hero_subtitle","Home Hero Subtitle (HTML allowed: <b>bold</b>, <i>italic</i>)","textarea"],
-  ["house_favourites_title","\"House Favourites\" Section Title","input"],
-  ["cuisine_title","\"Explore the Cuisine\" Section Title (HTML allowed for italics)","input"],
+  ["site_name","Site Name","input"],["tagline","Tagline (under the logo)","input"],
+  ["hero_title","Hero Title — wrap the second line in <i>…</i> to colour it","textarea"],
+  ["hero_subtitle","Hero Subtitle","textarea"],
+  ["popular_title","\"Popular Items\" Section Title","input"],
+  ["menu_title","\"Our Menu\" Section Title","input"],
+  ["join_title","\"Join Your Table\" Section Title","input"],
+  ["join_text","\"Join Your Table\" Description","textarea"],
   ["about_html","About Us (HTML allowed)","textarea"],
   ["contact_address","Address","input"],
   ["map_url","Google Maps Link (shown under Address)","input"],
@@ -17,11 +19,12 @@ const FIELDS = [
   ["footer_note","Footer Note (HTML allowed: <b>bold</b>, <i>italic</i>)","input"],
 ];
 
+const FEATURE_FIELDS = [1, 2, 3, 4];
+
 const IMAGE_FIELDS = [
-  ["hero_image_1", "Hero Photo — Front", "Larger, foreground image in the homepage hero."],
-  ["hero_image_2", "Hero Photo — Back", "Smaller image peeking out behind the front one. Optional."],
-  ["favourites_image", "House Favourites Photo", "Tall photo (portrait) next to the House Favourites list."],
-  ["cuisine_image", "Explore the Cuisine Photo", "Photo next to the category grid near the bottom of the homepage."],
+  ["site_logo", "Logo", "Shown in the header and footer. Square works best. Leave empty for the cup icon."],
+  ["hero_image", "Hero Background Photo", "Full-width photo behind the headline. Landscape, 1600px+ wide. A dark scrim is applied automatically so the text stays readable."],
+  ["join_image", "\"Join Your Table\" Photo", "Photo beside the phone-number box. Leave empty to show the table-tent card instead."],
 ];
 
 const HEADING_FONTS = ["Playfair Display", "Prata", "Merriweather", "Cormorant Garamond", "Lora"];
@@ -100,7 +103,7 @@ export default function ContentPage() {
       </div>
 
       <div className="card" style={{ maxWidth: 640, marginBottom: "1.5rem" }}>
-        <h2 style={{ fontSize: "1rem", marginBottom: ".8rem" }}>Homepage Photos</h2>
+        <h2 style={{ fontSize: "1rem", marginBottom: ".8rem" }}>Logo & Homepage Photos</h2>
         <p style={{ fontSize: ".8rem", opacity: .7, marginBottom: "1rem" }}>Landscape or portrait photos work best depending on the slot — leave any of these empty and that section falls back to a plain background, nothing breaks.</p>
         {IMAGE_FIELDS.map(([key, label, hint]) => (
           <div className="field" key={key}>
@@ -111,6 +114,20 @@ export default function ContentPage() {
             {c[key] && <div><button className="btn small ghost" style={{ marginTop: ".4rem" }} onClick={() => removeImage(key)}>Remove Photo</button></div>}
           </div>
         ))}
+      </div>
+
+      <div className="card" style={{ maxWidth: 640, marginBottom: "1.5rem" }}>
+        <h2 style={{ fontSize: "1rem", marginBottom: ".8rem" }}>Homepage Feature Strip</h2>
+        <p style={{ fontSize: ".8rem", opacity: .7, marginBottom: "1rem" }}>The four points shown near the bottom of the homepage. Clear a title to hide that one.</p>
+        {FEATURE_FIELDS.map(n => (
+          <div key={n} style={{ marginBottom: "1rem", paddingBottom: ".6rem", borderBottom: "1px solid var(--line)" }}>
+            <div className="field"><label>Feature {n} — Title</label>
+              <input value={c[`feature_${n}_title`] || ""} onChange={e => setC({ ...c, [`feature_${n}_title`]: e.target.value })} /></div>
+            <div className="field" style={{ marginBottom: 0 }}><label>Feature {n} — Text</label>
+              <input value={c[`feature_${n}_text`] || ""} onChange={e => setC({ ...c, [`feature_${n}_text`]: e.target.value })} /></div>
+          </div>
+        ))}
+        <button className="btn" onClick={save}>Save Features</button>
       </div>
 
       <div className="card" style={{ maxWidth: 640 }}>

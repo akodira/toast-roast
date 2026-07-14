@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 const fmt = (n) => n.toFixed(2);
 
@@ -32,6 +33,19 @@ export default function PortalClient() {
   const [orders, setOrders] = useState([]);
   const [tab, setTab] = useState("orders"); // "orders" | "invoice"
 
+  // Handoff from the homepage "Join Your Table" box: /portal?join=<phone>
+  // lands straight in the join tab with the lookup already running, so the
+  // customer doesn't have to retype the number they just entered.
+  const qp = useSearchParams();
+  useEffect(() => {
+    const j = qp.get("join");
+    if (!j) return;
+    setMode("join");
+    setForm(f => ({ ...f, phone: j }));
+    findTable(j);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const loadTables = async () => {
     const res = await fetch("/api/public/tables");
     const d = await res.json();
@@ -58,10 +72,11 @@ export default function PortalClient() {
     return () => clearInterval(t);
   }, [session]);
 
-  const findTable = async () => {
-    if (!/^[\d+\-\s()]{7,}$/.test(form.phone)) return setErr("Please enter a valid phone number.");
+  const findTable = async (phoneOverride) => {
+    const lookup = (phoneOverride ?? form.phone).trim();
+    if (!/^[\d+\-\s()]{7,}$/.test(lookup)) return setErr("Please enter a valid phone number.");
     setErr(""); setBusy(true);
-    const res = await fetch(`/api/public/tables/find?phone=${encodeURIComponent(form.phone.trim())}`);
+    const res = await fetch(`/api/public/tables/find?phone=${encodeURIComponent(lookup)}`);
     const d = await res.json();
     setBusy(false);
     if (!res.ok) { setErr(d.error); setFoundTable(null); return; }
@@ -159,7 +174,7 @@ export default function PortalClient() {
               <input id="pt-find-phone" type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}
                 onKeyDown={e => e.key === "Enter" && findTable()} />
             </div>
-            <button className="btn" onClick={findTable} disabled={busy}>{busy ? "Searching…" : "Find My Table"}</button>
+            <button className="btn" onClick={() => findTable()} disabled={busy}>{busy ? "Searching…" : "Find My Table"}</button>
           </>
         )}
 
