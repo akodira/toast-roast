@@ -310,7 +310,12 @@ export default function PortalClient() {
                 <span className="inv-brand-name">Toast &amp; Roast</span>
                 <span className="inv-brand-sub">Total Invoice</span>
               </div>
-              <p style={{ fontSize: ".82rem", opacity: .7, marginBottom: ".8rem" }}>Combined across {orders.length} order{orders.length > 1 ? "s" : ""} placed today by {session.name} at Table {session.table}.</p>
+              <div className="inv-meta">
+                <div><span className="inv-meta-k">Customer</span><span className="inv-meta-v">{session.name}</span></div>
+                <div><span className="inv-meta-k">Table No.</span><span className="inv-meta-v">{session.table}</span></div>
+                <div><span className="inv-meta-k">Date</span><span className="inv-meta-v">{new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span></div>
+                <div><span className="inv-meta-k">Orders</span><span className="inv-meta-v">{orders.length}</span></div>
+              </div>
               <table className="inv">
                 <thead><tr><th>Item</th><th>Qty</th><th className="num">Unit Price</th><th className="num">Total</th></tr></thead>
                 <tbody>{inv.lines.map(l => (
