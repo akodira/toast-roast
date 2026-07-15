@@ -48,6 +48,28 @@ export default function PortalClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Resume an existing session when arriving from the order/confirm pages.
+  // We DON'T trust the URL: we re-verify with the server that this phone is
+  // actually registered to a table (via /find). Only then restore the
+  // session — so a hand-typed ?resume=... can't fake a session for a table
+  // that isn't yours. The name is carried through for the orders lookup.
+  useEffect(() => {
+    if (qp.get("resume") !== "1") return;
+    const phone = qp.get("phone");
+    const name = qp.get("name");
+    if (!phone || !name) return;
+    (async () => {
+      try {
+        const res = await fetch(`/api/public/tables/find?phone=${encodeURIComponent(phone)}`);
+        const d = await res.json();
+        if (res.ok && d.table) {
+          setSession({ table: d.table.Name, tableId: d.table.TableId, phone, name });
+        }
+      } catch { /* fall through to the normal claim/join screen */ }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const loadTables = async () => {
     const res = await fetch("/api/public/tables");
     const d = await res.json();
@@ -282,25 +304,61 @@ export default function PortalClient() {
         if (orders.length === 0) return <p>No orders yet today.</p>;
         const inv = buildCombinedInvoice(orders);
         return (
-          <div className="card" style={{ maxWidth: 560 }}>
-            <p style={{ fontSize: ".82rem", opacity: .7, marginBottom: ".8rem" }}>Combined across {orders.length} order{orders.length > 1 ? "s" : ""} placed today by {session.name} at Table {session.table}.</p>
-            <table className="inv">
-              <thead><tr><th>Item</th><th>Qty</th><th className="num">Unit Price</th><th className="num">Total</th></tr></thead>
-              <tbody>{inv.lines.map(l => (
-                <tr key={l.name + l.price}><td>{l.name}</td><td>{l.qty}</td><td className="num">{fmt(l.price)}</td><td className="num">{fmt(l.total)}</td></tr>
-              ))}</tbody>
-            </table>
-            <div className="totals">
-              <div className="row"><span>Subtotal</span><span>{fmt(inv.subtotal)}</span></div>
-              <div className="row"><span>Tax ({inv.taxPct}%)</span><span>{fmt(inv.tax)}</span></div>
-              <div className="row"><span>Service ({inv.svcPct}%)</span><span>{fmt(inv.svc)}</span></div>
-              <div className="row grand"><span>Grand Total</span><span>{fmt(inv.grand)}</span></div>
+          <div style={{ maxWidth: 560 }}>
+            <div className="card" id="total-invoice">
+              <div className="inv-brand">
+                <span className="inv-brand-name">Toast &amp; Roast</span>
+                <span className="inv-brand-sub">Total Invoice</span>
+              </div>
+              <p style={{ fontSize: ".82rem", opacity: .7, marginBottom: ".8rem" }}>Combined across {orders.length} order{orders.length > 1 ? "s" : ""} placed today by {session.name} at Table {session.table}.</p>
+              <table className="inv">
+                <thead><tr><th>Item</th><th>Qty</th><th className="num">Unit Price</th><th className="num">Total</th></tr></thead>
+                <tbody>{inv.lines.map(l => (
+                  <tr key={l.name + l.price}><td>{l.name}</td><td>{l.qty}</td><td className="num">{fmt(l.price)}</td><td className="num">{fmt(l.total)}</td></tr>
+                ))}</tbody>
+              </table>
+              <div className="totals">
+                <div className="row"><span>Subtotal</span><span>{fmt(inv.subtotal)}</span></div>
+                <div className="row"><span>Tax ({inv.taxPct}%)</span><span>{fmt(inv.tax)}</span></div>
+                <div className="row"><span>Service ({inv.svcPct}%)</span><span>{fmt(inv.svc)}</span></div>
+                <div className="row grand"><span>Grand Total</span><span>{fmt(inv.grand)}</span></div>
+              </div>
+            </div>
+            <div className="cta-row" style={{ marginTop: "1rem" }}>
+              <button className="btn ghost small" onClick={() => downloadInvoice("png", session)}>Download PNG</button>
+              <button className="btn ghost small" onClick={() => downloadInvoice("pdf", session)}>Download PDF</button>
             </div>
           </div>
         );
       })()}
     </div>
   );
+}
+
+/* Download the Total Invoice card as a PNG or a single-page PDF.
+ * Uses html2canvas + jspdf (both already dependencies). The white card is
+ * captured as-is; for PDF we scale the canvas to fit an A4 width. */
+async function downloadInvoice(kind, session) {
+  const el = document.getElementById("total-invoice");
+  if (!el) return;
+  const { default: html2canvas } = await import("html2canvas");
+  const canvas = await html2canvas(el, { backgroundColor: "#ffffff", scale: 2 });
+  const fname = `toast-roast-invoice-table-${session.table}`;
+  if (kind === "png") {
+    const link = document.createElement("a");
+    link.download = `${fname}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+    return;
+  }
+  const { jsPDF } = await import("jspdf");
+  const pdf = new jsPDF({ unit: "pt", format: "a4" });
+  const pageW = pdf.internal.pageSize.getWidth();
+  const margin = 32;
+  const imgW = pageW - margin * 2;
+  const imgH = (canvas.height / canvas.width) * imgW;
+  pdf.addImage(canvas.toDataURL("image/png"), "PNG", margin, margin, imgW, imgH);
+  pdf.save(`${fname}.pdf`);
 }
 
 /* One-time PIN reveal after claiming a table.

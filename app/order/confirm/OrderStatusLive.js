@@ -20,6 +20,7 @@ export default function OrderStatusLive({ initialOrder }) {
   }, [initialOrder.OrderNumber]);
 
   const orderMoreHref = `/order?table=${encodeURIComponent(o.TableNumber)}&name=${encodeURIComponent(o.CustomerName)}&phone=${encodeURIComponent(o.Telephone)}`;
+  const myTableHref = `/portal?resume=1&name=${encodeURIComponent(o.CustomerName)}&phone=${encodeURIComponent(o.Telephone)}`;
 
   return (
     <div className="card" style={{ maxWidth: 640, margin: "0 auto" }}>
@@ -39,11 +40,11 @@ export default function OrderStatusLive({ initialOrder }) {
       </div>
       <p style={{ marginTop: "1rem", fontSize: ".82rem", opacity: .75 }}>
         Status updates automatically. This is just this order's items — tax and service are applied once across all your orders today.
-        See the <Link href="/portal">Total Invoice</Link> tab for your combined bill.
+        See the <Link href={myTableHref}>Total Invoice</Link> tab for your combined bill.
       </p>
       <div style={{ display: "flex", gap: "1rem", marginTop: "1rem", flexWrap: "wrap" }}>
         <Link href={orderMoreHref} className="btn">Order More Items</Link>
-        <Link href="/portal" className="btn ghost">My Table / Total Invoice</Link>
+        <Link href={myTableHref} className="btn ghost">My Table / Total Invoice</Link>
         <Link href="/menu" className="btn ghost">Back to Menu</Link>
       </div>
     </div>

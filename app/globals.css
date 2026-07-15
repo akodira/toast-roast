@@ -1057,3 +1057,8 @@ body { overflow-x: clip; max-width: 100%; }
 .chip-status.fs-Cancelled.on { background: #FCEBEA; border-color: #F1C4C1; color: #8E1E17; box-shadow: none; }
 /* keep the dot readable on the filled tint */
 .chip-status.on .chip-dot { background: currentColor; }
+
+/* Total Invoice — brand header for the downloadable PNG/PDF */
+.inv-brand { text-align: center; padding-bottom: .8rem; margin-bottom: .8rem; border-bottom: 1px solid var(--line); }
+.inv-brand-name { display: block; font-family: var(--font-display); font-size: 1.4rem; color: var(--ink); }
+.inv-brand-sub { display: block; font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--copper-dk); margin-top: .2rem; }
