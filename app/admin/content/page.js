@@ -11,10 +11,22 @@ const FIELDS = [
   ["menu_title","\"Our Menu\" Section Title","input"],
   ["join_title","\"Join Your Table\" Section Title","input"],
   ["join_text","\"Join Your Table\" Description","textarea"],
+  ["about_title","About — Page Title","input"],
   ["about_html","About Us (HTML allowed)","textarea"],
+  ["story_1_title","About — Card 1 Title","input"],["story_1_tag","About — Card 1 Caption","input"],
+  ["story_2_title","About — Card 2 Title","input"],["story_2_tag","About — Card 2 Caption","input"],
+  ["story_3_title","About — Card 3 Title","input"],["story_3_tag","About — Card 3 Caption","input"],
+  ["about_feat_1","About — Feature 1 Label","input"],["about_feat_2","About — Feature 2 Label","input"],
+  ["about_feat_3","About — Feature 3 Label","input"],["about_feat_4","About — Feature 4 Label","input"],
+  ["contact_title","Contact — Page Title","input"],
+  ["contact_lead","Contact — Intro Text","textarea"],
   ["contact_address","Address","input"],
   ["contact_phone","Phone","input"],["contact_email","Email","input"],
   ["opening_hours","Opening Hours","input"],
+  ["map_url","Map Link (Google Maps URL)","input"],
+  ["map_embed","Map Embed URL (Maps → Share → Embed → the src=\"…\" value)","input"],
+  ["visit_title","Contact — \"Visit Us\" Title","input"],
+  ["visit_text","Contact — \"Visit Us\" Text","textarea"],
   ["footer_note","Footer Note (HTML allowed: <b>bold</b>, <i>italic</i>)","input"],
 ];
 
@@ -24,6 +36,10 @@ const IMAGE_FIELDS = [
   ["site_logo", "Logo", "Shown in the header and footer. Square works best. Leave empty for the cup icon."],
   ["hero_image", "Hero Background Photo", "Full-width photo behind the headline. Landscape, 1600px+ wide. A dark scrim is applied automatically so the text stays readable."],
   ["join_image", "\"Join Your Table\" Photo", "Photo beside the phone-number box. Leave empty to show the table-tent card instead."],
+  ["story_1_image", "About — Card 1 Photo", "The Grill card on the About page. Portrait works best."],
+  ["story_2_image", "About — Card 2 Photo", "The Roastery card on the About page. Portrait works best."],
+  ["story_3_image", "About — Card 3 Photo", "The Sweet Finish card on the About page. Portrait works best."],
+  ["contact_photo", "Contact — \"Visit Us\" Photo", "Background behind the Visit Us card on the Contact page. Leave empty for a dark panel."],
 ];
 
 const HEADING_FONTS = ["Playfair Display", "Prata", "Merriweather", "Cormorant Garamond", "Lora"];

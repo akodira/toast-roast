@@ -772,3 +772,157 @@ table.r-items td.qty, table.r-items th.qty { width: 2.2rem; text-align: center; 
   .mv-pdf span { display: none; }
   .mv-pdf { padding: .62rem .8rem; }
 }
+
+/* =========================================================
+   Mobile fixes — appended last so these win on specificity ties.
+   Three bugs this addresses, all seen on a real phone:
+   1. The on-hero header is absolutely positioned. On mobile it wraps to
+      two rows, so the nav landed on top of the hero headline. Below 980px
+      it stops overlaying and becomes a normal solid bar — no guessing at
+      a magic top-padding that breaks the moment a nav item is added.
+   2. Something wider than the viewport was letting the whole page scroll
+      sideways, which clipped the "Join a Table" button off the right edge.
+      overflow-x: clip kills it WITHOUT breaking the sticky header the way
+      overflow-x: hidden on <html> would.
+   3. Long single words (item names, URLs) could push a row past the edge.
+   ========================================================= */
+html { overflow-x: clip; }
+body { overflow-x: clip; max-width: 100%; }
+.container { width: 100%; }
+
+@media (max-width: 980px) {
+  /* 1 — header no longer floats over the hero */
+  .site-header.on-hero {
+    position: sticky; left: auto; right: auto;
+    background: var(--espresso);
+  }
+  .site-header .container { column-gap: .8rem; padding-top: .9rem; padding-bottom: .9rem; }
+  .brand-mark { width: 34px; height: 34px; }
+  .brand-txt { font-size: .84rem; }
+  .brand-txt small { font-size: .52rem; letter-spacing: .18em; }
+  .nav { gap: .5rem 1.2rem; font-size: .88rem; }
+  .nav-cta { padding: .45rem .85rem; font-size: .78rem; white-space: nowrap; }
+  .hero-copy { padding: 3.2rem 0 3.6rem; }
+  .hero-copy h1 { font-size: clamp(2rem, 8vw, 2.8rem); }
+}
+
+/* 3 — nothing gets to be wider than its column */
+.menu-line .nm, .mv-body .nm, .mv-body .desc,
+.s7-name, .card-body h4, .card-body .desc {
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Menu v4 on a phone ---------- */
+@media (max-width: 700px) {
+  .menu-page { padding: 1.4rem 0 3rem; }
+  /* Chips already cover category switching — the select is dead weight here. */
+  .mv-select { display: none; }
+  .mv-search { flex: 1 1 100%; }
+  .mv-title { font-size: 1.85rem; }
+  .mv-item { grid-template-columns: auto minmax(0, 1fr) auto; gap: .7rem; padding: .75rem .8rem; }
+  .mv-mono { width: 36px; height: 36px; font-size: .82rem; }
+  .mv-body .nm { font-size: .95rem; }
+  .mv-item .pr { font-size: .92rem; }
+  /* The + moves under the price so a long dish name never squeezes it away. */
+  .mv-add { grid-column: 3; justify-self: end; margin-top: .3rem; }
+  .mv-add-spacer { display: none; }
+  .mv-vat { font-size: .74rem; align-items: flex-start; }
+}
+
+/* =========================================================
+   About Us (story) + Contact Us — v4 redesign
+   New classes only. Shared bits: .eyebrow-mark, .rule-diamond, .story-title
+   ========================================================= */
+.eyebrow-mark {
+  display: inline-flex; align-items: center; gap: .5rem;
+  font-family: var(--font-body); font-size: .72rem; font-weight: 700;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--copper-dk);
+  margin-bottom: .5rem;
+}
+.eyebrow-mark::before {
+  content: ""; width: 16px; height: 12px;
+  background: var(--rust); opacity: .85;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M2 20c6-2 10-8 12-16' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M14 4c2 3 5 4 8 4' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M2 20c6-2 10-8 12-16' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M14 4c2 3 5 4 8 4' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.story-title { font-size: 2.9rem; line-height: 1.05; color: var(--ink); margin: .1rem 0 .6rem; }
+.rule-diamond {
+  display: block; width: 62px; height: 10px; margin: 0 0 1.2rem;
+  background:
+    linear-gradient(var(--rust), var(--rust)) left center/24px 1px no-repeat,
+    linear-gradient(var(--rust), var(--rust)) right center/24px 1px no-repeat;
+  position: relative;
+}
+.rule-diamond::after {
+  content: ""; position: absolute; left: 50%; top: 50%;
+  width: 6px; height: 6px; background: var(--rust);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+/* ---------- About / Story ---------- */
+.story-page { padding: 3rem 0 4rem; background: var(--cream); }
+.story-grid { display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); gap: 3rem; align-items: start; }
+.story-body p { color: var(--muted); line-height: 1.7; margin-bottom: 1rem; max-width: 42ch; }
+
+.story-feats { display: grid; grid-template-columns: repeat(4, auto); gap: 1.4rem; margin-top: 1.8rem; justify-content: start; }
+.story-feat { display: flex; flex-direction: column; align-items: center; text-align: center; gap: .5rem; width: 74px; }
+.story-feat-ic { color: var(--rust); }
+.story-feat-lbl { font-size: .74rem; font-weight: 600; color: var(--ink); line-height: 1.25; }
+
+.story-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.story-card {
+  position: relative; border-radius: 14px; overflow: hidden;
+  min-height: 340px; display: flex; align-items: flex-end;
+  background: var(--forest); box-shadow: 0 14px 34px rgba(42,33,27,.16);
+}
+.story-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.story-card-veil { position: absolute; inset: 0; background: linear-gradient(to top, rgba(15,11,9,.82) 12%, rgba(15,11,9,.25) 55%, rgba(15,11,9,.1)); }
+.story-card.no-photo .story-card-veil { background: linear-gradient(to top, rgba(15,11,9,.7), rgba(43,52,46,.3)); }
+.story-card-txt { position: relative; z-index: 2; padding: 1.3rem; width: 100%; text-align: center; }
+.story-card-title { display: block; font-family: var(--font-script, "Dancing Script"), var(--font-display); font-size: 1.7rem; color: #fff; }
+.story-card-line { display: block; width: 34px; height: 1px; background: var(--copper); margin: .4rem auto .6rem; }
+.story-card-tag { display: block; font-size: .78rem; color: rgba(248,244,239,.82); line-height: 1.5; }
+
+/* ---------- Contact ---------- */
+.ct-page { padding: 3rem 0 4rem; background: var(--cream); }
+.ct-grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1fr) minmax(0, .82fr); gap: 1.6rem; align-items: stretch; }
+.ct-lead { color: var(--muted); line-height: 1.7; margin-bottom: 1.3rem; max-width: 34ch; }
+
+.ct-card { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: .4rem .2rem; }
+.ct-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .9rem; padding: .85rem 1.1rem; border-bottom: 1px solid var(--cream-2); }
+.ct-row:last-child { border-bottom: 0; }
+.ct-ic { width: 38px; height: 38px; border-radius: 50%; background: rgba(192,138,86,.14); color: var(--rust); display: grid; place-items: center; flex-shrink: 0; }
+.ct-row-label { display: block; font-size: .72rem; font-weight: 700; letter-spacing: .04em; color: var(--ink); }
+.ct-row-val { display: block; font-size: .86rem; color: var(--muted); margin-top: .1rem; }
+.ct-maplink, .ct-row-extra a { font-size: .78rem; color: var(--rust); font-weight: 600; white-space: nowrap; }
+
+.ct-map { border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); min-height: 300px; background: var(--cream-2); position: relative; }
+.ct-map iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.ct-map-link, .ct-map-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .6rem; color: var(--muted); text-decoration: none; }
+.ct-map-link { color: var(--rust); font-weight: 600; }
+.ct-map-pin { width: 46px; height: 46px; border-radius: 50%; background: var(--espresso); color: var(--cream); display: grid; place-items: center; }
+
+.ct-visit { position: relative; border-radius: var(--radius); overflow: hidden; min-height: 300px; display: flex; align-items: center; justify-content: center; padding: 1.2rem; background: var(--forest); }
+.ct-visit-photo { position: absolute; inset: 0; }
+.ct-visit-photo img { width: 100%; height: 100%; object-fit: cover; }
+.ct-visit-veil { position: absolute; inset: 0; background: rgba(15,11,9,.45); }
+.ct-visit-card { position: relative; z-index: 2; background: var(--white); border-radius: 14px; padding: 1.5rem 1.4rem; text-align: center; max-width: 300px; box-shadow: 0 16px 40px rgba(15,11,9,.35); }
+.ct-visit-card .rule-diamond { margin: .4rem auto .8rem; }
+.ct-visit-title { font-family: var(--font-display); font-size: 1.5rem; color: var(--ink); }
+.ct-visit-text { font-size: .84rem; color: var(--muted); line-height: 1.6; margin-bottom: 1.1rem; }
+.ct-visit-cta { display: inline-flex; background: var(--espresso); color: var(--cream); }
+.ct-visit-cta:hover { background: var(--espresso-2); }
+
+/* ---------- About + Contact responsive ---------- */
+@media (max-width: 980px) {
+  .story-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .story-cards { grid-template-columns: 1fr; }
+  .story-card { min-height: 220px; }
+  .ct-grid { grid-template-columns: 1fr; }
+  .ct-map { min-height: 240px; }
+}
+@media (max-width: 560px) {
+  .story-title { font-size: 2.2rem; }
+  .story-feats { grid-template-columns: repeat(2, 1fr); gap: 1.2rem; justify-items: center; }
+  .story-feat { width: auto; }
+}

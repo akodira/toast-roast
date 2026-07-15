@@ -7,6 +7,9 @@ export const metadata = {
   description: "Toast & Roast cafe and restaurant in Cairo. Grills, feteer, pasta, speciality coffee and more. Order to your table online.",
 };
 
+// Explicit, so phones never render the page at desktop width and zoom out.
+export const viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };
+
 // Simple hex darken, used to derive a hover/deep shade from the admin's
 // chosen primary color (mirrors the original --rust vs --rust-deep gap).
 function darken(hex, amt) {
