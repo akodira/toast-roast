@@ -80,15 +80,14 @@ export default async function Contact() {
             </div>
 
             <div className="ct-visit">
-              <div className={`ct-visit-photo${content.contact_photo ? "" : " no-photo"}`}>
-                {content.contact_photo && <img src={content.contact_photo} alt="Our place" />}
-                <div className="ct-visit-veil" aria-hidden="true"></div>
-              </div>
+              {content.contact_photo
+                ? <div className="ct-visit-photo"><img src={content.contact_photo} alt="Our place" /></div>
+                : <div className="ct-visit-photo no-photo"><Ic kind="pin" /></div>}
               <div className="ct-visit-card">
                 <span className="ct-visit-title">{content.visit_title || "Visit Us"}</span>
                 <span className="rule-diamond" aria-hidden="true"></span>
                 <p className="ct-visit-text">{content.visit_text || "Enjoy our cozy atmosphere, great coffee, and delicious food. We can't wait to welcome you!"}</p>
-                <Link href="/portal" className="nav-cta ct-visit-cta"><TableIcon /> Join a Table</Link>
+                <Link href="/portal" className="ct-visit-cta"><TableIcon /> Join a Table</Link>
               </div>
             </div>
 

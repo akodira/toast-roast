@@ -47,7 +47,7 @@ export function Header({ content, onHero = false }) {
           <Link href="/">Home</Link>
           <Link href="/menu">Menu</Link>
           <Link href="/about">About Us</Link>
-          <Link href="/contact">Contact</Link>
+          <Link href="/contact">Contact Us</Link>
         </nav>
         <Link href="/portal" className="btn small nav-cta"><TableIcon /> Join a Table</Link>
       </div>
@@ -85,7 +85,7 @@ export function Footer({ content }) {
               <li><Link href="/">Home</Link></li>
               <li><Link href="/menu">Menu</Link></li>
               <li><Link href="/about">About Us</Link></li>
-              <li><Link href="/contact">Contact</Link></li>
+              <li><Link href="/contact">Contact Us</Link></li>
             </ul>
           </div>
 
