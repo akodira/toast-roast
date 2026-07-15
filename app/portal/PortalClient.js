@@ -105,8 +105,12 @@ export default function PortalClient() {
     if (!res.ok) { setErr(d.error); loadTables(); return; }
     const table = tables.find(t => t.TableId === +form.tableId);
     const s = { table: table?.Name || "", tableId: form.tableId, phone: form.phone.trim(), name: form.name.trim() };
-    // Reveal the PIN first (one-time). Session starts when they tap "Done".
-    setPinShow({ pin: d.pin, table: s.table, session: s });
+    // Reveal the PIN first (one-time popup). Session starts when they tap
+    // "Done" — and we keep the PIN in the in-memory session so the person who
+    // registered can always re-read it in the portal header (see below). It
+    // lives only in this tab's memory, exactly like the rest of the session,
+    // and is never re-fetchable by phone — so it's not a lookup hole.
+    setPinShow({ pin: d.pin, table: s.table, session: { ...s, pin: d.pin } });
   };
 
   const submitJoin = async (nameOverride) => {
@@ -238,6 +242,11 @@ export default function PortalClient() {
         <div>
           <p style={{ fontWeight: 600 }}>Table No. {session.table} &nbsp;·&nbsp; My Name: {session.name}</p>
           <p style={{ fontSize: ".82rem", opacity: .7 }}>{session.phone}</p>
+          {session.pin && (
+            <p className="portal-pin" title="Share this with anyone joining your table. You'll need it for every new order.">
+              Table PIN: <strong>{session.pin}</strong>
+            </p>
+          )}
         </div>
         <div style={{ display: "flex", gap: ".7rem" }}>
           <Link href={orderMoreHref} className="btn">Start New Order</Link>
@@ -302,6 +311,7 @@ export default function PortalClient() {
  * so if a saved screenshot leaks, it reveals as little as possible. */
 function PinReveal({ data, onDone }) {
   const [saving, setSaving] = useState(false);
+  const [ack, setAck] = useState(false);
 
   const download = async () => {
     setSaving(true);
@@ -329,11 +339,15 @@ function PinReveal({ data, onDone }) {
         <h3 id="pin-reveal-title" className="pin-reveal-title">Save your table PIN</h3>
         <p className="pin-reveal-sub">
           You'll need this 4-digit PIN for every new order, and anyone joining your table must enter it.
-          It's shown only once — note it down or save the image. Staff can reset it if it's lost.
+          Don't worry if you forget it — it stays visible at the top of your orders screen, and staff can reset it.
         </p>
+        <label className="pin-ack">
+          <input type="checkbox" checked={ack} onChange={e => setAck(e.target.checked)} />
+          I've written down or saved my PIN
+        </label>
         <div className="cta-row">
           <button className="btn ghost" onClick={download} disabled={saving}>{saving ? "Saving…" : "Save as image"}</button>
-          <button className="btn" onClick={onDone}>Done</button>
+          <button className="btn" onClick={onDone} disabled={!ack}>Done</button>
         </div>
       </div>
     </div>
