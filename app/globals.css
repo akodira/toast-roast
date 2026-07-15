@@ -976,3 +976,40 @@ body { overflow-x: clip; max-width: 100%; }
   font-size: .82rem; color: var(--muted); margin-bottom: 1rem; cursor: pointer;
 }
 .pin-ack input { width: 16px; height: 16px; accent-color: var(--rust); }
+
+/* ---------- Admin Orders — status control ----------
+   Replaces the old pill + raw dropdown with one status-coloured select,
+   so the current status IS the control (tap to change). A dot echoes the
+   colour; the select inherits the same background/text as the pill classes. */
+.status-cell { display: inline-flex; align-items: center; gap: .5rem; }
+.status-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; background: currentColor; }
+.status-select {
+  -webkit-appearance: none; appearance: none;
+  border: 1px solid transparent; border-radius: 999px;
+  padding: .32rem 1.7rem .32rem .8rem; font-family: inherit; font-size: .78rem; font-weight: 600;
+  cursor: pointer; line-height: 1.2;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right .55rem center;
+}
+.status-select:focus { outline: none; border-color: currentColor; }
+/* The .st-* classes already set background + text colour; the dot uses
+   currentColor, and the select border on focus follows it too. Keep option
+   text dark for readability in the native dropdown list. */
+.status-select option { color: #222; background: #fff; font-weight: 500; }
+
+/* Slightly stronger status backgrounds for the interactive control so the
+   dropdown reads as a button, not plain text. */
+.status-select.st-Pending   { background-color: #FDF0DC; color: #8A5A16; }
+.status-select.st-Preparing { background-color: #E5EEFA; color: #204E86; }
+.status-select.st-Ready     { background-color: #E4F3EA; color: #1F5E3C; }
+.status-select.st-Served    { background-color: #EDE7F6; color: #4A2E86; }
+.status-select.st-Completed { background-color: #E4F3EA; color: #1F5E3C; }
+.status-select.st-Cancelled { background-color: #FCEBEA; color: #8E1E17; }
+
+/* Admin content — subsection heading + field hint used by the grouped editor. */
+.admin-subhead {
+  font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--rust-deep, #8A5A2E); margin: 1rem 0 .6rem; padding-top: .3rem;
+  border-top: 1px solid var(--line);
+}
+.fld-hint { font-size: .76rem; opacity: .65; margin-bottom: .3rem; }

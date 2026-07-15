@@ -38,10 +38,17 @@ export default function OrdersPage() {
               <td>{o.items.map(i => <div key={i.OrderDetailId}>{i.Quantity}× {i.ItemName}</div>)}</td>
               <td><strong>{o.GrandTotal.toFixed(2)}</strong></td>
               <td>
-                <span className={`status-pill st-${o.Status}`}>{o.Status}</span><br />
-                <select value={o.Status} onChange={e => setStatus(o.OrderId, e.target.value)} style={{ marginTop: ".3rem" }}>
-                  {STATUSES.slice(1).map(s => <option key={s}>{s}</option>)}
-                </select>
+                <div className="status-cell">
+                  <span className={`status-dot st-${o.Status}`} aria-hidden="true"></span>
+                  <select
+                    className={`status-select st-${o.Status}`}
+                    value={o.Status}
+                    onChange={e => setStatus(o.OrderId, e.target.value)}
+                    aria-label={`Status for order ${o.OrderNumber}`}
+                  >
+                    {STATUSES.slice(1).map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
               </td>
               <td><button className="btn small danger" onClick={() => del(o.OrderId, o.OrderNumber)}>Delete</button></td>
             </tr>

@@ -3,45 +3,6 @@ import { useEffect, useState } from "react";
 import AdminShell from "../AdminShell";
 import { SOCIAL_LINKS } from "@/components/socials";
 
-const FIELDS = [
-  ["site_name","Site Name","input"],["tagline","Tagline (under the logo)","input"],
-  ["hero_title","Hero Title — wrap the second line in <i>…</i> to colour it","textarea"],
-  ["hero_subtitle","Hero Subtitle","textarea"],
-  ["popular_title","\"Popular Items\" Section Title","input"],
-  ["menu_title","\"Our Menu\" Section Title","input"],
-  ["join_title","\"Join Your Table\" Section Title","input"],
-  ["join_text","\"Join Your Table\" Description","textarea"],
-  ["about_title","About — Page Title","input"],
-  ["about_html","About Us (HTML allowed)","textarea"],
-  ["story_1_title","About — Card 1 Title","input"],["story_1_tag","About — Card 1 Caption","input"],
-  ["story_2_title","About — Card 2 Title","input"],["story_2_tag","About — Card 2 Caption","input"],
-  ["story_3_title","About — Card 3 Title","input"],["story_3_tag","About — Card 3 Caption","input"],
-  ["about_feat_1","About — Feature 1 Label","input"],["about_feat_2","About — Feature 2 Label","input"],
-  ["about_feat_3","About — Feature 3 Label","input"],["about_feat_4","About — Feature 4 Label","input"],
-  ["contact_title","Contact — Page Title","input"],
-  ["contact_lead","Contact — Intro Text","textarea"],
-  ["contact_address","Address","input"],
-  ["contact_phone","Phone","input"],["contact_email","Email","input"],
-  ["opening_hours","Opening Hours","input"],
-  ["map_url","Map Link (Google Maps URL)","input"],
-  ["map_embed","Map Embed URL (Maps → Share → Embed → the src=\"…\" value)","input"],
-  ["visit_title","Contact — \"Visit Us\" Title","input"],
-  ["visit_text","Contact — \"Visit Us\" Text","textarea"],
-  ["footer_note","Footer Note (HTML allowed: <b>bold</b>, <i>italic</i>)","input"],
-];
-
-const FEATURE_FIELDS = [1, 2, 3, 4];
-
-const IMAGE_FIELDS = [
-  ["site_logo", "Logo", "Shown in the header and footer. Square works best. Leave empty for the cup icon."],
-  ["hero_image", "Hero Background Photo", "Full-width photo behind the headline. Landscape, 1600px+ wide. A dark scrim is applied automatically so the text stays readable."],
-  ["join_image", "\"Join Your Table\" Photo", "Photo beside the phone-number box. Leave empty to show the table-tent card instead."],
-  ["story_1_image", "About — Card 1 Photo", "The Grill card on the About page. Portrait works best."],
-  ["story_2_image", "About — Card 2 Photo", "The Roastery card on the About page. Portrait works best."],
-  ["story_3_image", "About — Card 3 Photo", "The Sweet Finish card on the About page. Portrait works best."],
-  ["contact_photo", "Contact — \"Visit Us\" Photo", "Background behind the Visit Us card on the Contact page. Leave empty for a dark panel."],
-];
-
 const HEADING_FONTS = ["Playfair Display", "Prata", "Merriweather", "Cormorant Garamond", "Lora"];
 const BODY_FONTS = ["Inter", "Poppins", "Lato", "Nunito Sans", "Work Sans"];
 
@@ -51,9 +12,13 @@ export default function ContentPage() {
 
   useEffect(() => { fetch("/api/admin/content").then(r => r.json()).then(d => setC(d.content)); }, []);
 
-  const save = async () => {
+  // Save the whole content object. Every section's Save button calls this —
+  // fields are all in one state object, so one save persists everything, but
+  // each section has its own button so editing feels self-contained.
+  const save = async (note = "Saved — changes are live on the website immediately.") => {
     const res = await fetch("/api/admin/content", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(c) });
-    setMsg(res.ok ? "Saved — changes are live on the website immediately." : "Save failed.");
+    setMsg(res.ok ? note : "Save failed.");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const upload = async (key, file) => {
@@ -61,146 +26,207 @@ export default function ContentPage() {
     const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
     const d = await res.json();
     if (!res.ok) return setMsg(d.error);
-    const next = { ...c, [key]: d.url };
-    setC(next);
+    setC(prev => ({ ...prev, [key]: d.url }));
     // Save this field immediately so a photo upload is never lost.
     await fetch("/api/admin/content", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ [key]: d.url }) });
     setMsg("Photo uploaded and saved.");
   };
 
   const removeImage = async (key) => {
-    setC({ ...c, [key]: "" });
+    setC(prev => ({ ...prev, [key]: "" }));
     await fetch("/api/admin/content", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ [key]: "" }) });
     setMsg("Photo removed.");
   };
 
   if (!c) return <AdminShell><p>Loading…</p></AdminShell>;
 
+  // ---- small field helpers so each section stays readable ----
+  const set = (k, v) => setC(prev => ({ ...prev, [k]: v }));
+  const Text = ({ k, label, hint, area }) => (
+    <div className="field">
+      <label>{label}</label>
+      {hint && <p className="fld-hint">{hint}</p>}
+      {area
+        ? <textarea value={c[k] || ""} onChange={e => set(k, e.target.value)} />
+        : <input value={c[k] || ""} onChange={e => set(k, e.target.value)} />}
+    </div>
+  );
+  const Photo = ({ k, label, hint }) => (
+    <div className="field">
+      <label>{label}</label>
+      {hint && <p className="fld-hint">{hint}</p>}
+      <input type="file" accept="image/*" onChange={e => e.target.files[0] && upload(k, e.target.files[0])} />
+      {c[k] && <img src={c[k]} alt="" style={{ width: 140, marginTop: ".5rem", borderRadius: 4 }} />}
+      {c[k] && <div><button className="btn small ghost" style={{ marginTop: ".4rem" }} onClick={() => removeImage(k)}>Remove Photo</button></div>}
+    </div>
+  );
+  const card = { maxWidth: 680, marginBottom: "1.5rem" };
+  const h = { fontSize: "1.05rem", marginBottom: ".2rem" };
+  const sub = { fontSize: ".8rem", opacity: .7, marginBottom: "1rem" };
+
   return (
     <AdminShell>
       <h1>Website Content</h1>
+      <p style={{ opacity: .75, marginBottom: "1.2rem", maxWidth: 680 }}>
+        Each card below is one section of the site — its text and its photos are together, so you can edit a whole
+        section in one place and hit its Save button.
+      </p>
+      {msg && <p className="ok-msg" style={{ maxWidth: 680 }}>{msg}</p>}
 
-      <div className="card" style={{ maxWidth: 640, marginBottom: "1.5rem" }}>
-        <h2 style={{ fontSize: "1rem", marginBottom: ".8rem" }}>Colors & Fonts</h2>
+      {/* ---------------- BRAND ---------------- */}
+      <div className="card" style={card}>
+        <h2 style={h}>Brand &amp; Logo</h2>
+        <p style={sub}>Your name, tagline and logo — shown in the header and footer across every page.</p>
+        <Text k="site_name" label="Site Name" />
+        <Text k="tagline" label="Tagline (under the logo)" />
+        <Photo k="site_logo" label="Logo" hint="Square works best. Leave empty for the cup icon." />
+        <button className="btn" onClick={() => save()}>Save Brand</button>
+      </div>
+
+      {/* ---------------- COLORS & FONTS ---------------- */}
+      <div className="card" style={card}>
+        <h2 style={h}>Colors &amp; Fonts</h2>
+        <p style={sub}>Applies site-wide.</p>
         <div className="field">
           <label>Primary Color (buttons, headings, accents)</label>
-          <input type="color" value={c.theme_primary_color || "#C0502A"} onChange={e => setC({ ...c, theme_primary_color: e.target.value })} style={{ height: 44, padding: 4 }} />
+          <input type="color" value={c.theme_primary_color || "#C0502A"} onChange={e => set("theme_primary_color", e.target.value)} style={{ height: 44, padding: 4 }} />
         </div>
         <div className="field">
           <label>Heading Font</label>
-          <select value={c.theme_font_heading || "Playfair Display"} onChange={e => setC({ ...c, theme_font_heading: e.target.value })}>
+          <select value={c.theme_font_heading || "Playfair Display"} onChange={e => set("theme_font_heading", e.target.value)}>
             {HEADING_FONTS.map(f => <option key={f} value={f}>{f}</option>)}
           </select>
         </div>
         <div className="field">
           <label>Body Text Font</label>
-          <select value={c.theme_font_body || "Inter"} onChange={e => setC({ ...c, theme_font_body: e.target.value })}>
+          <select value={c.theme_font_body || "Inter"} onChange={e => set("theme_font_body", e.target.value)}>
             {BODY_FONTS.map(f => <option key={f} value={f}>{f}</option>)}
           </select>
         </div>
+        <button className="btn" onClick={() => save()}>Save Colors &amp; Fonts</button>
       </div>
 
-      <div className="card" style={{ maxWidth: 640, marginBottom: "1.5rem" }}>
-        <h2 style={{ fontSize: "1rem", marginBottom: ".8rem" }}>Invoice / Receipt Branding</h2>
-        <p style={{ fontSize: ".8rem", opacity: .7, marginBottom: "1rem" }}>Shown at the top of every printed/downloaded invoice in Admin → Invoices.</p>
-        <div className="field">
-          <label>Logo</label>
-          <p style={{ fontSize: ".76rem", opacity: .65, marginBottom: ".3rem" }}>If left empty, the invoice shows your Site Name as text instead.</p>
-          <input type="file" accept="image/*" onChange={e => e.target.files[0] && upload("invoice_logo", e.target.files[0])} />
-          {c.invoice_logo && <img src={c.invoice_logo} alt="" style={{ height: 60, marginTop: ".5rem", borderRadius: 4 }} />}
-          {c.invoice_logo && <div><button className="btn small ghost" style={{ marginTop: ".4rem" }} onClick={() => removeImage("invoice_logo")}>Remove Logo</button></div>}
-        </div>
-        <div className="field"><label>Branch / Location Line</label>
-          <input value={c.invoice_branch_line || ""} onChange={e => setC({ ...c, invoice_branch_line: e.target.value })} /></div>
-        <div className="field"><label>Footer Note (e.g. "Thank you for dining with us")</label>
-          <input value={c.invoice_footer_note || ""} onChange={e => setC({ ...c, invoice_footer_note: e.target.value })} /></div>
-        <button className="btn" onClick={save}>Save Invoice Branding</button>
+      {/* ---------------- HOMEPAGE: HERO ---------------- */}
+      <div className="card" style={card}>
+        <h2 style={h}>Homepage — Hero</h2>
+        <p style={sub}>The big headline area at the top of the homepage.</p>
+        <Text k="hero_title" label="Hero Title" hint="Wrap the second line in <i>…</i> to colour it." area />
+        <Text k="hero_subtitle" label="Hero Subtitle" area />
+        <Photo k="hero_image" label="Hero Background Photo" hint="Landscape, 1600px+ wide. A dark scrim is applied automatically so text stays readable." />
+        <button className="btn" onClick={() => save()}>Save Hero</button>
       </div>
 
-      <div className="card" style={{ maxWidth: 640, marginBottom: "1.5rem" }}>
-        <h2 style={{ fontSize: "1rem", marginBottom: ".8rem" }}>Logo & Homepage Photos</h2>
-        <p style={{ fontSize: ".8rem", opacity: .7, marginBottom: "1rem" }}>Landscape or portrait photos work best depending on the slot — leave any of these empty and that section falls back to a plain background, nothing breaks.</p>
-        {IMAGE_FIELDS.map(([key, label, hint]) => (
-          <div className="field" key={key}>
-            <label>{label}</label>
-            <p style={{ fontSize: ".76rem", opacity: .65, marginBottom: ".3rem" }}>{hint}</p>
-            <input type="file" accept="image/*" onChange={e => e.target.files[0] && upload(key, e.target.files[0])} />
-            {c[key] && <img src={c[key]} alt="" style={{ width: 140, marginTop: ".5rem", borderRadius: 4 }} />}
-            {c[key] && <div><button className="btn small ghost" style={{ marginTop: ".4rem" }} onClick={() => removeImage(key)}>Remove Photo</button></div>}
-          </div>
-        ))}
+      {/* ---------------- HOMEPAGE: SECTIONS ---------------- */}
+      <div className="card" style={card}>
+        <h2 style={h}>Homepage — Section Titles</h2>
+        <p style={sub}>The headings for the main blocks on the homepage.</p>
+        <Text k="popular_title" label="&quot;Popular Items&quot; Section Title" />
+        <Text k="menu_title" label="&quot;Our Menu&quot; Section Title" />
+        <button className="btn" onClick={() => save()}>Save Section Titles</button>
       </div>
 
-      <div className="card" style={{ maxWidth: 640, marginBottom: "1.5rem" }}>
-        <h2 style={{ fontSize: "1rem", marginBottom: ".8rem" }}>Homepage Feature Strip</h2>
-        <p style={{ fontSize: ".8rem", opacity: .7, marginBottom: "1rem" }}>The four points shown near the bottom of the homepage. Clear a title to hide that one.</p>
-        {FEATURE_FIELDS.map(n => (
+      {/* ---------------- HOMEPAGE: JOIN YOUR TABLE ---------------- */}
+      <div className="card" style={card}>
+        <h2 style={h}>Homepage — Join Your Table</h2>
+        <p style={sub}>The phone-number box section on the homepage.</p>
+        <Text k="join_title" label="Section Title" />
+        <Text k="join_text" label="Description" area />
+        <Photo k="join_image" label="Photo" hint="Beside the phone-number box. Leave empty to show the table-tent card instead." />
+        <button className="btn" onClick={() => save()}>Save Join Your Table</button>
+      </div>
+
+      {/* ---------------- HOMEPAGE: FEATURE STRIP ---------------- */}
+      <div className="card" style={card}>
+        <h2 style={h}>Homepage — Feature Strip</h2>
+        <p style={sub}>The four points near the bottom of the homepage. Clear a title to hide that one.</p>
+        {[1, 2, 3, 4].map(n => (
           <div key={n} style={{ marginBottom: "1rem", paddingBottom: ".6rem", borderBottom: "1px solid var(--line)" }}>
-            <div className="field"><label>Feature {n} — Title</label>
-              <input value={c[`feature_${n}_title`] || ""} onChange={e => setC({ ...c, [`feature_${n}_title`]: e.target.value })} /></div>
-            <div className="field" style={{ marginBottom: 0 }}><label>Feature {n} — Text</label>
-              <input value={c[`feature_${n}_text`] || ""} onChange={e => setC({ ...c, [`feature_${n}_text`]: e.target.value })} /></div>
+            <Text k={`feature_${n}_title`} label={`Feature ${n} — Title`} />
+            <Text k={`feature_${n}_text`} label={`Feature ${n} — Text`} />
           </div>
         ))}
-        <button className="btn" onClick={save}>Save Features</button>
+        <button className="btn" onClick={() => save()}>Save Feature Strip</button>
       </div>
 
-      <div className="card" style={{ maxWidth: 640, marginBottom: "1.5rem" }}>
-        <h2 style={{ fontSize: "1rem", marginBottom: ".8rem" }}>Downloadable Menu (PDF)</h2>
-        <p style={{ fontSize: ".8rem", opacity: .7, marginBottom: "1rem" }}>
-          Upload a PDF and a <strong>Download Menu (PDF)</strong> button appears at the top of the Menu page.
-          Remove it and the button disappears. Max 15 MB.
-        </p>
+      {/* ---------------- ABOUT US ---------------- */}
+      <div className="card" style={card}>
+        <h2 style={h}>About Us Page</h2>
+        <p style={sub}>Everything on the About page — title, story text, the three photo cards, and the feature chips.</p>
+        <Text k="about_title" label="Page Title" />
+        <Text k="about_html" label="Story Text (HTML allowed)" area />
+        <div className="admin-subhead">Story Cards</div>
+        {[1, 2, 3].map(n => (
+          <div key={n} style={{ marginBottom: "1rem", paddingBottom: ".8rem", borderBottom: "1px solid var(--line)" }}>
+            <Text k={`story_${n}_title`} label={`Card ${n} — Title`} />
+            <Text k={`story_${n}_tag`} label={`Card ${n} — Caption`} />
+            <Photo k={`story_${n}_image`} label={`Card ${n} — Photo`} hint="Portrait works best. Leave empty for a dark panel." />
+          </div>
+        ))}
+        <div className="admin-subhead">Feature Chips</div>
+        {[1, 2, 3, 4].map(n => <Text key={n} k={`about_feat_${n}`} label={`Feature ${n} Label`} />)}
+        <button className="btn" onClick={() => save()}>Save About Page</button>
+      </div>
+
+      {/* ---------------- CONTACT US ---------------- */}
+      <div className="card" style={card}>
+        <h2 style={h}>Contact Us Page</h2>
+        <p style={sub}>Title, intro, your contact details, the map, and the &quot;Visit Us&quot; card.</p>
+        <Text k="contact_title" label="Page Title" />
+        <Text k="contact_lead" label="Intro Text" area />
+        <div className="admin-subhead">Contact Details</div>
+        <Text k="contact_address" label="Address" />
+        <Text k="contact_phone" label="Phone" />
+        <Text k="contact_email" label="Email" />
+        <Text k="opening_hours" label="Opening Hours" />
+        <div className="admin-subhead">Map</div>
+        <Text k="map_url" label="Map Link (Google Maps URL)" hint="Used for the &quot;View on Map&quot; / &quot;Open in Maps&quot; link." />
+        <Text k="map_embed" label="Embedded Map"
+          hint="In Google Maps: Share → Embed a map → Copy HTML, and paste the whole snippet OR just the src=&quot;…&quot; link here. A normal maps link won't embed — it must be the embed code." area />
+        <div className="admin-subhead">Visit Us Card</div>
+        <Text k="visit_title" label="&quot;Visit Us&quot; Title" />
+        <Text k="visit_text" label="&quot;Visit Us&quot; Text" area />
+        <Photo k="contact_photo" label="&quot;Visit Us&quot; Photo" hint="Background behind the Visit Us card. Leave empty for a dark panel." />
+        <button className="btn" onClick={() => save()}>Save Contact Page</button>
+      </div>
+
+      {/* ---------------- MENU PDF ---------------- */}
+      <div className="card" style={card}>
+        <h2 style={h}>Menu Page — Downloadable PDF</h2>
+        <p style={sub}>Upload a PDF and a <strong>Download Menu (PDF)</strong> button appears at the top of the Menu page. Remove it and the button disappears. Max 15 MB.</p>
         <div className="field">
           <input type="file" accept="application/pdf" onChange={e => e.target.files[0] && upload("menu_pdf", e.target.files[0])} />
-          {c.menu_pdf && (
-            <p style={{ marginTop: ".6rem" }}>
-              <a href={c.menu_pdf} target="_blank" rel="noopener noreferrer" style={{ color: "var(--rust-deep)", fontWeight: 600 }}>
-                View current menu PDF →
-              </a>
-            </p>
-          )}
-          {c.menu_pdf && (
-            <div><button className="btn small ghost" style={{ marginTop: ".5rem" }} onClick={() => removeImage("menu_pdf")}>Remove PDF</button></div>
-          )}
+          {c.menu_pdf && <p style={{ marginTop: ".6rem" }}><a href={c.menu_pdf} target="_blank" rel="noopener noreferrer" style={{ color: "var(--rust-deep)", fontWeight: 600 }}>View current menu PDF →</a></p>}
+          {c.menu_pdf && <div><button className="btn small ghost" style={{ marginTop: ".5rem" }} onClick={() => removeImage("menu_pdf")}>Remove PDF</button></div>}
         </div>
       </div>
 
-      <div className="card" style={{ maxWidth: 640, marginBottom: "1.5rem" }}>
-        <h2 style={{ fontSize: "1rem", marginBottom: ".8rem" }}>Social &amp; Map Links</h2>
-        <p style={{ fontSize: ".8rem", opacity: .7, marginBottom: "1rem" }}>
-          Paste a link and its icon appears in the footer automatically. Leave a field empty to hide that icon.
-          The map link is also shown next to your address on the Contact page.
-        </p>
+      {/* ---------------- INVOICE BRANDING ---------------- */}
+      <div className="card" style={card}>
+        <h2 style={h}>Invoice / Receipt Branding</h2>
+        <p style={sub}>Shown at the top of every printed/downloaded invoice in Admin → Invoices.</p>
+        <Photo k="invoice_logo" label="Invoice Logo" hint="If empty, the invoice shows your Site Name as text instead." />
+        <Text k="invoice_branch_line" label="Branch / Location Line" />
+        <Text k="invoice_footer_note" label={'Footer Note (e.g. "Thank you for dining with us")'} />
+        <button className="btn" onClick={() => save()}>Save Invoice Branding</button>
+      </div>
+
+      {/* ---------------- SOCIAL + FOOTER ---------------- */}
+      <div className="card" style={card}>
+        <h2 style={h}>Social Links &amp; Footer</h2>
+        <p style={sub}>Paste a link and its icon appears in the footer automatically. Leave a field empty to hide that icon.</p>
         {SOCIAL_LINKS.map(({ key, label, path }) => (
           <div className="field" key={key}>
             <label style={{ display: "flex", alignItems: "center", gap: ".45rem" }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={path} /></svg>
               {label}
             </label>
-            <input
-              value={c[key] || ""}
-              placeholder="https://…"
-              onChange={e => setC({ ...c, [key]: e.target.value })}
-            />
+            <input value={c[key] || ""} placeholder="https://…" onChange={e => set(key, e.target.value)} />
           </div>
         ))}
-        <button className="btn" onClick={save}>Save Links</button>
+        <Text k="footer_note" label="Footer Note (HTML allowed: <b>bold</b>, <i>italic</i>)" />
+        <button className="btn" onClick={() => save()}>Save Social &amp; Footer</button>
       </div>
 
-      <div className="card" style={{ maxWidth: 640 }}>
-        <h2 style={{ fontSize: "1rem", marginBottom: ".8rem" }}>Text Content</h2>
-        {msg && <p className="ok-msg">{msg}</p>}
-        {FIELDS.map(([k, label, kind]) => (
-          <div className="field" key={k}>
-            <label>{label}</label>
-            {kind === "textarea"
-              ? <textarea value={c[k] || ""} onChange={e => setC({ ...c, [k]: e.target.value })} />
-              : <input value={c[k] || ""} onChange={e => setC({ ...c, [k]: e.target.value })} />}
-          </div>
-        ))}
-        <button className="btn" onClick={save}>Save All Content</button>
-      </div>
     </AdminShell>
   );
 }

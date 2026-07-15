@@ -14,6 +14,25 @@ function TableIcon() {
   return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9h18" /><path d="M5 9v11" /><path d="M19 9v11" /><path d="M12 9v4" /><path d="M8 13h8" /></svg>;
 }
 
+/* Turn whatever the admin pasted into a usable iframe src — OR null.
+ *
+ * The "www.google.com refused to connect" error happens when a normal Maps
+ * link (google.com/maps/place/…) is put in an iframe: Google blocks those
+ * with X-Frame-Options. Only the embed URL (google.com/maps/embed?pb=…)
+ * is allowed to be framed. Most people copy the whole <iframe …> snippet
+ * from Maps → Share → Embed, so we also pull the src= out of that.
+ * Anything that isn't a real embed URL returns null, and the page shows an
+ * "Open in Maps" link instead of a broken frame. */
+function resolveEmbedSrc(raw) {
+  const v = (raw || "").trim();
+  if (!v) return null;
+  // Pasted the full <iframe ... src="..."> snippet → extract the src.
+  const m = v.match(/src=["']([^"']+)["']/i);
+  const url = m ? m[1] : v;
+  // Only allow Google's actual embed endpoint — never a normal maps page.
+  return /\/maps\/embed/i.test(url) ? url : null;
+}
+
 export default async function Contact() {
   const content = await getContent();
   const rows = [
@@ -22,7 +41,8 @@ export default async function Contact() {
     { k: "mail", label: "Email", val: content.contact_email },
     { k: "clock", label: "Opening Hours", val: content.opening_hours },
   ];
-  const hasMap = !!content.map_embed?.trim() || !!content.map_url?.trim();
+  const embedSrc = resolveEmbedSrc(content.map_embed);
+  const hasMap = !!embedSrc || !!content.map_url?.trim();
 
   return (
     <>
@@ -52,9 +72,9 @@ export default async function Contact() {
             </div>
 
             <div className="ct-map">
-              {content.map_embed?.trim()
-                ? <iframe src={content.map_embed} title="Map" loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen></iframe>
-                : hasMap
+              {embedSrc
+                ? <iframe src={embedSrc} title="Map" loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen></iframe>
+                : content.map_url?.trim()
                   ? <a className="ct-map-link" href={content.map_url} target="_blank" rel="noopener noreferrer"><span className="ct-map-pin"><Ic kind="pin" /></span><span>Open in Maps →</span></a>
                   : <div className="ct-map-empty"><Ic kind="pin" /><span>Map coming soon</span></div>}
             </div>
