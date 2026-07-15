@@ -28,6 +28,8 @@ export default function OrderWizard({ categories, items, tables = [], settings }
   const [cart, setCart] = useState({}); // id -> qty
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pinOpen, setPinOpen] = useState(false); // PIN prompt shown at place-order time
+  const [pin, setPin] = useState("");
 
   const itemById = useMemo(() => Object.fromEntries(items.map(i => [i.MenuItemId, i])), [items]);
   const cartLines = Object.entries(cart).filter(([, q]) => q > 0).map(([id, q]) => {
@@ -55,16 +57,24 @@ export default function OrderWizard({ categories, items, tables = [], settings }
     setStep(s => s + 1);
   };
 
+  // Placing an order requires the table PIN every time (a stranger who
+  // glimpsed the phone number still can't order without the secret). We ask
+  // for it here, at submit — never in the URL, so it stays out of history.
   const submit = async () => {
+    if (!/^\d{4}$/.test(pin.trim())) { setPinOpen(true); setErr(""); return; }
     setBusy(true); setErr("");
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...info, items: cartLines.map(l => ({ menuItemId: l.MenuItemId, quantity: l.qty })) }),
+        body: JSON.stringify({ ...info, pin: pin.trim(), items: cartLines.map(l => ({ menuItemId: l.MenuItemId, quantity: l.qty })) }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Something went wrong. Please try again.");
+      if (!res.ok) {
+        // Wrong/locked PIN → reopen the prompt so they can retry.
+        if (res.status === 403 || res.status === 429 || res.status === 400) { setPin(""); setPinOpen(true); }
+        throw new Error(data.error || "Something went wrong. Please try again.");
+      }
       router.push(`/order/confirm/${data.orderNumber}`);
     } catch (e) { setErr(e.message); setBusy(false); }
   };
@@ -219,6 +229,31 @@ export default function OrderWizard({ categories, items, tables = [], settings }
           <div className="cta-row" style={{ marginTop: "1.4rem" }}>
             <button className="btn ghost" onClick={() => setStep(4)}>Back to Cart</button>
             <button className="btn" onClick={submit} disabled={busy}>{busy ? "Submitting…" : "Submit Order"}</button>
+          </div>
+        </div>
+      )}
+
+      {pinOpen && (
+        <div className="pin-overlay" role="dialog" aria-modal="true" aria-labelledby="pin-modal-title" onClick={() => !busy && setPinOpen(false)}>
+          <div className="pin-modal" onClick={e => e.stopPropagation()}>
+            <h3 id="pin-modal-title">Enter your table PIN</h3>
+            <p className="pin-modal-sub">The 4-digit PIN shown when your table was registered. Ask whoever registered it if you don't have it.</p>
+            <input
+              className="pin-modal-input"
+              type="tel" inputMode="numeric" autoComplete="off" maxLength={4} autoFocus
+              value={pin}
+              onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              onKeyDown={e => { if (e.key === "Enter" && pin.length === 4) { setPinOpen(false); submit(); } }}
+              placeholder="••••"
+              aria-label="Table PIN"
+            />
+            {err && <p className="err" role="alert" style={{ marginTop: ".6rem" }}>{err}</p>}
+            <div className="cta-row" style={{ marginTop: "1rem" }}>
+              <button className="btn ghost" onClick={() => { setPinOpen(false); setErr(""); }} disabled={busy}>Cancel</button>
+              <button className="btn" onClick={() => { setPinOpen(false); submit(); }} disabled={busy || pin.length !== 4}>
+                {busy ? "Placing…" : "Place Order"}
+              </button>
+            </div>
           </div>
         </div>
       )}

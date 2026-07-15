@@ -7,7 +7,7 @@ export async function POST(_req, { params }) {
   const s = await requireRole([ROLE_ADMIN, ROLE_STAFF]);
   if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = await getDb();
-  await db.prepare("UPDATE Tables SET OccupiedBy=NULL, OccupiedName=NULL, OccupiedAt=NULL WHERE TableId=$1").run(params.id);
+  await db.prepare("UPDATE Tables SET OccupiedBy=NULL, OccupiedName=NULL, OccupiedAt=NULL, PinHash=NULL, PinAttempts=0, PinLockedUntil=NULL WHERE TableId=$1").run(params.id);
   await logActivity(Number(s.sub), "TABLE_RELEASE", `#${params.id}`);
   return NextResponse.json({ ok: true });
 }

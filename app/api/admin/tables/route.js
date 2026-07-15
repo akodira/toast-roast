@@ -7,7 +7,9 @@ export async function GET() {
   const s = await requireRole([ROLE_ADMIN, ROLE_STAFF]);
   if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = await getDb();
-  const tables = await db.prepare("SELECT * FROM Tables ORDER BY DisplayOrder").all();
+  const rows = await db.prepare("SELECT * FROM Tables ORDER BY DisplayOrder").all();
+  // Never send the PIN hash to the browser. Expose only whether a PIN is set.
+  const tables = rows.map(({ PinHash, ...t }) => ({ ...t, HasPin: !!PinHash }));
   return NextResponse.json({ tables });
 }
 export async function POST(req) {

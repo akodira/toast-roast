@@ -30,6 +30,15 @@ export default function TablesPage() {
     if (!confirm(`Release Table ${name}? It will become available for a new customer to register.`)) return;
     await fetch(`/api/admin/tables/${id}/release`, { method: "POST" }); load();
   };
+  const resetPin = async (id, name) => {
+    if (!confirm(`Reset the PIN for Table ${name}? The old PIN stops working immediately — read the new one to the customer.`)) return;
+    const res = await fetch(`/api/admin/tables/${id}/pin`, { method: "POST" });
+    const d = await res.json();
+    if (!res.ok) return setMsg(d.error);
+    // Show it plainly — this is the one time staff can see it.
+    alert(`New PIN for Table ${name}: ${d.pin}\n\nGive this to the customer. It won't be shown again.`);
+    load();
+  };
 
   return (
     <AdminShell>
@@ -62,6 +71,7 @@ export default function TablesPage() {
             <td>{t.OccupiedName || "—"}</td>
             <td>
               {t.OccupiedBy && <button className="btn small ghost" onClick={() => release(t.TableId, t.Name)}>Release</button>}{" "}
+              {t.OccupiedBy && <button className="btn small ghost" onClick={() => resetPin(t.TableId, t.Name)}>Reset PIN</button>}{" "}
               {isAdmin && <>
                 <button className="btn small ghost" onClick={() => { setEditId(t.TableId); setF(t); }}>Edit</button>{" "}
                 <button className="btn small danger" onClick={() => del(t.TableId)}>Delete</button>

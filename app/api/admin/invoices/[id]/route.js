@@ -23,7 +23,7 @@ export async function PATCH(req, { params }) {
     const unpaid = await db.prepare("SELECT COUNT(*) c FROM Invoices WHERE TableId=$1 AND OccupiedAt=$2 AND IsPaid=false")
       .get(inv.TableId, inv.OccupiedAt);
     if (Number(unpaid.c) === 0) {
-      const r = await db.prepare("UPDATE Tables SET OccupiedBy=NULL, OccupiedName=NULL, OccupiedAt=NULL WHERE TableId=$1 AND OccupiedAt=$2")
+      const r = await db.prepare("UPDATE Tables SET OccupiedBy=NULL, OccupiedName=NULL, OccupiedAt=NULL, PinHash=NULL, PinAttempts=0, PinLockedUntil=NULL WHERE TableId=$1 AND OccupiedAt=$2")
         .run(inv.TableId, inv.OccupiedAt);
       tableReleased = r.changes > 0;
       if (tableReleased) await logActivity(Number(s.sub), "TABLE_AUTO_RELEASE", `Table #${inv.TableId} — all invoices paid`);

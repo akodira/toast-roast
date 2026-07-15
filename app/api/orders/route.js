@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getDb, logActivity, withTransaction } from "@/lib/db";
 import { phonesMatch } from "@/lib/phone";
+import { checkTablePin } from "@/lib/pin";
 import { requireRole, ROLE_ADMIN, ROLE_STAFF } from "@/lib/auth";
 
 const round = (n) => Math.round(n * 100) / 100;
@@ -9,7 +10,7 @@ const round = (n) => Math.round(n * 100) / 100;
 export async function POST(req) {
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
-  const { tableNumber, name, telephone, items } = body;
+  const { tableNumber, name, telephone, items, pin } = body;
   if (!tableNumber || !name || !telephone)
     return NextResponse.json({ error: "Table number, name and telephone are required." }, { status: 400 });
   if (!Array.isArray(items) || items.length === 0)
@@ -17,13 +18,17 @@ export async function POST(req) {
 
   const db = await getDb();
 
-  // The real security boundary: an order is only accepted if this table is
-  // actually registered to this phone number (via Portal claim or join).
-  // Client-side redirects to /portal are just UX — this is what actually
-  // stops a random visitor from ordering to an arbitrary table.
+  // The real security boundary. Two independent checks must both pass:
+  //   1. The table is registered to this phone number (claim/join), AND
+  //   2. The caller supplies the table's current PIN (verified with lockout).
+  // The phone tie keeps orders attached to the right customer/invoice; the
+  // PIN is the secret that stops a stranger ordering to someone else's table.
   const table = await db.prepare("SELECT TableId, OccupiedBy, OccupiedAt FROM Tables WHERE Name=$1 AND IsActive=true").get(String(tableNumber).trim());
   if (!table || !table.OccupiedBy || !phonesMatch(table.OccupiedBy, telephone))
     return NextResponse.json({ error: "This table isn't registered to your phone number. Please register or join it at /portal first." }, { status: 403 });
+
+  const pinCheck = await checkTablePin(db, table.TableId, pin);
+  if (!pinCheck.ok) return NextResponse.json({ error: pinCheck.error }, { status: pinCheck.status });
   const settingsRows = await db.prepare("SELECT * FROM Settings").all();
   const settings = Object.fromEntries(settingsRows.map(s => [s.SettingKey, s.SettingValue]));
   const taxP = parseFloat(settings.tax_percent || "14");

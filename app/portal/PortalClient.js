@@ -32,6 +32,8 @@ export default function PortalClient() {
   const [busy, setBusy] = useState(false);
   const [orders, setOrders] = useState([]);
   const [tab, setTab] = useState("orders"); // "orders" | "invoice"
+  const [pinShow, setPinShow] = useState(null); // { pin, table } — the one-time reveal after claiming
+  const [joinPin, setJoinPin] = useState(""); // PIN typed when joining someone else's table
 
   // Handoff from the homepage "Join Your Table" box: /portal?join=<phone>
   // lands straight in the join tab with the lookup already running, so the
@@ -103,21 +105,23 @@ export default function PortalClient() {
     if (!res.ok) { setErr(d.error); loadTables(); return; }
     const table = tables.find(t => t.TableId === +form.tableId);
     const s = { table: table?.Name || "", tableId: form.tableId, phone: form.phone.trim(), name: form.name.trim() };
-    setSession(s);
+    // Reveal the PIN first (one-time). Session starts when they tap "Done".
+    setPinShow({ pin: d.pin, table: s.table, session: s });
   };
 
   const submitJoin = async (nameOverride) => {
     if (!foundTable) return;
     const joinName = (nameOverride ?? form.name).trim();
     if (!joinName) return setErr("Please enter your name.");
+    if (!/^\d{4}$/.test(joinPin.trim())) return setErr("Enter the 4-digit table PIN.");
     setErr(""); setBusy(true);
     const res = await fetch("/api/public/tables/join", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tableId: foundTable.TableId, phone: form.phone.trim(), name: joinName }),
+      body: JSON.stringify({ tableId: foundTable.TableId, phone: form.phone.trim(), name: joinName, pin: joinPin.trim() }),
     });
     const d = await res.json();
     setBusy(false);
-    if (!res.ok) { setErr(d.error); setFoundTable(null); return; }
+    if (!res.ok) { setErr(d.error); return; }
     const s = { table: foundTable.Name, tableId: foundTable.TableId, phone: form.phone.trim(), name: joinName };
     setSession(s);
   };
@@ -132,12 +136,14 @@ export default function PortalClient() {
   if (!session) {
     const freeTables = tables.filter(t => !t.Occupied);
     return (
+      <>
+      {pinShow && <PinReveal data={pinShow} onDone={() => { const s = pinShow.session; setPinShow(null); setSession(s); }} />}
       <div className="card" style={{ maxWidth: 440 }}>
         <div className="steps" style={{ marginBottom: "1.2rem" }}>
           <button className={`step-dot ${mode === "claim" ? "on" : ""}`} style={{ border: "none", cursor: "pointer" }}
-            onClick={() => { setMode("claim"); setForm({ tableId: "", phone: "", name: "" }); setFoundTable(null); setJoiningAsNew(false); setErr(""); }}>New Order</button>
+            onClick={() => { setMode("claim"); setForm({ tableId: "", phone: "", name: "" }); setFoundTable(null); setJoiningAsNew(false); setJoinPin(""); setErr(""); }}>New Order</button>
           <button className={`step-dot ${mode === "join" ? "on" : ""}`} style={{ border: "none", cursor: "pointer" }}
-            onClick={() => { setMode("join"); setForm({ tableId: "", phone: "", name: "" }); setFoundTable(null); setJoiningAsNew(false); setErr(""); }}>Join Current Table</button>
+            onClick={() => { setMode("join"); setForm({ tableId: "", phone: "", name: "" }); setFoundTable(null); setJoiningAsNew(false); setJoinPin(""); setErr(""); }}>Join Current Table</button>
         </div>
         {err && <p className="err" role="alert">{err}</p>}
 
@@ -181,8 +187,13 @@ export default function PortalClient() {
         {mode === "join" && foundTable && !joiningAsNew && (
           <>
             <p style={{ marginBottom: "1.2rem" }}>
-              Found it — <strong>Table {foundTable.Name}</strong>{foundTable.OccupiedName ? `, registered by ${foundTable.OccupiedName}` : ""}. Is this you, or someone else at the table?
+              Found it — <strong>Table {foundTable.Name}</strong>{foundTable.OccupiedName ? `, registered by ${foundTable.OccupiedName}` : ""}. Enter the table PIN to continue.
             </p>
+            <div className="field">
+              <label htmlFor="pt-join-pin">Table PIN</label>
+              <input id="pt-join-pin" type="tel" inputMode="numeric" maxLength={4} value={joinPin}
+                onChange={e => setJoinPin(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="4-digit PIN" />
+            </div>
             {foundTable.OccupiedName && (
               <button className="btn" style={{ display: "block", width: "100%", marginBottom: ".7rem" }}
                 onClick={() => submitJoin(foundTable.OccupiedName)} disabled={busy}>
@@ -193,7 +204,7 @@ export default function PortalClient() {
               onClick={() => { setForm(f => ({ ...f, name: "" })); setJoiningAsNew(true); }}>
               I'm someone else at this table
             </button>
-            <button className="btn ghost" onClick={() => { setFoundTable(null); setJoiningAsNew(false); setErr(""); }}>Back</button>
+            <button className="btn ghost" onClick={() => { setFoundTable(null); setJoiningAsNew(false); setJoinPin(""); setErr(""); }}>Back</button>
           </>
         )}
 
@@ -202,14 +213,20 @@ export default function PortalClient() {
             <p style={{ marginBottom: "1rem" }}>Joining <strong>Table {foundTable.Name}</strong> as a new customer — your orders will be tracked separately from {foundTable.OccupiedName || "the table's"}.</p>
             <div className="field">
               <label htmlFor="pt-join-name">Your Name</label>
-              <input id="pt-join-name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-                onKeyDown={e => e.key === "Enter" && submitJoin()} autoFocus />
+              <input id="pt-join-name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} autoFocus />
+            </div>
+            <div className="field">
+              <label htmlFor="pt-join-pin2">Table PIN</label>
+              <input id="pt-join-pin2" type="tel" inputMode="numeric" maxLength={4} value={joinPin}
+                onChange={e => setJoinPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                onKeyDown={e => e.key === "Enter" && submitJoin()} placeholder="4-digit PIN" />
             </div>
             <button className="btn" onClick={() => submitJoin()} disabled={busy}>{busy ? "Joining…" : "Join Table"}</button>{" "}
-            <button className="btn ghost" onClick={() => setJoiningAsNew(false)}>Back</button>
+            <button className="btn ghost" onClick={() => { setJoiningAsNew(false); setJoinPin(""); }}>Back</button>
           </>
         )}
       </div>
+      </>
     );
   }
 
@@ -273,6 +290,52 @@ export default function PortalClient() {
           </div>
         );
       })()}
+    </div>
+  );
+}
+
+/* One-time PIN reveal after claiming a table.
+ *
+ * This is the ONLY moment the plaintext PIN is ever shown — it's stored
+ * hashed and can't be retrieved again (staff can reset it if lost). The
+ * card deliberately shows only the PIN + table + date — never the phone —
+ * so if a saved screenshot leaks, it reveals as little as possible. */
+function PinReveal({ data, onDone }) {
+  const [saving, setSaving] = useState(false);
+
+  const download = async () => {
+    setSaving(true);
+    try {
+      const { default: html2canvas } = await import("html2canvas");
+      const el = document.getElementById("pin-card");
+      const canvas = await html2canvas(el, { backgroundColor: "#17120F", scale: 2 });
+      const link = document.createElement("a");
+      link.download = `toast-roast-table-${data.table}-pin.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } catch { /* if capture fails, the PIN is still on screen to note down */ }
+    setSaving(false);
+  };
+
+  return (
+    <div className="pin-overlay" role="dialog" aria-modal="true" aria-labelledby="pin-reveal-title">
+      <div className="pin-reveal">
+        <div id="pin-card" className="pin-card">
+          <span className="pin-card-brand">TOAST &amp; ROAST</span>
+          <span className="pin-card-label">Table {data.table} · PIN</span>
+          <span className="pin-card-code">{data.pin}</span>
+          <span className="pin-card-note">Valid for today's sitting only</span>
+        </div>
+        <h3 id="pin-reveal-title" className="pin-reveal-title">Save your table PIN</h3>
+        <p className="pin-reveal-sub">
+          You'll need this 4-digit PIN for every new order, and anyone joining your table must enter it.
+          It's shown only once — note it down or save the image. Staff can reset it if it's lost.
+        </p>
+        <div className="cta-row">
+          <button className="btn ghost" onClick={download} disabled={saving}>{saving ? "Saving…" : "Save as image"}</button>
+          <button className="btn" onClick={onDone}>Done</button>
+        </div>
+      </div>
     </div>
   );
 }
