@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getDb, logActivity, withTransaction } from "@/lib/db";
 import { phonesMatch } from "@/lib/phone";
 import { checkTablePin } from "@/lib/pin";
-import { requireRole, ROLE_ADMIN, ROLE_STAFF } from "@/lib/auth";
+import { requireRole, ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER } from "@/lib/auth";
 
 const round = (n) => Math.round(n * 100) / 100;
 
@@ -76,7 +76,7 @@ export async function POST(req) {
 }
 
 export async function GET(req) {
-  const session = await requireRole([ROLE_ADMIN, ROLE_STAFF]);
+  const session = await requireRole([ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER]);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const status = new URL(req.url).searchParams.get("status");
   const db = await getDb();

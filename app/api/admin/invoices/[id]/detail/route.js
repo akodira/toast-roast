@@ -1,13 +1,13 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
-import { requireRole, ROLE_ADMIN, ROLE_STAFF } from "@/lib/auth";
+import { requireRole, ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER } from "@/lib/auth";
 
 // Full itemized detail for one invoice — used to render the printable
 // receipt (view / PNG / PDF). Merges line items across every order that
 // belongs to this invoice's (table, customer, sitting).
 export async function GET(_req, { params }) {
-  const s = await requireRole([ROLE_ADMIN, ROLE_STAFF]);
+  const s = await requireRole([ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER]);
   if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = await getDb();
 

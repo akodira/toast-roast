@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb, logActivity } from "@/lib/db";
-import { requireRole, ROLE_ADMIN, ROLE_STAFF } from "@/lib/auth";
+import { requireRole, ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER } from "@/lib/auth";
 
 const STATUSES = ["Pending","Preparing","Ready","Served","Completed","Cancelled"];
 
@@ -15,7 +15,7 @@ export async function GET(_req, { params }) {
 
 // Admin + Staff: update status
 export async function PATCH(req, { params }) {
-  const session = await requireRole([ROLE_ADMIN, ROLE_STAFF]);
+  const session = await requireRole([ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER]);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { status } = await req.json().catch(() => ({}));
   if (!STATUSES.includes(status)) return NextResponse.json({ error: "Invalid status." }, { status: 400 });

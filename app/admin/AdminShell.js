@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 // Keep in sync with lib/auth.js ROLE_* constants.
-const ROLE_ADMIN = 1, ROLE_STAFF = 2, ROLE_EDITOR = 3;
+const ROLE_ADMIN = 1, ROLE_STAFF = 2, ROLE_EDITOR = 3, ROLE_MANAGER = 4;
 
 const ALL_LINKS = [
-  ["/admin", "Dashboard", [ROLE_ADMIN]],
-  ["/admin/orders", "Orders", [ROLE_ADMIN, ROLE_STAFF]],
-  ["/admin/invoices", "Invoices", [ROLE_ADMIN, ROLE_STAFF]],
-  ["/admin/tables", "Tables", [ROLE_ADMIN, ROLE_STAFF]],
+  ["/admin", "Dashboard", [ROLE_ADMIN, ROLE_MANAGER]],
+  ["/admin/orders", "Orders", [ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER]],
+  ["/admin/invoices", "Invoices", [ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER]],
+  ["/admin/tables", "Tables", [ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER]],
   ["/admin/menu", "Menu Items", [ROLE_ADMIN, ROLE_EDITOR]],
   ["/admin/categories", "Categories", [ROLE_ADMIN, ROLE_EDITOR]],
   ["/admin/content", "Website Content", [ROLE_ADMIN]],
@@ -22,6 +22,7 @@ const ALL_LINKS = [
 // Admin+Staff user lands on the full Dashboard, not just Orders.
 function defaultPageFor(roles) {
   if (roles.includes(ROLE_ADMIN)) return "/admin";
+  if (roles.includes(ROLE_MANAGER)) return "/admin";
   if (roles.includes(ROLE_STAFF)) return "/admin/orders";
   if (roles.includes(ROLE_EDITOR)) return "/admin/menu";
   return "/admin/login";

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import AdminShell from "../AdminShell";
 
-const ROLE_OPTIONS = [[1, "Admin"], [2, "Staff"], [3, "Editor"]];
+const ROLE_OPTIONS = [[1, "Admin"], [4, "Manager"], [2, "Staff"], [3, "Editor"]];
 const blank = { Username: "", Password: "", FullName: "", RoleIds: [1] };
 
 export default function UsersPage() {

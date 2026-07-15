@@ -1066,3 +1066,33 @@ body { overflow-x: clip; max-width: 100%; }
 .inv-meta > div { display: flex; flex-direction: column; }
 .inv-meta-k { font-size: .68rem; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
 .inv-meta-v { font-size: .9rem; font-weight: 600; color: var(--ink); margin-top: .1rem; }
+
+/* ===================== Admin KPI Dashboard ===================== */
+.kcard { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 1.2rem 1.3rem; margin-bottom: 1.3rem; }
+.kh { font-size: 1.02rem; margin-bottom: 1rem; color: var(--ink); }
+.kmuted { color: var(--muted); font-size: .85rem; }
+.kgrid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.3rem; }
+
+/* horizontal bar rows (top items, categories, tables) */
+.kbar { display: grid; grid-template-columns: 130px 1fr auto; align-items: center; gap: .7rem; margin-bottom: .55rem; }
+.kbar-lbl { font-size: .82rem; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kbar-track { height: 12px; background: #F1EBE3; border-radius: 999px; overflow: hidden; }
+.kbar-fill { display: block; height: 100%; background: linear-gradient(90deg, #C08A56, #A9743F); border-radius: 999px; }
+.kbar-val { font-size: .78rem; color: var(--muted); white-space: nowrap; font-weight: 500; }
+
+/* line chart */
+.kline { width: 100%; height: 180px; display: block; }
+.kline-x { display: flex; justify-content: space-between; margin-top: .3rem; font-size: .62rem; color: var(--muted); overflow: hidden; }
+.kline-x span { flex: 1; text-align: center; white-space: nowrap; }
+.kline-x span:nth-child(even) { display: none; }
+
+/* hour bars (vertical) */
+.khours { display: flex; align-items: flex-end; gap: 3px; height: 150px; }
+.khour { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+.khour-bar { width: 100%; max-width: 22px; background: linear-gradient(180deg, #C08A56, #8A5A2E); border-radius: 4px 4px 0 0; min-height: 4px; }
+.khour-lbl { font-size: .6rem; color: var(--muted); margin-top: .3rem; }
+
+@media (max-width: 900px) {
+  .kgrid2 { grid-template-columns: 1fr; }
+  .kbar { grid-template-columns: 100px 1fr auto; }
+}
