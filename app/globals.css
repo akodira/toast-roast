@@ -878,19 +878,19 @@ body { overflow-x: clip; max-width: 100%; }
 .story-feat-ic { color: var(--rust); }
 .story-feat-lbl { font-size: .74rem; font-weight: 600; color: var(--ink); line-height: 1.25; }
 
-.story-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.story-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; align-items: stretch; }
 .story-card {
   position: relative; border-radius: 14px; overflow: hidden;
-  min-height: 340px; display: flex; align-items: flex-end;
+  min-height: 380px; height: 100%; display: flex; align-items: flex-end;
   background: var(--forest); box-shadow: 0 14px 34px rgba(42,33,27,.16);
 }
-.story-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.story-card-veil { position: absolute; inset: 0; background: linear-gradient(to top, rgba(15,11,9,.82) 12%, rgba(15,11,9,.25) 55%, rgba(15,11,9,.1)); }
-.story-card.no-photo .story-card-veil { background: linear-gradient(to top, rgba(15,11,9,.7), rgba(43,52,46,.3)); }
-.story-card-txt { position: relative; z-index: 2; padding: 1.3rem; width: 100%; text-align: center; }
-.story-card-title { display: block; font-family: var(--font-script, "Dancing Script"), var(--font-display); font-size: 1.7rem; color: #fff; }
-.story-card-line { display: block; width: 34px; height: 1px; background: var(--copper); margin: .4rem auto .6rem; }
-.story-card-tag { display: block; font-size: .78rem; color: rgba(248,244,239,.82); line-height: 1.5; }
+.story-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.story-card-veil { position: absolute; inset: 0; background: linear-gradient(to top, rgba(12,9,7,.94) 0%, rgba(12,9,7,.85) 22%, rgba(12,9,7,.5) 46%, rgba(12,9,7,.15) 70%, rgba(12,9,7,.05) 100%); }
+.story-card.no-photo .story-card-veil { background: linear-gradient(to top, rgba(15,11,9,.8), rgba(43,52,46,.35)); }
+.story-card-txt { position: relative; z-index: 2; padding: 1.4rem; width: 100%; text-align: center; }
+.story-card-title { display: block; font-family: var(--font-script, "Dancing Script"), var(--font-display); font-size: 1.7rem; color: #fff; text-shadow: 0 2px 12px rgba(0,0,0,.55); line-height: 1.15; }
+.story-card-line { display: block; width: 34px; height: 1px; background: var(--copper); margin: .45rem auto .6rem; }
+.story-card-tag { display: block; font-size: .82rem; color: rgba(248,244,239,.92); line-height: 1.5; text-shadow: 0 1px 8px rgba(0,0,0,.6); }
 
 /* ---------- Contact ---------- */
 .ct-page { padding: 3rem 0 4rem; background: var(--cream); }
@@ -914,8 +914,8 @@ body { overflow-x: clip; max-width: 100%; }
 .ct-map-pin { width: 46px; height: 46px; border-radius: 50%; background: var(--espresso); color: var(--cream); display: grid; place-items: center; }
 
 .ct-visit { display: flex; flex-direction: column; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); background: var(--white); }
-.ct-visit-photo { width: 100%; height: 220px; overflow: hidden; background: var(--forest); display: grid; place-items: center; }
-.ct-visit-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ct-visit-photo { width: 100%; height: 300px; overflow: hidden; background: var(--forest); display: grid; place-items: center; }
+.ct-visit-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
 .ct-visit-photo.no-photo { color: rgba(248,244,239,.4); }
 .ct-visit-photo.no-photo svg { width: 40px; height: 40px; }
 .ct-visit-card { padding: 1.4rem 1.4rem 1.6rem; text-align: center; }
