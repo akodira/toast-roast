@@ -334,7 +334,7 @@ function PinReveal({ data, onDone }) {
           <span className="pin-card-brand">TOAST &amp; ROAST</span>
           <span className="pin-card-label">Table {data.table} · PIN</span>
           <span className="pin-card-code">{data.pin}</span>
-          <span className="pin-card-note">Valid for today's sitting only</span>
+          <span className="pin-card-note">Valid until your table is closed</span>
         </div>
         <h3 id="pin-reveal-title" className="pin-reveal-title">Save your table PIN</h3>
         <p className="pin-reveal-sub">

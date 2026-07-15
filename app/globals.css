@@ -876,6 +876,7 @@ body { overflow-x: clip; max-width: 100%; }
 .story-feats { display: grid; grid-template-columns: repeat(4, auto); gap: 1.4rem; margin-top: 1.8rem; justify-content: start; }
 .story-feat { display: flex; flex-direction: column; align-items: center; text-align: center; gap: .5rem; width: 74px; }
 .story-feat-ic { color: var(--rust); }
+.story-feat-img { width: 30px; height: 30px; object-fit: contain; display: block; }
 .story-feat-lbl { font-size: .74rem; font-weight: 600; color: var(--ink); line-height: 1.25; }
 
 .story-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; align-items: stretch; margin-top: 5.2rem; }

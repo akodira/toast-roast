@@ -156,7 +156,12 @@ export default function ContentPage() {
           </div>
         ))}
         <div className="admin-subhead">Feature Chips</div>
-        {[1, 2, 3, 4].map(n => textField(`about_feat_${n}`, `Feature ${n} Label`))}
+        {[1, 2, 3, 4].map(n => (
+          <div key={n} style={{ marginBottom: ".9rem", paddingBottom: ".7rem", borderBottom: "1px solid var(--line)" }}>
+            {textField(`about_feat_${n}`, `Feature ${n} Label`)}
+            {photoField(`about_feat_${n}_icon`, `Feature ${n} Icon`, "Optional — upload to replace the built-in icon. Small square (e.g. 80×80). Leave empty to keep the default.")}
+          </div>
+        ))}
         <button className="btn" onClick={() => save()}>Save About Page</button>
       </div>
 

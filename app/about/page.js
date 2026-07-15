@@ -34,6 +34,7 @@ export default async function About() {
   }));
   const feats = FEAT_FALLBACK.map(([label, icon], i) => ({
     label: content[`about_feat_${i + 1}`] || label,
+    image: content[`about_feat_${i + 1}_icon`] || "",
     icon,
   }));
 
@@ -53,7 +54,11 @@ export default async function About() {
               <div className="story-feats">
                 {feats.map((f, i) => (
                   <div className="story-feat" key={i}>
-                    <span className="story-feat-ic"><FeatIcon kind={f.icon} /></span>
+                    <span className="story-feat-ic">
+                      {f.image
+                        ? <img src={f.image} alt="" className="story-feat-img" />
+                        : <FeatIcon kind={f.icon} />}
+                    </span>
                     <span className="story-feat-lbl">{f.label}</span>
                   </div>
                 ))}
