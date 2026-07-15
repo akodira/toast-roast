@@ -288,7 +288,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
 .ok-msg { background: #E8F4ED; color: #1F5E3C; border: 1px solid #C3E2D2; padding: .7rem .9rem; border-radius: 10px; margin-bottom: 1rem; font-size: .88rem; }
 .intro { color: var(--muted); margin-bottom: 1.5rem; }
 
-.filters { display: flex; gap: .55rem; flex-wrap: wrap; align-items: center; }
+.filters { display: flex; gap: .55rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.4rem; }
 .chip {
   display: inline-flex; align-items: center; justify-content: center;
   min-height: 36px; line-height: 1;
@@ -1022,3 +1022,37 @@ body { overflow-x: clip; max-width: 100%; }
   border-top: 1px solid var(--line);
 }
 .fld-hint { font-size: .76rem; opacity: .65; margin-bottom: .3rem; }
+
+/* ---------- Orders filter chips — colour-matched to each status ----------
+   Each status chip carries its status colour as a small dot at all times.
+   When selected (.on) the chip fills with that status's pale tint + text
+   colour — the same palette as the status pills/dropdowns, so the filter
+   bar and the table read as one system. "All" keeps the copper brand look. */
+.chip-status { gap: .5rem; }
+.chip-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: currentColor; }
+
+/* Resting state: neutral chip, but the dot shows the status colour. */
+.fs-Pending   .chip-dot { background: #C08A16; }
+.fs-Preparing .chip-dot { background: #2E68B0; }
+.fs-Ready     .chip-dot { background: #2E8158; }
+.fs-Served    .chip-dot { background: #6A4AB0; }
+.fs-Completed .chip-dot { background: #2E8158; }
+.fs-Cancelled .chip-dot { background: #C0453C; }
+
+/* Hover: tint toward the status colour instead of the generic copper hover. */
+.fs-Pending:hover   { border-color: #C08A16; color: #8A5A16; background: #FDF6EA; }
+.fs-Preparing:hover { border-color: #2E68B0; color: #204E86; background: #EEF4FC; }
+.fs-Ready:hover,
+.fs-Completed:hover { border-color: #2E8158; color: #1F5E3C; background: #EDF6F0; }
+.fs-Served:hover    { border-color: #6A4AB0; color: #4A2E86; background: #F2EEFA; }
+.fs-Cancelled:hover { border-color: #C0453C; color: #8E1E17; background: #FCF0EF; }
+
+/* Selected: filled with the status's pill colours (overrides the copper .on). */
+.chip-status.fs-Pending.on   { background: #FDF0DC; border-color: #EBCF9E; color: #8A5A16; box-shadow: none; }
+.chip-status.fs-Preparing.on { background: #E5EEFA; border-color: #B9D2F0; color: #204E86; box-shadow: none; }
+.chip-status.fs-Ready.on,
+.chip-status.fs-Completed.on { background: #E4F3EA; border-color: #B4DEC5; color: #1F5E3C; box-shadow: none; }
+.chip-status.fs-Served.on    { background: #EDE7F6; border-color: #CFC1EA; color: #4A2E86; box-shadow: none; }
+.chip-status.fs-Cancelled.on { background: #FCEBEA; border-color: #F1C4C1; color: #8E1E17; box-shadow: none; }
+/* keep the dot readable on the filled tint */
+.chip-status.on .chip-dot { background: currentColor; }
