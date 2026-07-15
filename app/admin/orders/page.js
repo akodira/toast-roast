@@ -21,8 +21,17 @@ export default function OrdersPage() {
   return (
     <AdminShell>
       <h1>Orders</h1>
-      <div className="filters">
-        {STATUSES.map(s => <button key={s} className={`chip ${filter === s ? "on" : ""}`} onClick={() => setFilter(s)}>{s}</button>)}
+      <div className="filters filters-status">
+        {STATUSES.map(s => (
+          <button
+            key={s}
+            className={`chip chip-status${s === "All" ? "" : ` fs-${s}`} ${filter === s ? "on" : ""}`}
+            onClick={() => setFilter(s)}
+          >
+            {s !== "All" && <span className="chip-dot" aria-hidden="true"></span>}
+            {s}
+          </button>
+        ))}
       </div>
       <div className="table-wrap"><table className="adm">
         <thead><tr><th>Order #</th><th>Date & Time</th><th>Table</th><th>Customer</th><th>Contact</th><th>Items</th><th>Total</th><th>Status</th><th /></tr></thead>
