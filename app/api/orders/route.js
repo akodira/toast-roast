@@ -41,7 +41,7 @@ export async function POST(req) {
     if (!qty || qty < 1 || qty > 99) return NextResponse.json({ error: "Invalid quantity." }, { status: 400 });
     const row = await db.prepare("SELECT * FROM MenuItems WHERE MenuItemId=$1 AND IsActive=true AND IsAvailable=true").get(it.menuItemId);
     if (!row) return NextResponse.json({ error: "One of the items is no longer available." }, { status: 400 });
-    lines.push({ id: row.MenuItemId, name: row.Name, price: row.Price, qty, total: round(row.Price * qty) });
+    lines.push({ id: row.MenuItemId, name: row.Name, price: row.Price, qty, total: round(row.Price * qty), note: (it.note || "").toString().trim().slice(0, 300) || null });
   }
   const subtotal = round(lines.reduce((s, l) => s + l.total, 0));
   const taxAmount = round(subtotal * taxP / 100);
@@ -58,11 +58,11 @@ export async function POST(req) {
     const customerId = existing
       ? existing.CustomerId
       : (await tdb.prepare("INSERT INTO Customers (Name,Telephone) VALUES ($1,$2) RETURNING CustomerId AS id").run(name.trim(), telephone.trim())).lastInsertRowid;
-    const ord = await tdb.prepare(`INSERT INTO Orders (OrderNumber,CustomerId,TableNumber,Subtotal,TaxPercent,TaxAmount,ServicePercent,ServiceAmount,GrandTotal,Status)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'Pending') RETURNING OrderId AS id`).run(orderNumber, customerId, String(tableNumber).trim(), subtotal, taxP, taxAmount, svcP, serviceAmount, grandTotal);
+    const ord = await tdb.prepare(`INSERT INTO Orders (OrderNumber,CustomerId,TableNumber,Subtotal,TaxPercent,TaxAmount,ServicePercent,ServiceAmount,GrandTotal,Status,ReceivedAt)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'Received',NOW()) RETURNING OrderId AS id`).run(orderNumber, customerId, String(tableNumber).trim(), subtotal, taxP, taxAmount, svcP, serviceAmount, grandTotal);
     for (const l of lines) {
-      await tdb.prepare("INSERT INTO OrderDetails (OrderId,MenuItemId,ItemName,UnitPrice,Quantity,LineTotal) VALUES ($1,$2,$3,$4,$5,$6)")
-        .run(ord.lastInsertRowid, l.id, l.name, l.price, l.qty, l.total);
+      await tdb.prepare("INSERT INTO OrderDetails (OrderId,MenuItemId,ItemName,UnitPrice,Quantity,LineTotal,Note) VALUES ($1,$2,$3,$4,$5,$6,$7)")
+        .run(ord.lastInsertRowid, l.id, l.name, l.price, l.qty, l.total, l.note || null);
     }
     // One invoice per (table occupancy, customer) — created on their first
     // order this sitting, reused for every order after. This is what lets

@@ -2,13 +2,39 @@
 import { useEffect, useState } from "react";
 import AdminShell from "../AdminShell";
 
-const STATUSES = ["All","Pending","Preparing","Ready","Served","Completed","Cancelled"];
+const STATUSES = ["All", "Received", "Preparing", "Ready", "Delivered", "Cancelled"];
+const TL_STEPS = [["Received", "ReceivedAt"], ["Preparing", "PreparingAt"], ["Ready", "ReadyAt"], ["Delivered", "DeliveredAt"]];
+const hhmm = ts => ts ? new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+
+function Timeline({ o }) {
+  if (o.Status === "Cancelled") return <div className="otl"><span className="otl-step">Cancelled</span></div>;
+  return (
+    <div className="otl">
+      {TL_STEPS.map(([label, col]) => {
+        const done = !!o[col];
+        return (
+          <span className={`otl-step${done ? " done" : ""}`} key={col}>
+            <span className="otl-tick">{done ? "✓" : ""}</span>
+            {label}{done && <span className="otl-time"> {hhmm(o[col])}</span>}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [filter, setFilter] = useState("All");
+  const [calls, setCalls] = useState([]);
   const load = () => fetch(`/api/orders?status=${filter}`).then(r => r.json()).then(d => setOrders(d.orders || []));
+  const loadCalls = () => fetch("/api/admin/waiter").then(r => r.ok ? r.json() : { calls: [] }).then(d => setCalls(d.calls || []));
   useEffect(() => { load(); const t = setInterval(load, 10000); return () => clearInterval(t); }, [filter]);
+  useEffect(() => { loadCalls(); const t = setInterval(loadCalls, 8000); return () => clearInterval(t); }, []);
+  const resolveCall = async (callId) => {
+    await fetch("/api/admin/waiter", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ callId }) });
+    loadCalls();
+  };
   const setStatus = async (id, status) => {
     await fetch(`/api/orders/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
     load();
@@ -21,6 +47,19 @@ export default function OrdersPage() {
   return (
     <AdminShell>
       <h1>Orders</h1>
+
+      {calls.length > 0 && (
+        <div className="callbar">
+          <h3><span aria-hidden="true">🔔</span> Waiter requested ({calls.length})</h3>
+          {calls.map(c => (
+            <div className="callrow" key={c.CallId}>
+              <span><strong>Table {c.TableName}</strong> · {c.CustomerName} · {hhmm(c.CreatedAt)}</span>
+              <button className="btn small ghost" onClick={() => resolveCall(c.CallId)}>Mark done</button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="filters filters-status">
         {STATUSES.map(s => (
           <button
@@ -44,7 +83,12 @@ export default function OrdersPage() {
               <td>{o.TableNumber}</td>
               <td>{o.CustomerName}</td>
               <td>{o.Telephone}</td>
-              <td>{o.items.map(i => <div key={i.OrderDetailId}>{i.Quantity}× {i.ItemName}</div>)}</td>
+              <td>{o.items.map(i => (
+                <div key={i.OrderDetailId}>
+                  {i.Quantity}× {i.ItemName}
+                  {i.Note ? <span className="adm-item-note"> — {i.Note}</span> : null}
+                </div>
+              ))}</td>
               <td><strong>{o.GrandTotal.toFixed(2)}</strong></td>
               <td>
                 <div className="status-cell">
@@ -58,6 +102,7 @@ export default function OrdersPage() {
                     {STATUSES.slice(1).map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
+                <Timeline o={o} />
               </td>
               <td><button className="btn small danger" onClick={() => del(o.OrderId, o.OrderNumber)}>Delete</button></td>
             </tr>

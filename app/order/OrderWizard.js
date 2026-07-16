@@ -26,6 +26,7 @@ export default function OrderWizard({ categories, items, tables = [], settings }
 
   const [cat, setCat] = useState(null);
   const [cart, setCart] = useState({}); // id -> qty
+  const [notes, setNotes] = useState({}); // id -> special-instructions note
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [pinOpen, setPinOpen] = useState(false); // PIN prompt shown at place-order time
@@ -34,7 +35,7 @@ export default function OrderWizard({ categories, items, tables = [], settings }
   const itemById = useMemo(() => Object.fromEntries(items.map(i => [i.MenuItemId, i])), [items]);
   const cartLines = Object.entries(cart).filter(([, q]) => q > 0).map(([id, q]) => {
     const it = itemById[id];
-    return { ...it, qty: q, total: it.Price * q };
+    return { ...it, qty: q, total: it.Price * q, note: notes[id] || "" };
   });
   const subtotal = cartLines.reduce((s, l) => s + l.total, 0);
   const tax = subtotal * taxP / 100;
@@ -67,7 +68,7 @@ export default function OrderWizard({ categories, items, tables = [], settings }
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...info, pin: pin.trim(), items: cartLines.map(l => ({ menuItemId: l.MenuItemId, quantity: l.qty })) }),
+        body: JSON.stringify({ ...info, pin: pin.trim(), items: cartLines.map(l => ({ menuItemId: l.MenuItemId, quantity: l.qty, note: l.note })) }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -152,23 +153,32 @@ export default function OrderWizard({ categories, items, tables = [], settings }
             <>
               <div className="cart-list">
                 {cartLines.map(l => (
-                  <div className="cart-line" key={l.MenuItemId}>
-                    <div className="cart-info">
-                      <span className="cart-name">{l.Name}</span>
-                      <span className="cart-unit">{fmt(l.Price)} each</span>
+                  <div className="cart-line-wrap" key={l.MenuItemId}>
+                    <div className="cart-line">
+                      <div className="cart-info">
+                        <span className="cart-name">{l.Name}</span>
+                        <span className="cart-unit">{fmt(l.Price)} each</span>
+                      </div>
+                      <span className="qty-ctl">
+                        <button onClick={() => setQty(l.MenuItemId, -1)} aria-label={`Decrease ${l.Name}`}>−</button>
+                        <span className="qty-val">{l.qty}</span>
+                        <button onClick={() => setQty(l.MenuItemId, 1)} aria-label={`Increase ${l.Name}`}>+</button>
+                      </span>
+                      <span className="cart-total">{fmt(l.total)}</span>
+                      <button className="cart-remove" onClick={() => setCart(c => ({ ...c, [l.MenuItemId]: 0 }))}
+                        aria-label={`Remove ${l.Name}`} title="Remove">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <path d="M18 6 6 18M6 6l12 12" />
+                        </svg>
+                      </button>
                     </div>
-                    <span className="qty-ctl">
-                      <button onClick={() => setQty(l.MenuItemId, -1)} aria-label={`Decrease ${l.Name}`}>−</button>
-                      <span className="qty-val">{l.qty}</span>
-                      <button onClick={() => setQty(l.MenuItemId, 1)} aria-label={`Increase ${l.Name}`}>+</button>
-                    </span>
-                    <span className="cart-total">{fmt(l.total)}</span>
-                    <button className="cart-remove" onClick={() => setCart(c => ({ ...c, [l.MenuItemId]: 0 }))}
-                      aria-label={`Remove ${l.Name}`} title="Remove">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                        <path d="M18 6 6 18M6 6l12 12" />
-                      </svg>
-                    </button>
+                    <input
+                      className="cart-note-input"
+                      value={notes[l.MenuItemId] || ""}
+                      onChange={e => setNotes(n => ({ ...n, [l.MenuItemId]: e.target.value.slice(0, 300) }))}
+                      placeholder="Add note (e.g. no onions, extra spicy)…"
+                      aria-label={`Special instructions for ${l.Name}`}
+                    />
                   </div>
                 ))}
               </div>
@@ -209,7 +219,7 @@ export default function OrderWizard({ categories, items, tables = [], settings }
             <thead><tr><th>Item</th><th className="num">Qty</th><th className="num">Unit Price</th><th className="num">Total</th></tr></thead>
             <tbody>{cartLines.map(l => (
               <tr key={l.MenuItemId}>
-                <td>{l.Name}</td>
+                <td>{l.Name}{l.note ? <span className="inv-line-note">Note: {l.note}</span> : null}</td>
                 <td className="num">{l.qty}</td>
                 <td className="num">{fmt(l.Price)}</td>
                 <td className="num">{fmt(l.total)}</td>

@@ -159,6 +159,34 @@ export default function PortalClient() {
     setErr("");
   };
 
+  // Call waiter — one tap, appears in the back office by table + name.
+  const [waiterMsg, setWaiterMsg] = useState("");
+  const callWaiter = async () => {
+    setWaiterMsg("");
+    try {
+      const res = await fetch("/api/public/waiter", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tableName: session.table, customerName: session.name, phone: session.phone }),
+      });
+      setWaiterMsg(res.ok ? "A waiter has been notified — someone will be with you shortly." : "Couldn't send the request, please try again.");
+    } catch { setWaiterMsg("Couldn't send the request, please try again."); }
+  };
+
+  // Service rating.
+  const [ratingScore, setRatingScore] = useState(0);
+  const [ratingComment, setRatingComment] = useState("");
+  const [ratingDone, setRatingDone] = useState(false);
+  const submitRating = async () => {
+    if (!ratingScore) return;
+    try {
+      const res = await fetch("/api/public/rating", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tableName: session.table, customerName: session.name, phone: session.phone, score: ratingScore, comment: ratingComment }),
+      });
+      if (res.ok) setRatingDone(true);
+    } catch { /* ignore, let them retry */ }
+  };
+
   if (!session) {
     const freeTables = tables.filter(t => !t.Occupied);
     return (
@@ -270,11 +298,13 @@ export default function PortalClient() {
             </p>
           )}
         </div>
-        <div style={{ display: "flex", gap: ".7rem" }}>
+        <div style={{ display: "flex", gap: ".7rem", flexWrap: "wrap" }}>
           <Link href={orderMoreHref} className="btn">Start New Order</Link>
+          <button className="btn ghost" onClick={callWaiter}>🔔 Call Waiter</button>
           <button className="btn ghost small" onClick={logout}>Not you? Switch table</button>
         </div>
       </div>
+      {waiterMsg && <p className="ok-msg" style={{ marginTop: "-.8rem", marginBottom: "1.2rem" }}>{waiterMsg}</p>}
 
       <div className="steps" style={{ marginBottom: "1.2rem" }}>
         <button className={`step-dot ${tab === "orders" ? "on" : ""}`} style={{ border: "none", cursor: "pointer" }} onClick={() => setTab("orders")}>Today's Orders</button>
@@ -289,14 +319,54 @@ export default function PortalClient() {
               <p>Order <strong>{o.OrderNumber}</strong> · Table {o.TableNumber} · {new Date(o.CreatedAt).toLocaleTimeString()} ·{" "}
                 <span className={`status-pill st-${o.Status}`}>{o.Status}</span>
               </p>
+              {o.Status !== "Cancelled" && (
+                <div className="otl otl-cust">
+                  {[["Received", "ReceivedAt"], ["Preparing", "PreparingAt"], ["Ready", "ReadyAt"], ["Delivered", "DeliveredAt"]].map(([label, col]) => (
+                    <span className={`otl-step${o[col] ? " done" : ""}`} key={col}>
+                      <span className="otl-tick">{o[col] ? "✓" : ""}</span>{label}
+                    </span>
+                  ))}
+                </div>
+              )}
               <ul style={{ margin: ".6rem 0", paddingLeft: "1.1rem", fontSize: ".9rem" }}>
-                {o.items.map(i => <li key={i.OrderDetailId}>{i.Quantity}× {i.ItemName} @ {fmt(i.UnitPrice)} — {fmt(i.LineTotal)}</li>)}
+                {o.items.map(i => <li key={i.OrderDetailId}>{i.Quantity}× {i.ItemName} @ {fmt(i.UnitPrice)} — {fmt(i.LineTotal)}{i.Note ? <span className="cust-item-note"> · {i.Note}</span> : null}</li>)}
               </ul>
               <p style={{ fontWeight: 600 }}>Subtotal: {fmt(o.Subtotal)}</p>
               <p style={{ fontSize: ".78rem", opacity: .65, marginBottom: ".6rem" }}>Tax &amp; service are applied once on the combined Total Invoice tab, not per order.</p>
               <Link href={`/order/confirm/${o.OrderNumber}`} className="btn small ghost">View Full Invoice</Link>
             </div>
           ))}
+
+          {orders.length > 0 && (
+            <div className="card rating-card">
+              {ratingDone ? (
+                <p className="ok-msg" style={{ margin: 0 }}>Thank you for rating our service!</p>
+              ) : (
+                <>
+                  <p style={{ fontWeight: 600, marginBottom: ".5rem" }}>How was our service?</p>
+                  <div className="rating-stars" role="radiogroup" aria-label="Service rating">
+                    {[1, 2, 3, 4, 5].map(n => (
+                      <button
+                        key={n}
+                        type="button"
+                        className={`rating-star${n <= ratingScore ? " on" : ""}`}
+                        onClick={() => setRatingScore(n)}
+                        aria-label={`${n} star${n > 1 ? "s" : ""}`}
+                        aria-pressed={n <= ratingScore}
+                      >★</button>
+                    ))}
+                  </div>
+                  <textarea
+                    className="rating-comment"
+                    value={ratingComment}
+                    onChange={e => setRatingComment(e.target.value.slice(0, 500))}
+                    placeholder="Any comments? (optional)"
+                  />
+                  <button className="btn" onClick={submitRating} disabled={!ratingScore}>Submit Rating</button>
+                </>
+              )}
+            </div>
+          )}
         </>
       )}
 

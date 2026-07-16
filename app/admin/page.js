@@ -37,9 +37,11 @@ function LineChart({ points }) {
 
 export default function Dashboard() {
   const [s, setS] = useState(null);
+  const [ratings, setRatings] = useState(null);
   const [err, setErr] = useState("");
   useEffect(() => {
     fetch("/api/admin/stats").then(r => r.ok ? r.json() : Promise.reject()).then(setS).catch(() => setErr("Could not load dashboard."));
+    fetch("/api/admin/ratings").then(r => r.ok ? r.json() : null).then(setRatings).catch(() => {});
   }, []);
 
   if (err) return <AdminShell><h1>Dashboard</h1><p>{err}</p></AdminShell>;
@@ -127,6 +129,29 @@ export default function Dashboard() {
           <thead><tr><th>Item</th><th>Qty Sold</th></tr></thead>
           <tbody>{s.slowItems.map((it, i) => <tr key={i}><td>{it.name}</td><td>{it.qty}</td></tr>)}</tbody>
         </table></div>
+      </div>
+
+      {/* service ratings */}
+      <div className="kcard">
+        <h2 className="kh">Service Ratings {ratings && ratings.count > 0 && (
+          <span className="kmuted" style={{ fontWeight: 400, fontSize: ".85rem" }}>
+            — {ratings.average.toFixed(1)} ★ average across {ratings.count}
+          </span>
+        )}</h2>
+        {!ratings || ratings.count === 0 ? <p className="kmuted">No ratings yet.</p> : (
+          <div className="table-wrap"><table className="adm">
+            <thead><tr><th>When</th><th>Table</th><th>Customer</th><th>Score</th><th>Comment</th></tr></thead>
+            <tbody>{ratings.ratings.map(r => (
+              <tr key={r.RatingId}>
+                <td>{new Date(r.CreatedAt).toLocaleString()}</td>
+                <td>{r.TableName || "—"}</td>
+                <td>{r.CustomerName || "—"}</td>
+                <td>{"★".repeat(r.Score)}<span style={{ color: "#D9D2C8" }}>{"★".repeat(5 - r.Score)}</span></td>
+                <td>{r.Comment || "—"}</td>
+              </tr>
+            ))}</tbody>
+          </table></div>
+        )}
       </div>
 
     </AdminShell>

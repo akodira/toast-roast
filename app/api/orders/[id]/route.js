@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { getDb, logActivity } from "@/lib/db";
 import { requireRole, ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER } from "@/lib/auth";
 
-const STATUSES = ["Pending","Preparing","Ready","Served","Completed","Cancelled"];
+const STATUSES = ["Received", "Preparing", "Ready", "Delivered", "Cancelled"];
+// Which timestamp column each status stamps when first reached.
+const STATUS_TS = { Received: "ReceivedAt", Preparing: "PreparingAt", Ready: "ReadyAt", Delivered: "DeliveredAt" };
 
 // Public: fetch invoice by order number
 export async function GET(_req, { params }) {
@@ -20,7 +22,13 @@ export async function PATCH(req, { params }) {
   const { status } = await req.json().catch(() => ({}));
   if (!STATUSES.includes(status)) return NextResponse.json({ error: "Invalid status." }, { status: 400 });
   const db = await getDb();
-  const r = await db.prepare("UPDATE Orders SET Status=$1 WHERE OrderId=$2").run(status, params.id);
+  // Stamp the timestamp for this status the first time it's reached (COALESCE
+  // keeps the original time if an order is re-set to a status it already hit).
+  const tsCol = STATUS_TS[status];
+  const sql = tsCol
+    ? `UPDATE Orders SET Status=$1, ${tsCol}=COALESCE(${tsCol}, NOW()) WHERE OrderId=$2`
+    : "UPDATE Orders SET Status=$1 WHERE OrderId=$2";
+  const r = await db.prepare(sql).run(status, params.id);
   if (!r.changes) return NextResponse.json({ error: "Order not found." }, { status: 404 });
   await logActivity(Number(session.sub), "ORDER_STATUS", `Order #${params.id} -> ${status}`);
   return NextResponse.json({ ok: true });

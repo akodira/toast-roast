@@ -1096,3 +1096,50 @@ body { overflow-x: clip; max-width: 100%; }
   .kgrid2 { grid-template-columns: 1fr; }
   .kbar { grid-template-columns: 100px 1fr auto; }
 }
+
+/* New status set (Jul 2026): Received / Preparing / Ready / Delivered / Cancelled */
+.st-Received  { background: #FDF0DC; color: #8A5A16; }
+.st-Delivered { background: #E4F3EA; color: #1F5E3C; }
+.status-select.st-Received  { background-color: #FDF0DC; color: #8A5A16; }
+.status-select.st-Delivered { background-color: #E4F3EA; color: #1F5E3C; }
+.fs-Received  .chip-dot { background: #C08A16; }
+.fs-Delivered .chip-dot { background: #2E8158; }
+.fs-Received:hover  { border-color: #C08A16; color: #8A5A16; background: #FDF6EA; }
+.fs-Delivered:hover { border-color: #2E8158; color: #1F5E3C; background: #EDF6F0; }
+.chip-status.fs-Received.on  { background: #FDF0DC; border-color: #EBCF9E; color: #8A5A16; box-shadow: none; }
+.chip-status.fs-Delivered.on { background: #E4F3EA; border-color: #B4DEC5; color: #1F5E3C; box-shadow: none; }
+
+/* Order timeline — the progress trail of status timestamps */
+.otl { display: flex; flex-wrap: wrap; gap: .4rem 1rem; margin-top: .4rem; }
+.otl-step { display: flex; align-items: center; gap: .35rem; font-size: .72rem; color: var(--muted); }
+.otl-step.done { color: var(--ink); font-weight: 500; }
+.otl-tick { width: 15px; height: 15px; border-radius: 50%; display: grid; place-items: center; background: #E7E0D6; color: #fff; font-size: .6rem; flex-shrink: 0; }
+.otl-step.done .otl-tick { background: #1F5E3C; }
+.otl-time { color: var(--muted); font-weight: 400; }
+
+/* Call-waiter alert banner in admin */
+.callbar { background: #FDF0DC; border: 1px solid #EBCF9E; border-radius: 10px; padding: .8rem 1rem; margin-bottom: 1rem; }
+.callbar h3 { font-size: .9rem; color: #8A5A16; margin-bottom: .5rem; display: flex; align-items: center; gap: .5rem; }
+.callrow { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .4rem 0; border-top: 1px solid rgba(138,90,22,.15); font-size: .85rem; }
+.callrow:first-of-type { border-top: 0; }
+
+/* Item special-instructions note (wizard cart) */
+.cart-line-wrap { border-bottom: 1px solid var(--line); padding-bottom: .6rem; margin-bottom: .6rem; }
+.cart-line-wrap:last-child { border-bottom: 0; }
+.cart-note-input { width: 100%; margin-top: .4rem; padding: .5rem .7rem; border: 1px dashed var(--line); border-radius: 8px; font: inherit; font-size: .82rem; background: #FDFBF8; }
+.cart-note-input:focus { outline: none; border-color: var(--copper); border-style: solid; }
+.inv-line-note { display: block; font-size: .76rem; color: var(--rust-deep, #8A5A2E); margin-top: .15rem; }
+.adm-item-note { color: var(--rust-deep, #8A5A2E); font-style: italic; }
+.cust-item-note { color: var(--rust-deep, #8A5A2E); font-style: italic; }
+
+/* Customer-side timeline (lighter, no times) */
+.otl-cust { margin: .5rem 0 .2rem; }
+
+/* Service rating widget */
+.rating-card { text-align: center; }
+.rating-stars { display: flex; justify-content: center; gap: .3rem; margin-bottom: .8rem; }
+.rating-star { background: none; border: none; font-size: 2rem; line-height: 1; cursor: pointer; color: #D9D2C8; transition: color .12s, transform .08s; padding: 0 .1rem; }
+.rating-star:hover { transform: scale(1.12); }
+.rating-star.on { color: #E6A817; }
+.rating-comment { width: 100%; min-height: 60px; padding: .6rem .7rem; border: 1px solid var(--line); border-radius: 9px; font: inherit; font-size: .88rem; margin-bottom: .8rem; resize: vertical; }
+.rating-comment:focus { outline: none; border-color: var(--copper); }
