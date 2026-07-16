@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Html from "@/components/Html";
 import { Header, Footer, getContent } from "@/components/SiteChrome";
 import { getDb } from "@/lib/db";
 import HomeMenu, { ItemCard } from "./HomeMenu";
@@ -109,7 +110,7 @@ export default async function Home() {
                         {FEATURE_ICONS[idx % FEATURE_ICONS.length]}
                       </svg>
                     </span>
-                    <div><h5>{f.title}</h5><p>{f.text}</p></div>
+                    <div><Html as="h5">{f.title}</Html><Html as="p">{f.text}</Html></div>
                   </div>
                 ))}
               </div>

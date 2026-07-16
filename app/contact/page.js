@@ -1,5 +1,6 @@
 import { Header, Footer, getContent } from "@/components/SiteChrome";
 import Link from "next/link";
+import Html from "@/components/Html";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Contact Us — Toast & Roast" };
 
@@ -55,7 +56,7 @@ export default async function Contact() {
               <span className="eyebrow-mark">Get In Touch</span>
               <h1 className="story-title">{content.contact_title || "Contact Us"}</h1>
               <span className="rule-diamond" aria-hidden="true"></span>
-              <p className="ct-lead">{content.contact_lead || "We'd love to hear from you. Reach out to us for reservations, feedback, or any inquiries."}</p>
+              <Html as="p" className="ct-lead">{content.contact_lead || "We'd love to hear from you. Reach out to us for reservations, feedback, or any inquiries."}</Html>
 
               <div className="ct-card">
                 {rows.map((r, i) => (
@@ -86,7 +87,7 @@ export default async function Contact() {
               <div className="ct-visit-card">
                 <span className="ct-visit-title">{content.visit_title || "Visit Us"}</span>
                 <span className="rule-diamond" aria-hidden="true"></span>
-                <p className="ct-visit-text">{content.visit_text || "Enjoy our cozy atmosphere, great coffee, and delicious food. We can't wait to welcome you!"}</p>
+                <Html as="p" className="ct-visit-text">{content.visit_text || "Enjoy our cozy atmosphere, great coffee, and delicious food. We can't wait to welcome you!"}</Html>
                 <Link href="/portal" className="ct-visit-cta"><TableIcon /> Join a Table</Link>
               </div>
             </div>

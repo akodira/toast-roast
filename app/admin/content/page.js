@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import AdminShell from "../AdminShell";
 import { SOCIAL_LINKS } from "@/components/socials";
+import RichText from "@/components/RichText";
 
 const HEADING_FONTS = ["Playfair Display", "Prata", "Merriweather", "Cormorant Garamond", "Lora"];
 const BODY_FONTS = ["Inter", "Poppins", "Lato", "Nunito Sans", "Work Sans"];
@@ -42,13 +43,13 @@ export default function ContentPage() {
   // component inside render remounts it every keystroke (focus is lost after
   // one letter). Calling a function that returns elements keeps the same
   // <input> instance mounted, so typing works normally.
+  // Every text field is now a WYSIWYG editor. Long/prose fields (area:true)
+  // get the full toolbar; short labels get a simple bold/italic/link toolbar.
   const textField = (k, label, { hint, area } = {}) => (
     <div className="field" key={k}>
       <label>{label}</label>
       {hint && <p className="fld-hint">{hint}</p>}
-      {area
-        ? <textarea value={c[k] || ""} onChange={e => set(k, e.target.value)} />
-        : <input value={c[k] || ""} onChange={e => set(k, e.target.value)} />}
+      <RichText value={c[k] || ""} onChange={v => set(k, v)} simple={!area} />
     </div>
   );
   const photoField = (k, label, hint) => (
