@@ -406,9 +406,8 @@ table.inv .num, table.inv th.num { text-align: right; }
 .cart-line {
   display: grid; grid-template-columns: 1fr auto 5.5rem 2.2rem;
   align-items: center; gap: 1rem;
-  padding: .9rem 1.1rem; border-bottom: 1px solid var(--line); background: #fff;
+  padding: .9rem 1.1rem; background: #fff;
 }
-.cart-line:last-child { border-bottom: none; }
 .cart-info { display: flex; flex-direction: column; min-width: 0; }
 .cart-name { font-weight: 600; }
 .cart-unit { font-size: .78rem; color: var(--muted); }
@@ -1124,9 +1123,10 @@ body { overflow-x: clip; max-width: 100%; }
 .callrow:first-of-type { border-top: 0; }
 
 /* Item special-instructions note (wizard cart) */
-.cart-line-wrap { border-bottom: 1px solid var(--line); padding-bottom: .7rem; margin-bottom: .7rem; }
+.cart-line-wrap { border-bottom: 1px solid var(--line); background: #fff; }
 .cart-line-wrap:last-child { border-bottom: 0; }
-.cart-extra { margin-top: .6rem; }
+.cart-extra { padding: 0 1.1rem .3rem 1.1rem; margin-top: .3rem; }
+.cart-extra:last-child { padding-bottom: .9rem; }
 .cart-extra-lbl { display: block; font-size: .78rem; font-weight: 600; color: var(--ink); margin-bottom: .35rem; }
 .cart-extra-lbl small { font-weight: 400; color: var(--muted); font-size: .9em; }
 .cart-note-input { width: 100%; padding: .6rem .8rem; border: 1px solid var(--copper); border-radius: 9px; font: inherit; font-size: .85rem; background: #FDFBF8; }
