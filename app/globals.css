@@ -1163,3 +1163,14 @@ body { overflow-x: clip; max-width: 100%; }
 .sec-item { display: flex; align-items: center; gap: .45rem; font-weight: 400; font-size: .88rem; padding: .2rem 0; }
 .sec-item.overridden { color: var(--rust-deep, #8A5A2E); font-weight: 500; }
 .sec-tag { font-size: .62rem; letter-spacing: .04em; text-transform: uppercase; background: rgba(192,138,86,.15); color: var(--rust-deep, #8A5A2E); padding: .08rem .35rem; border-radius: 4px; }
+
+/* Category note — banner under the category heading on the Menu page.
+   pre-line preserves the admin's line breaks (Enter = new line). */
+.mv-cat-note {
+  display: flex; align-items: flex-start; gap: .6rem;
+  background: rgba(192,138,86,.1); border: 1px solid rgba(192,138,86,.3);
+  border-radius: 10px; padding: .8rem 1rem; margin-bottom: 1.1rem;
+  font-size: .88rem; color: var(--rust-deep, #8A5A2E); line-height: 1.55;
+  white-space: pre-line;
+}
+.mv-cat-note svg { flex-shrink: 0; margin-top: .15rem; }

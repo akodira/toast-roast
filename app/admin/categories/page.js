@@ -52,10 +52,10 @@ export default function CategoriesPage() {
         <div className="field">
           <label>Category Note</label>
           <p style={{ fontSize: ".76rem", opacity: .65, marginBottom: ".3rem" }}>
-            Shown under this category's items on the Menu page — e.g. a VAT line, an allergen warning, or a serving note. Leave blank to show nothing.
+            Shown under this category's heading on the Menu page — e.g. a serving note or allergen warning. Press Enter for a new line. Leave blank to show nothing.
           </p>
-          <input value={f.Note || ""} onChange={e => setF({ ...f, Note: e.target.value })}
-            placeholder="e.g. All prices are subject to a 12% service charge and 14% VAT." />
+          <textarea value={f.Note || ""} onChange={e => setF({ ...f, Note: e.target.value })} rows={3}
+            placeholder={"e.g. All dishes are served with your choice of 2 sides.\nAsk your server about today's specials."} />
         </div>
         <div className="field">
           <label>Background Photo (shown behind this category on the Menu page)</label>

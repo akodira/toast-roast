@@ -146,6 +146,13 @@ export default function MenuBrowser({ categories, items, eyebrow, pdfUrl, taxPer
           )}
         </div>
 
+        {activeCategory && !showAll && !searching && activeCategory.Note?.trim() && (
+          <div className="mv-cat-note">
+            <InfoIcon />
+            <span>{activeCategory.Note}</span>
+          </div>
+        )}
+
         <div className="mv-filters">
           <label className="mv-search">
             <SearchIcon />
@@ -218,12 +225,6 @@ export default function MenuBrowser({ categories, items, eyebrow, pdfUrl, taxPer
               />
             )}
             {!hasImg && <span className="mv-photo-mono">{monogram(activeCategory.Name)}</span>}
-            {activeCategory.Note?.trim() && (
-              <div className="mv-note">
-                <span className="mv-note-title"><LeafIcon />{activeCategory.Name}</span>
-                <span className="mv-note-body">{activeCategory.Note}</span>
-              </div>
-            )}
           </div>
         </aside>
       )}
