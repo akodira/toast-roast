@@ -1,10 +1,10 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
-import { requireRole, ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER } from "@/lib/auth";
+import { requireRole, ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER , requireSection } from "@/lib/auth";
 
 export async function GET(req) {
-  const s = await requireRole([ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER]);
+  const s = await requireSection("invoices");
   if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const status = new URL(req.url).searchParams.get("status"); // "paid" | "unpaid" | null (all)
   const db = await getDb();

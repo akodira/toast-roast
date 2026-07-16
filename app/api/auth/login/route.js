@@ -12,7 +12,9 @@ export async function POST(req) {
     return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
   const roleRows = await db.prepare("SELECT RoleId FROM UserRoles WHERE UserId=$1").all(user.UserId);
   const roleIds = roleRows.length ? roleRows.map(r => r.RoleId) : [user.RoleId];
-  const token = await createSession(user, roleIds);
+  const ovRows = await db.prepare("SELECT Section, Allowed FROM UserSectionAccess WHERE UserId=$1").all(user.UserId);
+  const overrides = Object.fromEntries(ovRows.map(r => [r.Section, !!r.Allowed]));
+  const token = await createSession(user, roleIds, overrides);
   await logActivity(user.UserId, "LOGIN", `User ${username} signed in`);
   const res = NextResponse.json({ ok: true });
   res.cookies.set("tr_session", token, { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 8 });

@@ -3,7 +3,27 @@ import { useEffect, useState } from "react";
 import AdminShell from "../AdminShell";
 
 const ROLE_OPTIONS = [[1, "Admin"], [4, "Manager"], [2, "Staff"], [3, "Editor"]];
-const blank = { Username: "", Password: "", FullName: "", RoleIds: [1] };
+
+// Mirror of lib/auth.js SECTIONS (key, label, roles that grant by default).
+const SECTIONS = [
+  ["dashboard", "Dashboard", [1, 4]],
+  ["orders", "Orders", [1, 2, 4]],
+  ["invoices", "Invoices", [1, 2, 4]],
+  ["tables", "Tables", [1, 2, 4]],
+  ["menu", "Menu Items", [1, 3]],
+  ["categories", "Categories", [1, 3]],
+  ["content", "Website Content", [1]],
+  ["settings", "Tax & Service", [1]],
+  ["users", "Users", [1]],
+];
+const blank = { Username: "", Password: "", FullName: "", RoleIds: [1], Overrides: {} };
+
+// What sections these roles grant by default (before overrides).
+const defaultSections = (roleIds) => {
+  const set = {};
+  for (const [key, , roles] of SECTIONS) set[key] = roles.some(r => roleIds.includes(r));
+  return set;
+};
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
@@ -13,11 +33,29 @@ export default function UsersPage() {
   const load = () => fetch("/api/admin/users").then(r => r.json()).then(d => setUsers(d.users || []));
   useEffect(() => { load(); }, []);
 
-  const toggleRole = (ids, roleId) => ids.includes(roleId) ? ids.filter(r => r !== roleId) : [...ids, roleId];
+  const isAdmin = f.RoleIds.includes(1);
+  const defaults = defaultSections(f.RoleIds);
+  // Effective access shown in the checkboxes = default, unless an override says otherwise.
+  const effective = (key) => (key in f.Overrides) ? f.Overrides[key] : defaults[key];
+
+  const toggleRole = (roleId) =>
+    setF(f => ({ ...f, RoleIds: f.RoleIds.includes(roleId) ? f.RoleIds.filter(r => r !== roleId) : [...f.RoleIds, roleId] }));
+
+  const toggleSection = (key) => {
+    setF(f => {
+      const cur = (key in f.Overrides) ? f.Overrides[key] : defaults[key];
+      const next = !cur;
+      const ov = { ...f.Overrides };
+      // If the new value matches the role default, drop the override (keep it clean).
+      if (next === defaults[key]) delete ov[key];
+      else ov[key] = next;
+      return { ...f, Overrides: ov };
+    });
+  };
 
   const startEdit = (u) => {
     setEditId(u.UserId);
-    setF({ Username: u.Username, Password: "", FullName: u.FullName || "", RoleIds: u.RoleIds });
+    setF({ Username: u.Username, Password: "", FullName: u.FullName || "", RoleIds: u.RoleIds, Overrides: u.Overrides || {} });
     setMsg("");
     window.scrollTo(0, 0);
   };
@@ -30,9 +68,8 @@ export default function UsersPage() {
     if (editId && f.Password && f.Password.length < 8) return setMsg("Password must be at least 8 characters.");
 
     const url = editId ? `/api/admin/users/${editId}` : "/api/admin/users";
-    const body = editId
-      ? { Username: f.Username, FullName: f.FullName, RoleIds: f.RoleIds, ...(f.Password ? { Password: f.Password } : {}) }
-      : f;
+    const base = { Username: f.Username, FullName: f.FullName, RoleIds: f.RoleIds, Overrides: f.Overrides };
+    const body = editId ? { ...base, ...(f.Password ? { Password: f.Password } : {}) } : { ...base, Password: f.Password };
     const res = await fetch(url, { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const d = await res.json();
     setMsg(res.ok ? (editId ? "User updated." : "User created.") : d.error);
@@ -57,10 +94,31 @@ export default function UsersPage() {
         <div className="field"><label>Roles (a user can hold more than one)</label>
           {ROLE_OPTIONS.map(([id, name]) => (
             <label key={id} style={{ display: "block", fontWeight: 400 }}>
-              <input type="checkbox" checked={f.RoleIds.includes(id)} onChange={() => setF({ ...f, RoleIds: toggleRole(f.RoleIds, id) })} /> {name}
+              <input type="checkbox" checked={f.RoleIds.includes(id)} onChange={() => toggleRole(id)} /> {name}
             </label>
           ))}
         </div>
+
+        <div className="field">
+          <label>Section Access</label>
+          <p className="fld-hint">
+            Checked = this user can open that section. Boxes start at the role's defaults; tick or untick to customise per user.
+            {isAdmin && " Admins always have every section."}
+          </p>
+          <div className="sec-grid">
+            {SECTIONS.map(([key, label]) => {
+              const on = isAdmin || effective(key);
+              const overridden = !isAdmin && (key in f.Overrides);
+              return (
+                <label key={key} className={`sec-item${overridden ? " overridden" : ""}`}>
+                  <input type="checkbox" checked={on} disabled={isAdmin} onChange={() => toggleSection(key)} />
+                  {label}{overridden && <span className="sec-tag">custom</span>}
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
         <button className="btn" onClick={save}>{editId ? "Save Changes" : "Create User"}</button>
         {editId && <button className="btn ghost" style={{ marginLeft: ".6rem" }} onClick={cancelEdit}>Cancel</button>}
       </div>

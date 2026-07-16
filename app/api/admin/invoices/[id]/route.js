@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { getDb, logActivity } from "@/lib/db";
-import { requireRole, ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER } from "@/lib/auth";
+import { requireRole, ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER , requireSection } from "@/lib/auth";
 
 // Admin + Staff: mark an invoice paid/unpaid. When marking paid, if every
 // other invoice for that same table sitting is also paid, release the
 // table automatically.
 export async function PATCH(req, { params }) {
-  const s = await requireRole([ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER]);
+  const s = await requireSection("invoices");
   if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { IsPaid } = await req.json().catch(() => ({}));
   const db = await getDb();

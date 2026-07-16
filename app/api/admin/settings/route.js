@@ -1,17 +1,17 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getDb, logActivity } from "@/lib/db";
-import { requireRole, ROLE_ADMIN } from "@/lib/auth";
+import { requireRole, ROLE_ADMIN , requireSection } from "@/lib/auth";
 
 export async function GET() {
-  const s = await requireRole([ROLE_ADMIN]);
+  const s = await requireSection("settings");
   if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = await getDb();
   const rows = await db.prepare("SELECT * FROM Settings").all();
   return NextResponse.json({ settings: Object.fromEntries(rows.map(r => [r.SettingKey, r.SettingValue])) });
 }
 export async function PUT(req) {
-  const s = await requireRole([ROLE_ADMIN]);
+  const s = await requireSection("settings");
   if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = await req.json();
   const db = await getDb();

@@ -1,14 +1,14 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
-import { requireRole, ROLE_ADMIN, ROLE_MANAGER } from "@/lib/auth";
+import { requireRole, ROLE_ADMIN, ROLE_MANAGER , requireSection } from "@/lib/auth";
 
 // All KPIs below are computed ONLY from data the system already stores
 // (orders, order lines, menu, categories, tables). Cost-based metrics
 // (COGS, profit margin, labour %) are intentionally absent — the system
 // has no cost data, and inventing them would be misleading.
 export async function GET() {
-  if (!(await requireRole([ROLE_ADMIN, ROLE_MANAGER]))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!(await requireSection("dashboard"))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = await getDb();
   const paid = "Status != 'Cancelled'"; // revenue counts everything except cancelled
 

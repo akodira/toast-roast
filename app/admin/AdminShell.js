@@ -3,52 +3,48 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
-// Keep in sync with lib/auth.js ROLE_* constants.
-const ROLE_ADMIN = 1, ROLE_STAFF = 2, ROLE_EDITOR = 3, ROLE_MANAGER = 4;
-
+// Each link maps to a section key (see lib/auth.js SECTIONS). Access is
+// decided by the user's resolved sections (role presets + per-user overrides),
+// returned from /api/auth/me. Hiding a link isn't the security boundary — the
+// API routes enforce it — but it keeps the nav honest.
 const ALL_LINKS = [
-  ["/admin", "Dashboard", [ROLE_ADMIN, ROLE_MANAGER]],
-  ["/admin/orders", "Orders", [ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER]],
-  ["/admin/invoices", "Invoices", [ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER]],
-  ["/admin/tables", "Tables", [ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER]],
-  ["/admin/menu", "Menu Items", [ROLE_ADMIN, ROLE_EDITOR]],
-  ["/admin/categories", "Categories", [ROLE_ADMIN, ROLE_EDITOR]],
-  ["/admin/content", "Website Content", [ROLE_ADMIN]],
-  ["/admin/settings", "Tax & Service", [ROLE_ADMIN]],
-  ["/admin/users", "Users", [ROLE_ADMIN]],
+  ["/admin", "Dashboard", "dashboard"],
+  ["/admin/orders", "Orders", "orders"],
+  ["/admin/invoices", "Invoices", "invoices"],
+  ["/admin/tables", "Tables", "tables"],
+  ["/admin/menu", "Menu Items", "menu"],
+  ["/admin/categories", "Categories", "categories"],
+  ["/admin/content", "Website Content", "content"],
+  ["/admin/settings", "Tax & Service", "settings"],
+  ["/admin/users", "Users", "users"],
 ];
 
-// Priority order for where to land someone with multiple roles — an
-// Admin+Staff user lands on the full Dashboard, not just Orders.
-function defaultPageFor(roles) {
-  if (roles.includes(ROLE_ADMIN)) return "/admin";
-  if (roles.includes(ROLE_MANAGER)) return "/admin";
-  if (roles.includes(ROLE_STAFF)) return "/admin/orders";
-  if (roles.includes(ROLE_EDITOR)) return "/admin/menu";
-  return "/admin/login";
+// Where to land a user: first section they can actually access, in nav order.
+function defaultPageFor(sections) {
+  const first = ALL_LINKS.find(([, , key]) => sections.includes(key));
+  return first ? first[0] : "/admin/login";
 }
 
 export default function AdminShell({ children }) {
   const path = usePathname();
   const router = useRouter();
-  const [roles, setRoles] = useState(null);
+  const [sections, setSections] = useState(null);
 
   useEffect(() => {
-    fetch("/api/auth/me").then(r => r.ok ? r.json() : Promise.reject()).then(d => setRoles(d.roles || []))
+    fetch("/api/auth/me").then(r => r.ok ? r.json() : Promise.reject()).then(d => setSections(d.sections || []))
       .catch(() => router.push("/admin/login"));
   }, [router]);
 
-  // Once we know the roles, bounce away from pages none of this user's
-  // roles can use — hiding the nav link isn't the real security boundary
-  // (the API routes are), but landing on an empty page is just confusing.
+  // Bounce away from a section this user can't access (nav-hiding alone is
+  // just cosmetic; the API routes are the real gate).
   useEffect(() => {
-    if (!roles) return;
-    const allowed = ALL_LINKS.find(([href]) => href === path)?.[2];
-    if (allowed && !allowed.some(r => roles.includes(r))) router.replace(defaultPageFor(roles));
-  }, [roles, path, router]);
+    if (!sections) return;
+    const key = ALL_LINKS.find(([href]) => href === path)?.[2];
+    if (key && !sections.includes(key)) router.replace(defaultPageFor(sections));
+  }, [sections, path, router]);
 
   const logout = async () => { await fetch("/api/auth/logout", { method: "POST" }); router.push("/admin/login"); };
-  const links = roles ? ALL_LINKS.filter(([, , allowed]) => allowed.some(r => roles.includes(r))) : [];
+  const links = sections ? ALL_LINKS.filter(([, , key]) => sections.includes(key)) : [];
 
   return (
     <div className="admin-shell">

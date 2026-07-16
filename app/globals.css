@@ -1143,3 +1143,16 @@ body { overflow-x: clip; max-width: 100%; }
 .rating-star.on { color: #E6A817; }
 .rating-comment { width: 100%; min-height: 60px; padding: .6rem .7rem; border: 1px solid var(--line); border-radius: 9px; font: inherit; font-size: .88rem; margin-bottom: .8rem; resize: vertical; }
 .rating-comment:focus { outline: none; border-color: var(--copper); }
+
+/* Side-option chips in the order wizard cart */
+.cart-sides { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-top: .5rem; }
+.cart-sides-lbl { font-size: .78rem; color: var(--muted); margin-right: .2rem; }
+.side-chip { display: inline-flex; align-items: center; gap: .35rem; font-size: .8rem; padding: .28rem .65rem; border: 1px solid var(--line); border-radius: 999px; cursor: pointer; background: #fff; user-select: none; }
+.side-chip input { width: 14px; height: 14px; accent-color: var(--rust); margin: 0; }
+.side-chip.on { border-color: var(--rust); background: rgba(192,138,86,.1); color: var(--rust-deep, #8A5A2E); font-weight: 500; }
+
+/* Users — per-section access grid */
+.sec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem .8rem; margin-top: .3rem; }
+.sec-item { display: flex; align-items: center; gap: .45rem; font-weight: 400; font-size: .88rem; padding: .2rem 0; }
+.sec-item.overridden { color: var(--rust-deep, #8A5A2E); font-weight: 500; }
+.sec-tag { font-size: .62rem; letter-spacing: .04em; text-transform: uppercase; background: rgba(192,138,86,.15); color: var(--rust-deep, #8A5A2E); padding: .08rem .35rem; border-radius: 4px; }

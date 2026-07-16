@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { getDb, logActivity } from "@/lib/db";
-import { requireRole, ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER } from "@/lib/auth";
+import { requireRole, ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER , requireSection } from "@/lib/auth";
 import { generatePin, hashPin } from "@/lib/pin";
 
 // Admin + Staff: reset an occupied table's PIN (for the "customer forgot it"
 // case). Generates a fresh PIN, stores its hash, clears any lockout, and
 // returns the new plaintext ONCE so staff can read it out to the customer.
 export async function POST(_req, { params }) {
-  const s = await requireRole([ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER]);
+  const s = await requireSection("tables");
   if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const db = await getDb();

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { requireRole, ROLE_ADMIN, ROLE_EDITOR } from "@/lib/auth";
+import { requireSection, getSession, sessionSections, sessionRoles, ROLE_ADMIN } from "@/lib/auth";
 
 const ALLOWED = {
   "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp",
@@ -22,7 +22,12 @@ function getSupabase() {
 }
 
 export async function POST(req) {
-  if (!(await requireRole([ROLE_ADMIN, ROLE_EDITOR]))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // Uploads are used by the Menu and Website Content editors — allow anyone
+  // who can access either section (admins always can).
+  const sess = await getSession();
+  const canUpload = sess && (sessionRoles(sess).includes(ROLE_ADMIN) ||
+    sessionSections(sess).includes("menu") || sessionSections(sess).includes("content"));
+  if (!canUpload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const form = await req.formData();
   const file = form.get("file");

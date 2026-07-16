@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { getDb, logActivity, withTransaction } from "@/lib/db";
-import { requireRole, ROLE_ADMIN } from "@/lib/auth";
+import { requireRole, ROLE_ADMIN, requireSection, SECTION_KEYS } from "@/lib/auth";
 
 export async function PUT(req, { params }) {
-  const s = await requireRole([ROLE_ADMIN]);
+  const s = await requireSection("users");
   if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { Username, FullName, RoleIds, IsActive, Password } = await req.json();
+  const { Username, FullName, RoleIds, IsActive, Password, Overrides } = await req.json();
   const db = await getDb();
 
   if (Username !== undefined) {
@@ -34,6 +34,15 @@ export async function PUT(req, { params }) {
   if (Password) {
     if (Password.length < 8) return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
     await db.prepare("UPDATE Users SET PasswordHash=$1 WHERE UserId=$2").run(bcrypt.hashSync(Password, 10), params.id);
+  }
+
+  // Section overrides: replace the user's whole override set with what was sent.
+  if (Overrides && typeof Overrides === "object") {
+    const ov = Object.entries(Overrides).filter(([k]) => SECTION_KEYS.includes(k));
+    await withTransaction(async (tdb) => {
+      await tdb.prepare("DELETE FROM UserSectionAccess WHERE UserId=$1").run(params.id);
+      for (const [section, allowed] of ov) await tdb.prepare("INSERT INTO UserSectionAccess (UserId,Section,Allowed) VALUES ($1,$2,$3)").run(params.id, section, !!allowed);
+    });
   }
   await logActivity(Number(s.sub), "USER_UPDATE", `#${params.id}`);
   return NextResponse.json({ ok: true });
