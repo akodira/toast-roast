@@ -27,6 +27,7 @@ export default function OrderWizard({ categories, items, tables = [], settings }
   const [cat, setCat] = useState(null);
   const [cart, setCart] = useState({}); // id -> qty
   const [notes, setNotes] = useState({}); // id -> special-instructions note
+  const [sides, setSides] = useState({}); // id -> array of chosen side option names
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [pinOpen, setPinOpen] = useState(false); // PIN prompt shown at place-order time
@@ -35,7 +36,7 @@ export default function OrderWizard({ categories, items, tables = [], settings }
   const itemById = useMemo(() => Object.fromEntries(items.map(i => [i.MenuItemId, i])), [items]);
   const cartLines = Object.entries(cart).filter(([, q]) => q > 0).map(([id, q]) => {
     const it = itemById[id];
-    return { ...it, qty: q, total: it.Price * q, note: notes[id] || "" };
+    return { ...it, qty: q, total: it.Price * q, note: notes[id] || "", sides: sides[id] || [] };
   });
   const subtotal = cartLines.reduce((s, l) => s + l.total, 0);
   const tax = subtotal * taxP / 100;
@@ -68,7 +69,7 @@ export default function OrderWizard({ categories, items, tables = [], settings }
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...info, pin: pin.trim(), items: cartLines.map(l => ({ menuItemId: l.MenuItemId, quantity: l.qty, note: l.note })) }),
+        body: JSON.stringify({ ...info, pin: pin.trim(), items: cartLines.map(l => ({ menuItemId: l.MenuItemId, quantity: l.qty, note: l.note, sides: l.sides })) }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -172,13 +173,39 @@ export default function OrderWizard({ categories, items, tables = [], settings }
                         </svg>
                       </button>
                     </div>
-                    <input
-                      className="cart-note-input"
-                      value={notes[l.MenuItemId] || ""}
-                      onChange={e => setNotes(n => ({ ...n, [l.MenuItemId]: e.target.value.slice(0, 300) }))}
-                      placeholder="Add note (e.g. no onions, extra spicy)…"
-                      aria-label={`Special instructions for ${l.Name}`}
-                    />
+                    {l.SideOptions && l.SideOptions.trim() && (
+                      <div className="cart-extra">
+                        <span className="cart-extra-lbl">🍽️ Add sides <small>(free)</small></span>
+                        <div className="cart-sides">
+                          {l.SideOptions.split("\n").map(s => s.trim()).filter(Boolean).map(opt => {
+                            const chosen = (sides[l.MenuItemId] || []).includes(opt);
+                            return (
+                              <label key={opt} className={`side-chip${chosen ? " on" : ""}`}>
+                                <input
+                                  type="checkbox"
+                                  checked={chosen}
+                                  onChange={e => setSides(prev => {
+                                    const cur = prev[l.MenuItemId] || [];
+                                    return { ...prev, [l.MenuItemId]: e.target.checked ? [...cur, opt] : cur.filter(x => x !== opt) };
+                                  })}
+                                />
+                                {opt}
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    <div className="cart-extra">
+                      <span className="cart-extra-lbl">📝 Note <small>(special instructions)</small></span>
+                      <input
+                        className="cart-note-input"
+                        value={notes[l.MenuItemId] || ""}
+                        onChange={e => setNotes(n => ({ ...n, [l.MenuItemId]: e.target.value.slice(0, 300) }))}
+                        placeholder="e.g. no onions, extra spicy, well done…"
+                        aria-label={`Special instructions for ${l.Name}`}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -219,7 +246,10 @@ export default function OrderWizard({ categories, items, tables = [], settings }
             <thead><tr><th>Item</th><th className="num">Qty</th><th className="num">Unit Price</th><th className="num">Total</th></tr></thead>
             <tbody>{cartLines.map(l => (
               <tr key={l.MenuItemId}>
-                <td>{l.Name}{l.note ? <span className="inv-line-note">Note: {l.note}</span> : null}</td>
+                <td>{l.Name}
+                  {l.sides && l.sides.length > 0 ? <span className="inv-line-note">+ {l.sides.join(", ")}</span> : null}
+                  {l.note ? <span className="inv-line-note">Note: {l.note}</span> : null}
+                </td>
                 <td className="num">{l.qty}</td>
                 <td className="num">{fmt(l.Price)}</td>
                 <td className="num">{fmt(l.total)}</td>

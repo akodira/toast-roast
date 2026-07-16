@@ -83,7 +83,7 @@ export default function Dashboard() {
           <h2 className="kh">Top 10 Most Ordered Items</h2>
           {s.topItems.length === 0 ? <p className="kmuted">No orders yet.</p> :
             s.topItems.map((it, i) => (
-              <BarRow key={i} label={it.name} value={it.qty} max={topMax} sub={`${it.qty} × · ${egp(it.revenue)}`} />
+              <BarRow key={i} label={it.name} value={it.qty} max={topMax} sub={`${it.qty} sold · ${egp(it.revenue)}`} />
             ))}
         </div>
 

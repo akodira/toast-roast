@@ -44,26 +44,29 @@ export async function GET() {
     GROUP BY CreatedAt::date ORDER BY d`).all();
 
   // --- top 10 most ordered items (by quantity) ---
-  const topItems = await db.prepare(`SELECT od.ItemName name, SUM(od.Quantity) qty, COALESCE(SUM(od.LineTotal),0) revenue
+  // NOTE: column aliases must NOT collide with COLUMN_MAP keys (name, qty,
+  // orders, etc. get remapped to CamelCase and would come back undefined).
+  // Use neutral aliases: lbl / q / rev / ords.
+  const topItems = await db.prepare(`SELECT od.ItemName lbl, SUM(od.Quantity) q, COALESCE(SUM(od.LineTotal),0) rev
     FROM OrderDetails od JOIN Orders o ON o.OrderId = od.OrderId
     WHERE o.${paid}
-    GROUP BY od.ItemName ORDER BY qty DESC LIMIT 10`).all();
+    GROUP BY od.ItemName ORDER BY q DESC LIMIT 10`).all();
 
   // --- slowest 5 movers (menu items that exist but sell least; 0 = never) ---
-  const slowItems = await db.prepare(`SELECT mi.Name name, COALESCE(SUM(od.Quantity),0) qty
+  const slowItems = await db.prepare(`SELECT mi.Name lbl, COALESCE(SUM(od.Quantity),0) q
     FROM MenuItems mi
     LEFT JOIN OrderDetails od ON od.MenuItemId = mi.MenuItemId
     LEFT JOIN Orders o ON o.OrderId = od.OrderId AND o.${paid}
     WHERE mi.IsActive = true
-    GROUP BY mi.Name ORDER BY qty ASC, mi.Name LIMIT 5`).all();
+    GROUP BY mi.Name ORDER BY q ASC, mi.Name LIMIT 5`).all();
 
   // --- sales by category ---
-  const byCategory = await db.prepare(`SELECT COALESCE(c.Name,'Uncategorised') name, COALESCE(SUM(od.LineTotal),0) revenue, SUM(od.Quantity) qty
+  const byCategory = await db.prepare(`SELECT COALESCE(c.Name,'Uncategorised') lbl, COALESCE(SUM(od.LineTotal),0) rev, SUM(od.Quantity) q
     FROM OrderDetails od
     JOIN Orders o ON o.OrderId = od.OrderId AND o.${paid}
     LEFT JOIN MenuItems mi ON mi.MenuItemId = od.MenuItemId
     LEFT JOIN Categories c ON c.CategoryId = mi.CategoryId
-    GROUP BY c.Name ORDER BY revenue DESC`).all();
+    GROUP BY c.Name ORDER BY rev DESC`).all();
 
   // --- revenue by hour of day (peak hours) ---
   const byHour = await db.prepare(`SELECT EXTRACT(HOUR FROM CreatedAt)::int h, COALESCE(SUM(GrandTotal),0) t, COUNT(*) n
@@ -71,9 +74,9 @@ export async function GET() {
     GROUP BY h ORDER BY h`).all();
 
   // --- busiest tables (by order count + revenue) ---
-  const byTable = await db.prepare(`SELECT TableNumber name, COUNT(*) orders, COALESCE(SUM(GrandTotal),0) revenue
+  const byTable = await db.prepare(`SELECT TableNumber lbl, COUNT(*) ords, COALESCE(SUM(GrandTotal),0) rev
     FROM Orders WHERE ${paid}
-    GROUP BY TableNumber ORDER BY revenue DESC LIMIT 8`).all();
+    GROUP BY TableNumber ORDER BY rev DESC LIMIT 8`).all();
 
   return NextResponse.json({
     todayOrders: Number(today.c), todayRevenue: Number(today.t),
@@ -82,10 +85,10 @@ export async function GET() {
     avgOrderValue, avgPerCustomer, cancelRate,
     repeatCustomers: Number(repeatRow.c), totalOrders,
     last14: last14.map(r => ({ d: r.d, t: Number(r.t), n: Number(r.n) })),
-    topItems: topItems.map(r => ({ name: r.name, qty: Number(r.qty), revenue: Number(r.revenue) })),
-    slowItems: slowItems.map(r => ({ name: r.name, qty: Number(r.qty) })),
-    byCategory: byCategory.map(r => ({ name: r.name, revenue: Number(r.revenue), qty: Number(r.qty || 0) })),
+    topItems: topItems.map(r => ({ name: r.lbl, qty: Number(r.q), revenue: Number(r.rev) })),
+    slowItems: slowItems.map(r => ({ name: r.lbl, qty: Number(r.q) })),
+    byCategory: byCategory.map(r => ({ name: r.lbl, revenue: Number(r.rev), qty: Number(r.q || 0) })),
     byHour: byHour.map(r => ({ h: Number(r.h), t: Number(r.t), n: Number(r.n) })),
-    byTable: byTable.map(r => ({ name: r.name, orders: Number(r.orders), revenue: Number(r.revenue) })),
+    byTable: byTable.map(r => ({ name: r.lbl, orders: Number(r.ords), revenue: Number(r.rev) })),
   });
 }
