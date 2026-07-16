@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import AdminShell from "../AdminShell";
 
-const blank = { CategoryId: "", Name: "", Description: "", Price: "", ImageUrl: "", IsAvailable: 1, IsActive: 1, DisplayOrder: 0, IsFeatured: 0 };
+const blank = { CategoryId: "", Name: "", Description: "", Price: "", ImageUrl: "", IsAvailable: 1, IsActive: 1, DisplayOrder: 0, IsFeatured: 0, SideOptions: "", SideLimit: 0 };
 
 export default function MenuAdmin() {
   const [items, setItems] = useState([]);
@@ -60,6 +60,14 @@ export default function MenuAdmin() {
         <div className="field"><label>Image</label><input key={fileKey} type="file" accept="image/*" onChange={upload} />
           {f.ImageUrl && <img src={f.ImageUrl} alt="" style={{ width: 90, marginTop: ".5rem", borderRadius: 8 }} />}</div>
         <div className="field"><label>Display Order</label><input type="number" value={f.DisplayOrder} onChange={e => setF({ ...f, DisplayOrder: +e.target.value })} /></div>
+        <div className="field">
+          <label>Side Options <span style={{ fontWeight: 400, opacity: .6, fontSize: ".8rem" }}>— free add-ons, one per line. Leave empty for none.</span></label>
+          <textarea value={f.SideOptions || ""} onChange={e => setF({ ...f, SideOptions: e.target.value })} placeholder={"Ketchup\nGarlic dip\nExtra lemon"} rows={3} />
+        </div>
+        <div className="field">
+          <label>How many sides can the customer choose? <span style={{ fontWeight: 400, opacity: .6, fontSize: ".8rem" }}>— 0 = no limit (pick any)</span></label>
+          <input type="number" min="0" value={f.SideLimit ?? 0} onChange={e => setF({ ...f, SideLimit: Math.max(0, parseInt(e.target.value, 10) || 0) })} />
+        </div>
         <div className="field">
           <label><input type="checkbox" checked={!!f.IsAvailable} onChange={e => setF({ ...f, IsAvailable: e.target.checked ? 1 : 0 })} /> Available</label>{" "}
           <label><input type="checkbox" checked={!!f.IsActive} onChange={e => setF({ ...f, IsActive: e.target.checked ? 1 : 0 })} /> Active</label>{" "}

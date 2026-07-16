@@ -84,9 +84,10 @@ export default function OrdersPage() {
               <td>{o.CustomerName}</td>
               <td>{o.Telephone}</td>
               <td>{o.items.map(i => (
-                <div key={i.OrderDetailId}>
-                  {i.Quantity}× {i.ItemName}
-                  {i.Note ? <span className="adm-item-note"> — {i.Note}</span> : null}
+                <div key={i.OrderDetailId} className="adm-item">
+                  <span>{i.Quantity}× {i.ItemName}</span>
+                  {i.Sides ? <span className="adm-item-sides">+ {i.Sides}</span> : null}
+                  {i.Note ? <span className="adm-item-note">📝 {i.Note}</span> : null}
                 </div>
               ))}</td>
               <td><strong>{o.GrandTotal.toFixed(2)}</strong></td>

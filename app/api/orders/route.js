@@ -42,11 +42,13 @@ export async function POST(req) {
     const row = await db.prepare("SELECT * FROM MenuItems WHERE MenuItemId=$1 AND IsActive=true AND IsAvailable=true").get(it.menuItemId);
     if (!row) return NextResponse.json({ error: "One of the items is no longer available." }, { status: 400 });
     // Chosen free side options — validate against the item's actual options
-    // so a client can't inject arbitrary text.
+    // AND the per-item choose-limit so a client can't bypass either.
     const allowed = (row.SideOptions || "").split("\n").map(s => s.trim()).filter(Boolean);
-    const chosenSides = Array.isArray(it.sides)
-      ? it.sides.map(s => String(s).trim()).filter(s => allowed.includes(s))
+    let chosenSides = Array.isArray(it.sides)
+      ? [...new Set(it.sides.map(s => String(s).trim()).filter(s => allowed.includes(s)))]
       : [];
+    const limit = Number(row.SideLimit) || 0;
+    if (limit > 0 && chosenSides.length > limit) chosenSides = chosenSides.slice(0, limit);
     lines.push({ id: row.MenuItemId, name: row.Name, price: row.Price, qty, total: round(row.Price * qty), note: (it.note || "").toString().trim().slice(0, 300) || null, sides: chosenSides.length ? chosenSides.join(", ").slice(0, 500) : null });
   }
   const subtotal = round(lines.reduce((s, l) => s + l.total, 0));

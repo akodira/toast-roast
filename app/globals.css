@@ -1133,7 +1133,9 @@ body { overflow-x: clip; max-width: 100%; }
 .cart-note-input:focus { outline: none; border-color: var(--rust-deep, #8A5A2E); box-shadow: 0 0 0 3px rgba(192,138,86,.12); }
 .cart-note-input::placeholder { color: #b8afa0; }
 .inv-line-note { display: block; font-size: .76rem; color: var(--rust-deep, #8A5A2E); margin-top: .15rem; }
-.adm-item-note { color: var(--rust-deep, #8A5A2E); font-style: italic; }
+.adm-item { padding: .15rem 0; }
+.adm-item-sides { display: block; font-size: .8rem; color: var(--rust-deep, #8A5A2E); }
+.adm-item-note { display: block; font-size: .82rem; font-weight: 700; color: #8E1E17; margin-top: .1rem; }
 .cust-item-note { color: var(--rust-deep, #8A5A2E); font-style: italic; }
 
 /* Customer-side timeline (lighter, no times) */
@@ -1151,6 +1153,8 @@ body { overflow-x: clip; max-width: 100%; }
 /* Side-option chips in the order wizard cart */
 .cart-sides { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
 .side-chip { display: inline-flex; align-items: center; gap: .35rem; font-size: .8rem; padding: .3rem .7rem; border: 1px solid var(--line); border-radius: 999px; cursor: pointer; background: #fff; user-select: none; }
+.side-chip.disabled { opacity: .4; cursor: not-allowed; }
+.cart-sides-count { display: block; font-size: .74rem; color: var(--muted); margin-top: .4rem; }
 .side-chip input { width: 14px; height: 14px; accent-color: var(--rust); margin: 0; }
 .side-chip.on { border-color: var(--rust); background: rgba(192,138,86,.1); color: var(--rust-deep, #8A5A2E); font-weight: 500; }
 

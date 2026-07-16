@@ -17,8 +17,8 @@ export async function POST(req) {
   if (!b.Name?.trim() || !b.CategoryId || b.Price == null || isNaN(parseFloat(b.Price)))
     return NextResponse.json({ error: "Name, category and a valid price are required." }, { status: 400 });
   const db = await getDb();
-  const r = await db.prepare(`INSERT INTO MenuItems (CategoryId,Name,Description,Price,ImageUrl,IsAvailable,IsActive,DisplayOrder,IsFeatured,SideOptions)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING MenuItemId AS id`).run(b.CategoryId, b.Name.trim(), b.Description || null, parseFloat(b.Price), b.ImageUrl || null, b.IsAvailable ? true : false, b.IsActive ? true : false, b.DisplayOrder || 0, b.IsFeatured ? true : false, (b.SideOptions || "").trim() || null);
+  const r = await db.prepare(`INSERT INTO MenuItems (CategoryId,Name,Description,Price,ImageUrl,IsAvailable,IsActive,DisplayOrder,IsFeatured,SideOptions,SideLimit)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING MenuItemId AS id`).run(b.CategoryId, b.Name.trim(), b.Description || null, parseFloat(b.Price), b.ImageUrl || null, b.IsAvailable ? true : false, b.IsActive ? true : false, b.DisplayOrder || 0, b.IsFeatured ? true : false, (b.SideOptions || "").trim() || null, parseInt(b.SideLimit, 10) || 0);
   await logActivity(Number(s.sub), "ITEM_CREATE", b.Name);
   return NextResponse.json({ ok: true, id: r.lastInsertRowid });
 }

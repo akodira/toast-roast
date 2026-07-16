@@ -173,29 +173,46 @@ export default function OrderWizard({ categories, items, tables = [], settings }
                         </svg>
                       </button>
                     </div>
-                    {l.SideOptions && l.SideOptions.trim() && (
-                      <div className="cart-extra">
-                        <span className="cart-extra-lbl">🍽️ Add sides <small>(free)</small></span>
-                        <div className="cart-sides">
-                          {l.SideOptions.split("\n").map(s => s.trim()).filter(Boolean).map(opt => {
-                            const chosen = (sides[l.MenuItemId] || []).includes(opt);
-                            return (
-                              <label key={opt} className={`side-chip${chosen ? " on" : ""}`}>
-                                <input
-                                  type="checkbox"
-                                  checked={chosen}
-                                  onChange={e => setSides(prev => {
-                                    const cur = prev[l.MenuItemId] || [];
-                                    return { ...prev, [l.MenuItemId]: e.target.checked ? [...cur, opt] : cur.filter(x => x !== opt) };
-                                  })}
-                                />
-                                {opt}
-                              </label>
-                            );
-                          })}
+                    {l.SideOptions && l.SideOptions.trim() && (() => {
+                      const opts = l.SideOptions.split("\n").map(s => s.trim()).filter(Boolean);
+                      const chosenList = sides[l.MenuItemId] || [];
+                      const limit = l.SideLimit || 0; // 0 = unlimited
+                      const atLimit = limit > 0 && chosenList.length >= limit;
+                      return (
+                        <div className="cart-extra">
+                          <span className="cart-extra-lbl">
+                            🍽️ Add sides <small>{limit > 0 ? `(choose up to ${limit}, free)` : "(free)"}</small>
+                          </span>
+                          <div className="cart-sides">
+                            {opts.map(opt => {
+                              const chosen = chosenList.includes(opt);
+                              const disabled = !chosen && atLimit;
+                              return (
+                                <label key={opt} className={`side-chip${chosen ? " on" : ""}${disabled ? " disabled" : ""}`}>
+                                  <input
+                                    type="checkbox"
+                                    checked={chosen}
+                                    disabled={disabled}
+                                    onChange={e => setSides(prev => {
+                                      const cur = prev[l.MenuItemId] || [];
+                                      if (e.target.checked) {
+                                        if (limit > 0 && cur.length >= limit) return prev; // guard
+                                        return { ...prev, [l.MenuItemId]: [...cur, opt] };
+                                      }
+                                      return { ...prev, [l.MenuItemId]: cur.filter(x => x !== opt) };
+                                    })}
+                                  />
+                                  {opt}
+                                </label>
+                              );
+                            })}
+                          </div>
+                          {limit > 0 && (
+                            <span className="cart-sides-count">{chosenList.length} / {limit} selected</span>
+                          )}
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                     <div className="cart-extra">
                       <span className="cart-extra-lbl">📝 Note <small>(special instructions)</small></span>
                       <input
