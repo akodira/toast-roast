@@ -329,7 +329,7 @@ export default function PortalClient() {
                 </div>
               )}
               <ul style={{ margin: ".6rem 0", paddingLeft: "1.1rem", fontSize: ".9rem" }}>
-                {o.items.map(i => <li key={i.OrderDetailId}>{i.Quantity}× {i.ItemName} @ {fmt(i.UnitPrice)} — {fmt(i.LineTotal)}{i.Note ? <span className="cust-item-note"> · {i.Note}</span> : null}</li>)}
+                {o.items.map(i => <li key={i.OrderDetailId}>{i.Quantity}× {i.ItemName} @ {fmt(i.UnitPrice)} — {fmt(i.LineTotal)}{i.Sides ? <span className="cust-item-note"> + {i.Sides}</span> : null}{i.Note ? <span className="cust-item-note"> · {i.Note}</span> : null}</li>)}
               </ul>
               <p style={{ fontWeight: 600 }}>Subtotal: {fmt(o.Subtotal)}</p>
               <p style={{ fontSize: ".78rem", opacity: .65, marginBottom: ".6rem" }}>Tax &amp; service are applied once on the combined Total Invoice tab, not per order.</p>
