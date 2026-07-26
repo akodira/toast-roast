@@ -3,6 +3,9 @@ import { useEffect, useState, useRef } from "react";
 import AdminShell from "../AdminShell";
 
 const STATUSES = ["New", "Preparing", "Ready", "Delivered", "Cancelled", "All"];
+// The real workflow statuses an order can be set to (excludes the "New" alias
+// and the "All" filter). "New" in the tabs maps to "Received" orders.
+const ORDER_STATUSES = ["Received", "Preparing", "Ready", "Delivered", "Cancelled"];
 const TL_STEPS = [["Received", "ReceivedAt"], ["Preparing", "PreparingAt"], ["Ready", "ReadyAt"], ["Delivered", "DeliveredAt"]];
 const hhmm = ts => ts ? new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
 
@@ -156,7 +159,7 @@ export default function OrdersPage() {
                     onChange={e => setStatus(o.OrderId, e.target.value)}
                     aria-label={`Status for order ${o.OrderNumber}`}
                   >
-                    {STATUSES.slice(1).map(s => <option key={s} value={s}>{s}</option>)}
+                    {ORDER_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
                 <Timeline o={o} />

@@ -12,6 +12,7 @@ export default function CustomersPage() {
   const [msg, setMsg] = useState("");
   const [history, setHistory] = useState(null); // { customer, orders, invoices } | null
   const [loadingHist, setLoadingHist] = useState(false);
+  const [expanded, setExpanded] = useState({}); // invoiceId -> bool
   const load = () => fetch("/api/admin/customers").then(r => r.json()).then(d => setCustomers(d.customers || []));
   useEffect(() => { load(); }, []);
 
@@ -39,6 +40,7 @@ export default function CustomersPage() {
 
   const openHistory = async (c) => {
     setLoadingHist(true);
+    setExpanded({});
     setHistory({ customer: c, orders: [], invoices: [] });
     try {
       const res = await fetch(`/api/admin/customers/history?phoneKey=${encodeURIComponent(c.phoneKey)}`);
@@ -109,43 +111,46 @@ export default function CustomersPage() {
               <>
                 <h3 className="hist-sec">Invoices ({history.invoices.length})</h3>
                 {history.invoices.length === 0 ? <p className="hist-empty">No invoices yet.</p> : (
-                  <div className="table-wrap"><table className="adm">
-                    <thead><tr><th>Date</th><th>Table</th><th className="num">Orders</th><th className="num">Total</th><th>Status</th></tr></thead>
-                    <tbody>{history.invoices.map(inv => (
-                      <tr key={inv.InvoiceId}>
-                        <td>{fmtDate(inv.CreatedAt)}</td>
-                        <td>{inv.TableName}</td>
-                        <td className="num">{inv.OrderCount}</td>
-                        <td className="num">{Number(inv.total ?? inv.Total ?? 0).toFixed(2)}</td>
-                        <td>{inv.IsPaid
-                          ? <span className="status-pill st-Ready">Paid</span>
-                          : <span className="status-pill st-Pending">Unpaid</span>}</td>
-                      </tr>
-                    ))}</tbody>
-                  </table></div>
-                )}
-
-                <h3 className="hist-sec">Orders ({history.orders.length})</h3>
-                {history.orders.length === 0 ? <p className="hist-empty">No orders yet.</p> : (
-                  <div className="hist-orders">
-                    {history.orders.map(o => (
-                      <div className="hist-order" key={o.OrderId}>
-                        <div className="hist-order-head">
-                          <span><strong>{o.OrderNumber}</strong> · Table {o.TableNumber} · {fmtDate(o.CreatedAt)}</span>
-                          <span className={`status-pill st-${o.Status}`}>{o.Status}</span>
+                  <div className="hist-inv-list">
+                    {history.invoices.map(inv => {
+                      const invOrders = history.orders.filter(o => o.GroupInvoiceId === inv.InvoiceId);
+                      const open = !!expanded[inv.InvoiceId];
+                      return (
+                        <div className={`hist-inv${open ? " open" : ""}`} key={inv.InvoiceId}>
+                          <button className="hist-inv-head" onClick={() => setExpanded(e => ({ ...e, [inv.InvoiceId]: !open }))}>
+                            <span className="hist-inv-toggle" aria-hidden="true">{open ? "−" : "+"}</span>
+                            <span className="hist-inv-date">{fmtDate(inv.CreatedAt)}</span>
+                            <span className="hist-inv-meta">Table {inv.TableName} · {inv.OrderCount} order{inv.OrderCount === 1 ? "" : "s"}</span>
+                            <span className="hist-inv-total">{Number(inv.total ?? inv.Total ?? 0).toFixed(2)}</span>
+                            {inv.IsPaid
+                              ? <span className="status-pill st-Ready">Paid</span>
+                              : <span className="status-pill st-Pending">Unpaid</span>}
+                          </button>
+                          {open && (
+                            <div className="hist-inv-body">
+                              {invOrders.length === 0 ? <p className="hist-empty">No order details.</p> : invOrders.map(o => (
+                                <div className="hist-order" key={o.OrderId}>
+                                  <div className="hist-order-head">
+                                    <span><strong>{o.OrderNumber}</strong> · {fmtDate(o.CreatedAt)}</span>
+                                    <span className={`status-pill st-${o.Status}`}>{o.Status}</span>
+                                  </div>
+                                  <ul className="hist-items">
+                                    {o.items.map((i, ix) => (
+                                      <li key={ix}>
+                                        {i.Quantity}× {i.ItemName} — {Number(i.LineTotal).toFixed(2)}
+                                        {i.Sides ? <span className="hist-sub"> + {i.Sides}</span> : null}
+                                        {i.Note ? <span className="hist-sub"> · {i.Note}</span> : null}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                  <div className="hist-order-total">Order total: {Number(o.GrandTotal).toFixed(2)}</div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        <ul className="hist-items">
-                          {o.items.map((i, ix) => (
-                            <li key={ix}>
-                              {i.Quantity}× {i.ItemName} — {Number(i.LineTotal).toFixed(2)}
-                              {i.Sides ? <span className="hist-sub"> + {i.Sides}</span> : null}
-                              {i.Note ? <span className="hist-sub"> · {i.Note}</span> : null}
-                            </li>
-                          ))}
-                        </ul>
-                        <div className="hist-order-total">Total: {Number(o.GrandTotal).toFixed(2)}</div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </>

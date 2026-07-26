@@ -18,9 +18,19 @@ export async function GET(req) {
   if (ids.length === 0) return NextResponse.json({ orders: [], invoices: [] });
 
   const placeholders = ids.map((_, i) => `$${i + 1}`).join(",");
+  // Each order is tagged with the invoice (sitting) it belongs to: the invoice
+  // for its table+customer whose OccupiedAt is the latest at or before the order.
   const orders = await db.prepare(
-    `SELECT o.OrderId, o.OrderNumber, o.TableNumber, o.Status, o.Subtotal, o.TaxAmount, o.ServiceAmount, o.GrandTotal, o.CreatedAt
-     FROM Orders o WHERE o.CustomerId IN (${placeholders}) ORDER BY o.CreatedAt DESC`
+    `SELECT o.OrderId, o.OrderNumber, o.TableNumber, o.Status, o.Subtotal, o.TaxAmount, o.ServiceAmount, o.GrandTotal, o.CreatedAt,
+       inv.InvoiceId AS GroupInvoiceId
+     FROM Orders o
+     LEFT JOIN Tables t ON t.Name = o.TableNumber
+     LEFT JOIN LATERAL (
+       SELECT i.InvoiceId FROM Invoices i
+       WHERE i.CustomerId = o.CustomerId AND i.TableId = t.TableId AND i.OccupiedAt <= o.CreatedAt
+       ORDER BY i.OccupiedAt DESC LIMIT 1
+     ) inv ON TRUE
+     WHERE o.CustomerId IN (${placeholders}) ORDER BY o.CreatedAt DESC`
   ).all(...ids);
   for (const o of orders) {
     o.items = await db.prepare("SELECT ItemName, Quantity, UnitPrice, LineTotal, Sides, Note FROM OrderDetails WHERE OrderId=$1").all(o.OrderId);
