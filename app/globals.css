@@ -1188,3 +1188,17 @@ body { overflow-x: clip; max-width: 100%; }
 .rt-editor h1, .rt-editor h2, .rt-editor h3 { font-family: var(--font-display); margin: .3rem 0; }
 .rt-editor ul, .rt-editor ol { padding-left: 1.4rem; margin: .3rem 0; }
 .rt-editor a { color: var(--rust-deep, #8A5A2E); text-decoration: underline; }
+
+/* ===== Mobile menu responsiveness (<=640px) ===== */
+@media (max-width: 640px) {
+  .mv-item { gap: .7rem; padding: .7rem .4rem; grid-template-columns: auto minmax(0,1fr) auto auto; }
+  .mv-mono { width: 34px; height: 34px; font-size: .78rem; }
+  .mv-body .nm { font-size: .95rem; line-height: 1.25; }
+  .mv-body .desc { font-size: .74rem; }
+  .mv-item .pr { font-size: .9rem; }
+  .mv-cat-note, .mv-vat {
+    font-size: .78rem; padding: .6rem .7rem; gap: .45rem;
+    box-sizing: border-box; max-width: 100%; overflow-wrap: anywhere; word-break: break-word;
+  }
+  .mv-cat-note span, .mv-vat { min-width: 0; }
+}
