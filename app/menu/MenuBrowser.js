@@ -3,6 +3,13 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import CategoryIcon from "@/components/CategoryIcon";
+import Html from "@/components/Html";
+
+/* Strip HTML tags to test whether a rich-text note has real content — the
+   editor can leave empty <p></p>/<br> when "cleared", which shouldn't render. */
+function stripHtml(html = "") {
+  return String(html || "").replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ");
+}
 
 /* Typographic monogram — the deliberate stand-in for a per-item photo.
    244 items would mean 244 assets; initials look intentional, not missing. */
@@ -193,17 +200,10 @@ export default function MenuBrowser({ categories, items, eyebrow, pdfUrl, taxPer
           </>
         )}
 
-        {activeCategory && !showAll && !searching && activeCategory.Note?.trim() && (
+        {activeCategory && !showAll && !searching && stripHtml(activeCategory.Note).trim() && (
           <div className="mv-cat-note">
             <InfoIcon />
-            <span>{activeCategory.Note}</span>
-          </div>
-        )}
-
-        {vat && (
-          <div className="mv-vat">
-            <InfoIcon />
-            All prices are subject to a {vat}.
+            <Html>{activeCategory.Note}</Html>
           </div>
         )}
       </section>

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import AdminShell from "../AdminShell";
+import RichText from "@/components/RichText";
 
 const blank = { Name: "", DisplayOrder: 0, IsActive: 1, ImageUrl: "", Note: "",
   ImageLayout: "overlay", ImageFit: "cover", ImageFocusX: 50, ImageFocusY: 50 };
@@ -52,10 +53,9 @@ export default function CategoriesPage() {
         <div className="field">
           <label>Category Note</label>
           <p style={{ fontSize: ".76rem", opacity: .65, marginBottom: ".3rem" }}>
-            Shown under this category's heading on the Menu page — e.g. a serving note or allergen warning. Press Enter for a new line. Leave blank to show nothing.
+            Shown under this category's items on the Menu page — e.g. a serving note or allergen warning. Use the toolbar to format. Leave blank to show nothing.
           </p>
-          <textarea value={f.Note || ""} onChange={e => setF({ ...f, Note: e.target.value })} rows={3}
-            placeholder={"e.g. All dishes are served with your choice of 2 sides.\nAsk your server about today's specials."} />
+          <RichText value={f.Note || ""} onChange={v => setF({ ...f, Note: v })} />
         </div>
         <div className="field">
           <label>Background Photo (shown behind this category on the Menu page)</label>
