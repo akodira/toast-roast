@@ -81,10 +81,13 @@ export default function TablesPage() {
             {isAdmin && <td>{t.DisplayOrder}</td>}
             <td>{t.Name}</td>
             <td>
-              {t.OccupiedBy ? <span className="status-pill st-Pending">Occupied</span> : <span className="status-pill st-Ready">Free</span>}
-              {t.IsReserved && <span className="status-pill st-Preparing" style={{ marginLeft: ".4rem" }}>Reserved{t.ReservedName ? ` · ${t.ReservedName}` : ""}</span>}
+              {t.OccupiedBy
+                ? <span className="status-pill st-Pending">Occupied</span>
+                : t.IsReserved
+                  ? <span className="status-pill st-Preparing">Registered</span>
+                  : <span className="status-pill st-Ready">Free</span>}
             </td>
-            <td>{t.OccupiedName || "—"}</td>
+            <td>{t.OccupiedName || (t.IsReserved ? t.ReservedName : null) || "—"}</td>
             <td>
               {t.OccupiedBy && <button className="btn small ghost" onClick={() => release(t.TableId, t.Name)}>Release</button>}{" "}
               {t.OccupiedBy && <button className="btn small ghost" onClick={() => resetPin(t.TableId, t.Name)}>Reset PIN</button>}{" "}

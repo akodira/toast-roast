@@ -19,11 +19,22 @@ export async function POST(req) {
   const key = phoneKey(mobile || "");
   if (key.length < 7) return NextResponse.json({ known: false });
   const db = await getDb();
+  // Match an existing customer by mobile first…
+  let name = null;
   const row = await db.prepare(
     `SELECT Name FROM Customers WHERE ${PHONE_KEY_SQL("Telephone")} = $1 ORDER BY CustomerId DESC LIMIT 1`
   ).get(key);
-  if (!row) return NextResponse.json({ known: false });
+  if (row) name = row.Name;
+  // …otherwise fall back to a reserved-table name held for this mobile (a
+  // reserved guest who hasn't ordered before still gets recognised).
+  if (!name) {
+    const resv = await db.prepare(
+      `SELECT ReservedName FROM Tables WHERE IsReserved=true AND ReservedName IS NOT NULL AND ${PHONE_KEY_SQL("ReservedPhone")} = $1 LIMIT 1`
+    ).get(key);
+    if (resv?.ReservedName) name = resv.ReservedName;
+  }
+  if (!name) return NextResponse.json({ known: false });
   // reveal=true returns the full name (used only after the customer taps
   // "That's me" — the confirmation is the consent step).
-  return NextResponse.json(reveal ? { known: true, name: row.Name } : { known: true, hint: maskName(row.Name) });
+  return NextResponse.json(reveal ? { known: true, name } : { known: true, hint: maskName(name) });
 }
