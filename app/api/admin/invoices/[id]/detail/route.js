@@ -20,7 +20,7 @@ export async function GET(_req, { params }) {
   if (!inv) return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
 
   const orders = await db.prepare(`SELECT OrderId, OrderNumber, TaxPercent, ServicePercent FROM Orders
-    WHERE CustomerId=$1 AND TableNumber=$2 AND CreatedAt >= $3`).all(inv.CustomerId, inv.TableName, inv.OccupiedAt);
+    WHERE CustomerId=$1 AND TableNumber=$2 AND CreatedAt >= $3 AND Status <> 'Cancelled'`).all(inv.CustomerId, inv.TableName, inv.OccupiedAt);
 
   const lineMap = {};
   let subtotal = 0, tax = 0, service = 0, grand = 0;

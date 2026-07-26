@@ -9,6 +9,7 @@ function buildCombinedInvoice(orders) {
   const lineMap = {};
   let subtotal = 0, tax = 0, svc = 0, grand = 0, taxPct = 0, svcPct = 0;
   for (const o of orders) {
+    if (o.Status === "Cancelled") continue; // cancelled orders never bill
     subtotal += o.Subtotal; tax += o.TaxAmount; svc += o.ServiceAmount; grand += o.GrandTotal;
     taxPct = o.TaxPercent; svcPct = o.ServicePercent;
     for (const i of o.items) {

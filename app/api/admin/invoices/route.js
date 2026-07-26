@@ -17,7 +17,7 @@ export async function GET(req) {
     FROM Invoices i
     JOIN Tables t ON t.TableId = i.TableId
     JOIN Customers c ON c.CustomerId = i.CustomerId
-    LEFT JOIN Orders o ON o.CustomerId = i.CustomerId AND o.TableNumber = t.Name AND o.CreatedAt >= i.OccupiedAt
+    LEFT JOIN Orders o ON o.CustomerId = i.CustomerId AND o.TableNumber = t.Name AND o.CreatedAt >= i.OccupiedAt AND o.Status <> 'Cancelled'
   `;
   if (status === "paid") sql += " WHERE i.IsPaid=true";
   if (status === "unpaid") sql += " WHERE i.IsPaid=false";
