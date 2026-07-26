@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getDb, logActivity, withTransaction } from "@/lib/db";
-import { phonesMatch } from "@/lib/phone";
+import { phonesMatch, phoneKey, PHONE_KEY_SQL } from "@/lib/phone";
 import { checkTablePin } from "@/lib/pin";
 import { requireRole, ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER , requireSection } from "@/lib/auth";
 
@@ -61,11 +61,21 @@ export async function POST(req) {
     // Find-or-create: the same phone+name combo (e.g. someone ordering a
     // second round today) reuses their existing Customer row instead of
     // creating a fresh duplicate every single order.
-    const existing = await tdb.prepare("SELECT CustomerId FROM Customers WHERE Telephone=$1 AND Name=$2 ORDER BY CustomerId DESC LIMIT 1")
-      .get(telephone.trim(), name.trim());
-    const customerId = existing
-      ? existing.CustomerId
-      : (await tdb.prepare("INSERT INTO Customers (Name,Telephone) VALUES ($1,$2) RETURNING CustomerId AS id").run(name.trim(), telephone.trim())).lastInsertRowid;
+    // Mobile is the customer's identity. Match by phone key alone so the same
+    // number always maps to the same customer, regardless of small name
+    // differences — and reuse that existing row instead of creating duplicates.
+    // If the name changed, keep the latest one the customer supplied.
+    const existing = await tdb.prepare(`SELECT CustomerId, Name FROM Customers WHERE ${PHONE_KEY_SQL("Telephone")} = $1 ORDER BY CustomerId DESC LIMIT 1`)
+      .get(phoneKey(telephone));
+    let customerId;
+    if (existing) {
+      customerId = existing.CustomerId;
+      if (name.trim() && name.trim() !== existing.Name) {
+        await tdb.prepare(`UPDATE Customers SET Name=$1 WHERE ${PHONE_KEY_SQL("Telephone")} = $2`).run(name.trim(), phoneKey(telephone));
+      }
+    } else {
+      customerId = (await tdb.prepare("INSERT INTO Customers (Name,Telephone) VALUES ($1,$2) RETURNING CustomerId AS id").run(name.trim(), telephone.trim())).lastInsertRowid;
+    }
     const ord = await tdb.prepare(`INSERT INTO Orders (OrderNumber,CustomerId,TableNumber,Subtotal,TaxPercent,TaxAmount,ServicePercent,ServiceAmount,GrandTotal,Status,ReceivedAt)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'Received',NOW()) RETURNING OrderId AS id`).run(orderNumber, customerId, String(tableNumber).trim(), subtotal, taxP, taxAmount, svcP, serviceAmount, grandTotal);
     for (const l of lines) {

@@ -8,6 +8,7 @@ const ROLE_OPTIONS = [[1, "Admin"], [4, "Manager"], [2, "Staff"], [3, "Editor"]]
 const SECTIONS = [
   ["dashboard", "Dashboard", [1, 4]],
   ["orders", "Orders", [1, 2, 4]],
+  ["customers", "Customers", [1, 4]],
   ["invoices", "Invoices", [1, 2, 4]],
   ["tables", "Tables", [1, 2, 4]],
   ["menu", "Menu Items", [1, 3]],

@@ -54,6 +54,9 @@ export default function PortalClient() {
   const [tab, setTab] = useState("orders"); // "orders" | "invoice"
   const [pinShow, setPinShow] = useState(null); // { pin, table } — the one-time reveal after claiming
   const [joinPin, setJoinPin] = useState(""); // PIN typed when joining someone else's table
+  // Mobile-first: after the phone is entered, look the customer up. `custLookup`
+  // holds { status: "new" | "known", hint, confirmed, nameLocked }.
+  const [custLookup, setCustLookup] = useState(null);
 
   // Handoff from the homepage "Join Your Table" box: /portal?join=<phone>
   // lands straight in the join tab with the lookup already running, so the
@@ -179,6 +182,47 @@ export default function PortalClient() {
     setErr("");
   };
 
+  // Mobile-first customer lookup — runs when the phone field loses focus.
+  // Returns a MASKED hint for a known number (privacy); the full name is only
+  // fetched after the customer taps "That's me".
+  const lookupCustomer = async () => {
+    const phone = form.phone.trim();
+    if (!/^[\d+\-\s()]{7,}$/.test(phone)) { setCustLookup(null); return; }
+    try {
+      const res = await fetch("/api/public/customer-lookup", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile: phone }),
+      });
+      const d = await res.json();
+      if (d.known) {
+        setCustLookup({ status: "known", hint: d.hint, confirmed: false, nameLocked: true });
+        setForm(f => ({ ...f, name: "" })); // clear until confirmed
+      } else {
+        setCustLookup({ status: "new", confirmed: true, nameLocked: false });
+      }
+    } catch { setCustLookup({ status: "new", confirmed: true, nameLocked: false }); }
+  };
+
+  // "That's me" — reveal + fill the real name (locked); the tap is the consent.
+  const confirmCustomer = async () => {
+    try {
+      const res = await fetch("/api/public/customer-lookup", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile: form.phone.trim(), reveal: true }),
+      });
+      const d = await res.json();
+      if (d.known && d.name) {
+        setForm(f => ({ ...f, name: d.name }));
+        setCustLookup(l => ({ ...l, confirmed: true, nameLocked: true }));
+      }
+    } catch { /* leave as-is; they can still type */ }
+  };
+
+  // Unlock the name to correct it (wrong name saved, or a family member).
+  const editCustomerName = () => setCustLookup(l => ({ ...(l || {}), nameLocked: false, confirmed: true }));
+  // "Not me" — treat as a new/different name on this number.
+  const notMe = () => { setForm(f => ({ ...f, name: "" })); setCustLookup({ status: "known", confirmed: true, nameLocked: false }); };
+
   // Call waiter — one tap, appears in the back office by table + name.
   const [waiterMsg, setWaiterMsg] = useState("");
   const callWaiter = async () => {
@@ -233,16 +277,47 @@ export default function PortalClient() {
               {freeTables.length === 0 && <p style={{ fontSize: ".8rem", opacity: .7, marginTop: ".3rem" }}>No free tables right now — if you're joining someone already seated, use "Join Current Table" above.</p>}
               <button type="button" className="btn small ghost" style={{ marginTop: ".4rem" }} onClick={loadTables}>Refresh</button>
             </div>
-            <div className="field">
-              <label htmlFor="pt-name">Your Name</label>
-              <input id="pt-name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
-            </div>
+
+            {/* Mobile first — this identifies the customer. */}
             <div className="field">
               <label htmlFor="pt-phone">Phone Number</label>
-              <input id="pt-phone" type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}
-                onKeyDown={e => e.key === "Enter" && submitClaim()} />
+              <input id="pt-phone" type="tel" value={form.phone}
+                onChange={e => { setForm({ ...form, phone: e.target.value }); setCustLookup(null); }}
+                onBlur={lookupCustomer}
+                placeholder="e.g. 0100 123 4567" />
             </div>
-            <button className="btn" onClick={submitClaim} disabled={busy}>{busy ? "Checking…" : "Register Table"}</button>
+
+            {/* Returning customer: masked hint + confirm, before revealing the name. */}
+            {custLookup?.status === "known" && !custLookup.confirmed && (
+              <div className="cust-welcome">
+                <span>Welcome back! Is this you — <strong>{custLookup.hint}</strong>?</span>
+                <div className="cust-welcome-btns">
+                  <button type="button" className="btn small" onClick={confirmCustomer}>That's me</button>
+                  <button type="button" className="btn small ghost" onClick={notMe}>Not me</button>
+                </div>
+              </div>
+            )}
+
+            {/* Name field — only after we know if they're new or confirmed. */}
+            {custLookup && custLookup.confirmed && (
+              <div className="field">
+                <label htmlFor="pt-name">Your Name</label>
+                <div className="cust-name-row">
+                  <input id="pt-name" value={form.name}
+                    onChange={e => setForm({ ...form, name: e.target.value })}
+                    disabled={custLookup.nameLocked}
+                    className={custLookup.nameLocked ? "input-locked" : ""}
+                    placeholder="Enter your name" />
+                  {custLookup.nameLocked && (
+                    <button type="button" className="btn small ghost" onClick={editCustomerName}>Edit</button>
+                  )}
+                </div>
+                {custLookup.nameLocked && <p style={{ fontSize: ".76rem", opacity: .6, marginTop: ".3rem" }}>Saved from your last visit. Tap Edit if it's wrong.</p>}
+              </div>
+            )}
+
+            <button className="btn" onClick={submitClaim} disabled={busy || !custLookup}>{busy ? "Checking…" : "Register Table"}</button>
+            {!custLookup && form.phone.trim() && <p style={{ fontSize: ".78rem", opacity: .6, marginTop: ".5rem" }}>Tap outside the phone field to continue.</p>}
           </>
         )}
 
