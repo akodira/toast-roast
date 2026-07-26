@@ -58,6 +58,18 @@ export default function PortalClient() {
   // holds { status: "new" | "known", hint, confirmed, nameLocked }.
   const [custLookup, setCustLookup] = useState(null);
 
+  // Live lookup — fires as they type (debounced) once the number looks valid,
+  // so the name/hint appears without needing to tap out of the field. Only
+  // runs in claim mode.
+  useEffect(() => {
+    if (mode !== "claim") return;
+    const phone = form.phone.trim();
+    if (!/^[\d+\-\s()]{7,}$/.test(phone)) { setCustLookup(null); return; }
+    const t = setTimeout(() => { lookupCustomer(); }, 450);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.phone, mode]);
+
   // Handoff from the homepage "Join Your Table" box: /portal?join=<phone>
   // lands straight in the join tab with the lookup already running, so the
   // customer doesn't have to retype the number they just entered.
@@ -272,7 +284,7 @@ export default function PortalClient() {
               <label htmlFor="pt-table">Table</label>
               <select id="pt-table" value={form.tableId} onChange={e => setForm({ ...form, tableId: e.target.value })}>
                 <option value="">Select a table…</option>
-                {freeTables.map(t => <option key={t.TableId} value={t.TableId}>{t.Name}</option>)}
+                {freeTables.map(t => <option key={t.TableId} value={t.TableId}>{t.Name}{t.IsReserved ? " (Reserved)" : ""}</option>)}
               </select>
               {freeTables.length === 0 && <p style={{ fontSize: ".8rem", opacity: .7, marginTop: ".3rem" }}>No free tables right now — if you're joining someone already seated, use "Join Current Table" above.</p>}
               <button type="button" className="btn small ghost" style={{ marginTop: ".4rem" }} onClick={loadTables}>Refresh</button>
@@ -282,8 +294,7 @@ export default function PortalClient() {
             <div className="field">
               <label htmlFor="pt-phone">Phone Number</label>
               <input id="pt-phone" type="tel" value={form.phone}
-                onChange={e => { setForm({ ...form, phone: e.target.value }); setCustLookup(null); }}
-                onBlur={lookupCustomer}
+                onChange={e => setForm({ ...form, phone: e.target.value })}
                 placeholder="e.g. 0100 123 4567" />
             </div>
 
@@ -317,7 +328,6 @@ export default function PortalClient() {
             )}
 
             <button className="btn" onClick={submitClaim} disabled={busy || !custLookup}>{busy ? "Checking…" : "Register Table"}</button>
-            {!custLookup && form.phone.trim() && <p style={{ fontSize: ".78rem", opacity: .6, marginTop: ".5rem" }}>Tap outside the phone field to continue.</p>}
           </>
         )}
 

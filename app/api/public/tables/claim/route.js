@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { generatePin, hashPin } from "@/lib/pin";
+import { phonesMatch } from "@/lib/phone";
 
 // Public: claim a free table. Atomic conditional UPDATE (only succeeds if
 // still unoccupied) so two people tapping "claim" on the same table at the
@@ -18,10 +19,21 @@ export async function POST(req) {
   if (!/^[\d+\-\s()]{7,}$/.test(phone))
     return NextResponse.json({ error: "Please enter a valid phone number." }, { status: 400 });
 
+  const db = await getDb();
+
+  // Reserved tables show in the list but only the person the reservation is
+  // held for (matching mobile) may register them. This is the real boundary —
+  // the reserved phone is never sent to the client.
+  const resv = await db.prepare("SELECT IsReserved, ReservedPhone FROM Tables WHERE TableId=$1").get(tableId);
+  if (resv?.IsReserved) {
+    if (!resv.ReservedPhone || !phonesMatch(phone, resv.ReservedPhone)) {
+      return NextResponse.json({ error: "This table is reserved. Please pick another, or contact staff if this is your reservation." }, { status: 403 });
+    }
+  }
+
   const pin = generatePin();
   const pinHash = await hashPin(pin);
 
-  const db = await getDb();
   const r = await db.prepare(`UPDATE Tables
       SET OccupiedBy=$1, OccupiedName=$2, OccupiedAt=NOW(),
           PinHash=$3, PinAttempts=0, PinLockedUntil=NULL

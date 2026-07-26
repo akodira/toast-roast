@@ -56,6 +56,19 @@ export default function TablesPage() {
           <div className="field"><label>Table Name / Number</label><input value={f.Name} onChange={e => setF({ ...f, Name: e.target.value })} placeholder="e.g. 12, or Patio 3" /></div>
           <div className="field"><label>Display Order</label><input type="number" value={f.DisplayOrder} onChange={e => setF({ ...f, DisplayOrder: +e.target.value })} /></div>
           <div className="field"><label><input type="checkbox" checked={!!f.IsActive} onChange={e => setF({ ...f, IsActive: e.target.checked ? 1 : 0 })} /> Active (visible to customers)</label></div>
+          <div className="field"><label><input type="checkbox" checked={!!f.IsReserved} onChange={e => setF({ ...f, IsReserved: e.target.checked })} /> Reserved</label>
+            <p style={{ fontSize: ".76rem", opacity: .65, margin: ".2rem 0 0" }}>A reserved table still shows in the customer list, but only the person with the matching mobile below can register it.</p>
+          </div>
+          {f.IsReserved && (
+            <>
+              <div className="field"><label>Reserved — Customer Mobile</label>
+                <input type="tel" value={f.ReservedPhone || ""} onChange={e => setF({ ...f, ReservedPhone: e.target.value })} placeholder="e.g. 0100 123 4567" />
+              </div>
+              <div className="field"><label>Reserved — Customer Name</label>
+                <input value={f.ReservedName || ""} onChange={e => setF({ ...f, ReservedName: e.target.value })} placeholder="Name on the reservation" />
+              </div>
+            </>
+          )}
           <button className="btn" onClick={save}>{editId ? "Save Changes" : "Add Table"}</button>
           {editId && <button className="btn ghost" style={{ marginLeft: ".6rem" }} onClick={() => { setEditId(null); setF({ Name: "", DisplayOrder: 0, IsActive: 1 }); }}>Cancel</button>}
         </div>
@@ -67,7 +80,10 @@ export default function TablesPage() {
           <tr key={t.TableId}>
             {isAdmin && <td>{t.DisplayOrder}</td>}
             <td>{t.Name}</td>
-            <td>{t.OccupiedBy ? <span className="status-pill st-Pending">Occupied</span> : <span className="status-pill st-Ready">Free</span>}</td>
+            <td>
+              {t.OccupiedBy ? <span className="status-pill st-Pending">Occupied</span> : <span className="status-pill st-Ready">Free</span>}
+              {t.IsReserved && <span className="status-pill st-Preparing" style={{ marginLeft: ".4rem" }}>Reserved{t.ReservedName ? ` · ${t.ReservedName}` : ""}</span>}
+            </td>
             <td>{t.OccupiedName || "—"}</td>
             <td>
               {t.OccupiedBy && <button className="btn small ghost" onClick={() => release(t.TableId, t.Name)}>Release</button>}{" "}

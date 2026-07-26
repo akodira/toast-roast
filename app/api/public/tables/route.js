@@ -14,6 +14,7 @@ export async function GET() {
       Name: t.Name,
       Occupied: !!t.OccupiedBy,
       OccupiedName: t.OccupiedName || null,
+      IsReserved: !!t.IsReserved, // shown as a label; the phone stays server-side
     })),
   });
 }
