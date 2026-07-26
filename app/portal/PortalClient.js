@@ -282,12 +282,12 @@ export default function PortalClient() {
             <p style={{ marginBottom: "1rem" }}>Pick your table and register with your phone number to start ordering.</p>
             <div className="field">
               <label htmlFor="pt-table">Table</label>
-              <select id="pt-table" value={form.tableId} onChange={e => setForm({ ...form, tableId: e.target.value })}>
+              <select id="pt-table" value={form.tableId} onChange={e => { setForm({ tableId: e.target.value, phone: "", name: "" }); setCustLookup(null); setErr(""); }}>
                 <option value="">Select a table…</option>
                 {freeTables.map(t => <option key={t.TableId} value={t.TableId}>{t.Name}{t.IsReserved ? " (Reserved)" : ""}</option>)}
               </select>
               {freeTables.length === 0 && <p style={{ fontSize: ".8rem", opacity: .7, marginTop: ".3rem" }}>No free tables right now — if you're joining someone already seated, use "Join Current Table" above.</p>}
-              <button type="button" className="btn small ghost" style={{ marginTop: ".4rem" }} onClick={loadTables}>Refresh</button>
+              <button type="button" className="btn small ghost" style={{ marginTop: ".4rem" }} onClick={() => { setForm({ tableId: "", phone: "", name: "" }); setCustLookup(null); setErr(""); loadTables(); }}>Refresh</button>
             </div>
 
             {/* Mobile first — this identifies the customer. */}
