@@ -1283,6 +1283,10 @@ body { overflow-x: clip; max-width: 100%; }
 .hist-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--line); padding-bottom: .8rem; }
 .hist-sec { font-size: 1rem; margin: 1.2rem 0 .6rem; color: var(--rust-deep, #8A5A2E); }
 .hist-empty { color: var(--muted); font-size: .88rem; }
+.hist-day-list { display: flex; flex-direction: column; gap: 1.1rem; }
+.hist-day-head { display: flex; align-items: baseline; justify-content: space-between; gap: .8rem; padding: 0 .2rem .4rem; border-bottom: 2px solid rgba(192,138,86,.25); margin-bottom: .6rem; }
+.hist-day-date { font-weight: 700; font-size: .95rem; color: var(--ink); }
+.hist-day-meta { font-size: .82rem; color: var(--muted); }
 .hist-inv-list { display: flex; flex-direction: column; gap: .5rem; }
 .hist-inv { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 .hist-inv.open { border-color: rgba(192,138,86,.4); }

@@ -111,43 +111,63 @@ export default function CustomersPage() {
               <>
                 <h3 className="hist-sec">Invoices ({history.invoices.length})</h3>
                 {history.invoices.length === 0 ? <p className="hist-empty">No invoices yet.</p> : (
-                  <div className="hist-inv-list">
-                    {history.invoices.map(inv => {
-                      const invOrders = history.orders.filter(o => o.GroupInvoiceId === inv.InvoiceId);
-                      const open = !!expanded[inv.InvoiceId];
+                  <div className="hist-day-list">
+                    {Object.entries(
+                      history.invoices.reduce((days, inv) => {
+                        const dayKey = new Date(inv.CreatedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+                        (days[dayKey] = days[dayKey] || []).push(inv);
+                        return days;
+                      }, {})
+                    ).map(([day, dayInvoices]) => {
+                      const dayTotal = dayInvoices.reduce((s, inv) => s + Number(inv.total ?? inv.Total ?? 0), 0);
                       return (
-                        <div className={`hist-inv${open ? " open" : ""}`} key={inv.InvoiceId}>
-                          <button className="hist-inv-head" onClick={() => setExpanded(e => ({ ...e, [inv.InvoiceId]: !open }))}>
-                            <span className="hist-inv-toggle" aria-hidden="true">{open ? "−" : "+"}</span>
-                            <span className="hist-inv-date">{fmtDate(inv.CreatedAt)}</span>
-                            <span className="hist-inv-meta">Table {inv.TableName} · {inv.OrderCount} order{inv.OrderCount === 1 ? "" : "s"}</span>
-                            <span className="hist-inv-total">{Number(inv.total ?? inv.Total ?? 0).toFixed(2)}</span>
-                            {inv.IsPaid
-                              ? <span className="status-pill st-Ready">Paid</span>
-                              : <span className="status-pill st-Pending">Unpaid</span>}
-                          </button>
-                          {open && (
-                            <div className="hist-inv-body">
-                              {invOrders.length === 0 ? <p className="hist-empty">No order details.</p> : invOrders.map(o => (
-                                <div className="hist-order" key={o.OrderId}>
-                                  <div className="hist-order-head">
-                                    <span><strong>{o.OrderNumber}</strong> · {fmtDate(o.CreatedAt)}</span>
-                                    <span className={`status-pill st-${o.Status}`}>{o.Status}</span>
-                                  </div>
-                                  <ul className="hist-items">
-                                    {o.items.map((i, ix) => (
-                                      <li key={ix}>
-                                        {i.Quantity}× {i.ItemName} — {Number(i.LineTotal).toFixed(2)}
-                                        {i.Sides ? <span className="hist-sub"> + {i.Sides}</span> : null}
-                                        {i.Note ? <span className="hist-sub"> · {i.Note}</span> : null}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                  <div className="hist-order-total">Order total: {Number(o.GrandTotal).toFixed(2)}</div>
+                        <div className="hist-day" key={day}>
+                          <div className="hist-day-head">
+                            <span className="hist-day-date">{day}</span>
+                            <span className="hist-day-meta">{dayInvoices.length} invoice{dayInvoices.length === 1 ? "" : "s"} · {dayTotal.toFixed(2)}</span>
+                          </div>
+                          <div className="hist-inv-list">
+                            {dayInvoices.map(inv => {
+                              const invOrders = history.orders.filter(o => o.GroupInvoiceId === inv.InvoiceId);
+                              const open = !!expanded[inv.InvoiceId];
+                              const timeStr = new Date(inv.CreatedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+                              return (
+                                <div className={`hist-inv${open ? " open" : ""}`} key={inv.InvoiceId}>
+                                  <button className="hist-inv-head" onClick={() => setExpanded(e => ({ ...e, [inv.InvoiceId]: !open }))}>
+                                    <span className="hist-inv-toggle" aria-hidden="true">{open ? "−" : "+"}</span>
+                                    <span className="hist-inv-date">{timeStr}</span>
+                                    <span className="hist-inv-meta">Table {inv.TableName} · {inv.OrderCount} order{inv.OrderCount === 1 ? "" : "s"}</span>
+                                    <span className="hist-inv-total">{Number(inv.total ?? inv.Total ?? 0).toFixed(2)}</span>
+                                    {inv.IsPaid
+                                      ? <span className="status-pill st-Ready">Paid</span>
+                                      : <span className="status-pill st-Pending">Unpaid</span>}
+                                  </button>
+                                  {open && (
+                                    <div className="hist-inv-body">
+                                      {invOrders.length === 0 ? <p className="hist-empty">No order details.</p> : invOrders.map(o => (
+                                        <div className="hist-order" key={o.OrderId}>
+                                          <div className="hist-order-head">
+                                            <span><strong>{o.OrderNumber}</strong> · {new Date(o.CreatedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</span>
+                                            <span className={`status-pill st-${o.Status}`}>{o.Status}</span>
+                                          </div>
+                                          <ul className="hist-items">
+                                            {o.items.map((i, ix) => (
+                                              <li key={ix}>
+                                                {i.Quantity}× {i.ItemName} — {Number(i.LineTotal).toFixed(2)}
+                                                {i.Sides ? <span className="hist-sub"> + {i.Sides}</span> : null}
+                                                {i.Note ? <span className="hist-sub"> · {i.Note}</span> : null}
+                                              </li>
+                                            ))}
+                                          </ul>
+                                          <div className="hist-order-total">Order total: {Number(o.GrandTotal).toFixed(2)}</div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
                                 </div>
-                              ))}
-                            </div>
-                          )}
+                              );
+                            })}
+                          </div>
                         </div>
                       );
                     })}

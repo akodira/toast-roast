@@ -36,19 +36,31 @@ export async function GET(req) {
     o.items = await db.prepare("SELECT ItemName, Quantity, UnitPrice, LineTotal, Sides, Note FROM OrderDetails WHERE OrderId=$1").all(o.OrderId);
   }
 
-  // Invoices for this customer, with paid status and a computed total from
-  // their (non-cancelled) orders in that sitting.
+  // Invoices for this customer. Totals/counts are computed ONLY from orders
+  // whose nearest-preceding invoice IS this invoice (a per-order lateral
+  // match), so an earlier sitting never absorbs a later sitting's orders.
+  const ph2 = ids.map((_, i) => `$${ids.length + i + 1}`).join(",");
   const invoices = await db.prepare(
     `SELECT i.InvoiceId, t.Name AS TableName, i.IsPaid, i.PaidAt, i.OccupiedAt, i.CreatedAt,
-       COALESCE(SUM(CASE WHEN o.Status <> 'Cancelled' THEN o.GrandTotal ELSE 0 END),0) AS Total,
-       COUNT(DISTINCT CASE WHEN o.Status <> 'Cancelled' THEN o.OrderId END) AS OrderCount
+       COALESCE(SUM(CASE WHEN og.Status <> 'Cancelled' THEN og.GrandTotal ELSE 0 END),0) AS Total,
+       COUNT(DISTINCT CASE WHEN og.Status <> 'Cancelled' THEN og.OrderId END) AS OrderCount
      FROM Invoices i
      JOIN Tables t ON t.TableId = i.TableId
-     LEFT JOIN Orders o ON o.CustomerId = i.CustomerId AND o.TableNumber = t.Name AND o.CreatedAt >= i.OccupiedAt
-     WHERE i.CustomerId IN (${placeholders})
+     LEFT JOIN (
+       SELECT o.OrderId, o.Status, o.GrandTotal, inv.InvoiceId AS MatchedInvoiceId
+       FROM Orders o
+       JOIN Tables ot ON ot.Name = o.TableNumber
+       JOIN LATERAL (
+         SELECT i2.InvoiceId FROM Invoices i2
+         WHERE i2.CustomerId = o.CustomerId AND i2.TableId = ot.TableId AND i2.OccupiedAt <= o.CreatedAt
+         ORDER BY i2.OccupiedAt DESC LIMIT 1
+       ) inv ON TRUE
+       WHERE o.CustomerId IN (${placeholders})
+     ) og ON og.MatchedInvoiceId = i.InvoiceId
+     WHERE i.CustomerId IN (${ph2})
      GROUP BY i.InvoiceId, t.Name
      ORDER BY i.CreatedAt DESC`
-  ).all(...ids);
+  ).all(...ids, ...ids);
 
   return NextResponse.json({ orders, invoices });
 }
