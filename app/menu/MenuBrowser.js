@@ -54,7 +54,9 @@ function LeafIcon() {
 function ItemRow({ item }) {
   return (
     <div className={`mv-item${item.IsAvailable ? "" : " unavailable"}`}>
-      <span className="mv-mono" aria-hidden="true">{monogram(item.Name)}</span>
+      {item.ImageUrl
+        ? <span className="mv-thumb" aria-hidden="true"><img src={item.ImageUrl} alt="" loading="lazy" /></span>
+        : <span className="mv-mono" aria-hidden="true">{monogram(item.Name)}</span>}
       <span className="mv-body">
         <span className="nm">
           {item.Name}
