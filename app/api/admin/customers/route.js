@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { getDb, withTransaction } from "@/lib/db";
 import { requireSection } from "@/lib/auth";
 import { PHONE_KEY_SQL } from "@/lib/phone";
 
@@ -46,4 +46,32 @@ export async function PATCH(req) {
   const db = await getDb();
   await db.prepare(`UPDATE Customers SET Name=$1 WHERE ${PHONE_KEY_SQL("Telephone")} = $2`).run(name.trim(), String(phoneKey));
   return NextResponse.json({ ok: true });
+}
+
+// Delete a customer entirely (by phone key). Removes every Customer row for
+// that mobile plus all their orders and invoices. OrderDetails cascade from
+// Orders automatically; Orders and Invoices have no cascade from Customers, so
+// we clear them explicitly in FK-safe order inside a transaction.
+export async function DELETE(req) {
+  const s = await requireSection("customers");
+  if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { phoneKey } = await req.json().catch(() => ({}));
+  if (!phoneKey) return NextResponse.json({ error: "Mobile is required." }, { status: 400 });
+  const key = String(phoneKey);
+  try {
+    await withTransaction(async (tdb) => {
+      const custRows = await tdb.prepare(`SELECT CustomerId FROM Customers WHERE ${PHONE_KEY_SQL("Telephone")} = $1`).all(key);
+      const ids = custRows.map(r => r.CustomerId);
+      for (const cid of ids) {
+        // OrderDetails cascade when Orders go.
+        await tdb.prepare("DELETE FROM Orders WHERE CustomerId=$1").run(cid);
+        await tdb.prepare("DELETE FROM Invoices WHERE CustomerId=$1").run(cid);
+        await tdb.prepare("DELETE FROM Customers WHERE CustomerId=$1").run(cid);
+      }
+    });
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[customers DELETE] failed:", err.message);
+    return NextResponse.json({ error: "Could not delete this customer." }, { status: 500 });
+  }
 }

@@ -1276,3 +1276,17 @@ body { overflow-x: clip; max-width: 100%; }
 .cust-name-row { display: flex; gap: .5rem; align-items: center; }
 .cust-name-row input { flex: 1; }
 .input-locked { background: #F4F0EA; color: var(--muted); cursor: not-allowed; }
+
+/* ===== Customer history modal ===== */
+.hist-overlay { position: fixed; inset: 0; background: rgba(23,18,15,.5); display: flex; align-items: flex-start; justify-content: center; padding: 4vh 1rem; z-index: 200; overflow-y: auto; }
+.hist-panel { background: #fff; border-radius: 14px; max-width: 720px; width: 100%; padding: 1.5rem; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+.hist-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--line); padding-bottom: .8rem; }
+.hist-sec { font-size: 1rem; margin: 1.2rem 0 .6rem; color: var(--rust-deep, #8A5A2E); }
+.hist-empty { color: var(--muted); font-size: .88rem; }
+.hist-orders { display: flex; flex-direction: column; gap: .8rem; }
+.hist-order { border: 1px solid var(--line); border-radius: 10px; padding: .8rem 1rem; }
+.hist-order-head { display: flex; align-items: center; justify-content: space-between; gap: .8rem; font-size: .88rem; flex-wrap: wrap; margin-bottom: .5rem; }
+.hist-items { margin: 0; padding-left: 1.2rem; font-size: .86rem; }
+.hist-items li { margin: .15rem 0; }
+.hist-sub { color: var(--rust-deep, #8A5A2E); font-style: italic; }
+.hist-order-total { text-align: right; font-weight: 700; color: var(--copper-dk); margin-top: .5rem; font-size: .9rem; }

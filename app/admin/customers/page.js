@@ -10,6 +10,8 @@ export default function CustomersPage() {
   const [editKey, setEditKey] = useState(null);
   const [editName, setEditName] = useState("");
   const [msg, setMsg] = useState("");
+  const [history, setHistory] = useState(null); // { customer, orders, invoices } | null
+  const [loadingHist, setLoadingHist] = useState(false);
   const load = () => fetch("/api/admin/customers").then(r => r.json()).then(d => setCustomers(d.customers || []));
   useEffect(() => { load(); }, []);
 
@@ -24,6 +26,28 @@ export default function CustomersPage() {
     if (res.ok) { setMsg(`Updated ${editName.trim()}.`); cancel(); load(); }
     else { const d = await res.json().catch(() => ({})); setMsg(d.error || "Could not save."); }
   };
+
+  const del = async (c) => {
+    if (!confirm(`Delete ${c.name || "this customer"} (${c.mobile}) and ALL their orders and invoices? This can't be undone.`)) return;
+    const res = await fetch("/api/admin/customers", {
+      method: "DELETE", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phoneKey: c.phoneKey }),
+    });
+    if (res.ok) { setMsg(`Deleted ${c.name || "customer"}.`); load(); }
+    else { const d = await res.json().catch(() => ({})); setMsg(d.error || "Could not delete."); }
+  };
+
+  const openHistory = async (c) => {
+    setLoadingHist(true);
+    setHistory({ customer: c, orders: [], invoices: [] });
+    try {
+      const res = await fetch(`/api/admin/customers/history?phoneKey=${encodeURIComponent(c.phoneKey)}`);
+      const d = await res.json();
+      setHistory({ customer: c, orders: d.orders || [], invoices: d.invoices || [] });
+    } catch { setHistory({ customer: c, orders: [], invoices: [], error: true }); }
+    setLoadingHist(false);
+  };
+  const closeHistory = () => setHistory(null);
 
   const filtered = customers.filter(c => {
     if (!q.trim()) return true;
@@ -59,12 +83,76 @@ export default function CustomersPage() {
                       <button className="btn small" onClick={() => save(c)}>Save</button>{" "}
                       <button className="btn small ghost" onClick={cancel}>Cancel</button>
                     </>
-                  : <button className="btn small ghost" onClick={() => startEdit(c)}>Edit name</button>}
+                  : <>
+                      <button className="btn small ghost" onClick={() => openHistory(c)}>History</button>{" "}
+                      <button className="btn small ghost" onClick={() => startEdit(c)}>Edit name</button>{" "}
+                      <button className="btn small danger" onClick={() => del(c)}>Delete</button>
+                    </>}
               </td>
             </tr>
           ))}
         </tbody>
       </table></div>
+
+      {history && (
+        <div className="hist-overlay" onClick={closeHistory}>
+          <div className="hist-panel" onClick={e => e.stopPropagation()}>
+            <div className="hist-head">
+              <div>
+                <h2 style={{ margin: 0 }}>{history.customer.name || "Customer"}</h2>
+                <p style={{ margin: ".2rem 0 0", color: "var(--muted)", fontSize: ".85rem" }}>{history.customer.mobile}</p>
+              </div>
+              <button className="btn small ghost" onClick={closeHistory}>✕ Close</button>
+            </div>
+
+            {loadingHist ? <p>Loading history…</p> : (
+              <>
+                <h3 className="hist-sec">Invoices ({history.invoices.length})</h3>
+                {history.invoices.length === 0 ? <p className="hist-empty">No invoices yet.</p> : (
+                  <div className="table-wrap"><table className="adm">
+                    <thead><tr><th>Date</th><th>Table</th><th className="num">Orders</th><th className="num">Total</th><th>Status</th></tr></thead>
+                    <tbody>{history.invoices.map(inv => (
+                      <tr key={inv.InvoiceId}>
+                        <td>{fmtDate(inv.CreatedAt)}</td>
+                        <td>{inv.TableName}</td>
+                        <td className="num">{inv.OrderCount}</td>
+                        <td className="num">{Number(inv.total ?? inv.Total ?? 0).toFixed(2)}</td>
+                        <td>{inv.IsPaid
+                          ? <span className="status-pill st-Ready">Paid</span>
+                          : <span className="status-pill st-Pending">Unpaid</span>}</td>
+                      </tr>
+                    ))}</tbody>
+                  </table></div>
+                )}
+
+                <h3 className="hist-sec">Orders ({history.orders.length})</h3>
+                {history.orders.length === 0 ? <p className="hist-empty">No orders yet.</p> : (
+                  <div className="hist-orders">
+                    {history.orders.map(o => (
+                      <div className="hist-order" key={o.OrderId}>
+                        <div className="hist-order-head">
+                          <span><strong>{o.OrderNumber}</strong> · Table {o.TableNumber} · {fmtDate(o.CreatedAt)}</span>
+                          <span className={`status-pill st-${o.Status}`}>{o.Status}</span>
+                        </div>
+                        <ul className="hist-items">
+                          {o.items.map((i, ix) => (
+                            <li key={ix}>
+                              {i.Quantity}× {i.ItemName} — {Number(i.LineTotal).toFixed(2)}
+                              {i.Sides ? <span className="hist-sub"> + {i.Sides}</span> : null}
+                              {i.Note ? <span className="hist-sub"> · {i.Note}</span> : null}
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="hist-order-total">Total: {Number(o.GrandTotal).toFixed(2)}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </AdminShell>
   );
 }
