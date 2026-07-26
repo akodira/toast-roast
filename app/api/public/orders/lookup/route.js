@@ -18,23 +18,31 @@ export async function GET(req) {
   if (phone.length < 6) return NextResponse.json({ error: "Enter a valid phone number." }, { status: 400 });
 
   const db = await getDb();
-  // Only return orders for the customer's CURRENT unpaid sitting — not their
-  // whole day. An invoice is keyed by (TableId, CustomerId, OccupiedAt); once
-  // it's paid and the table is released + re-occupied, OccupiedAt changes and
-  // a fresh invoice begins. We therefore return only orders whose table is
-  // still occupied under an OccupiedAt that has an UNPAID invoice for this
-  // customer. Cancelled orders are excluded so they never hit the invoice.
+  // Return ALL of today's orders for this customer, each tagged with the
+  // invoice/sitting it belongs to and whether that invoice is paid — so the
+  // portal can group them into separate invoices per sitting (and never merge
+  // a paid past sitting into the current unpaid one). Cancelled orders are
+  // still excluded so they never appear on any invoice.
+  //
+  // An order's sitting is matched to the Invoice for its table+customer whose
+  // OccupiedAt is the latest one at or before the order was placed. We compute
+  // that per order via a lateral lookup so re-occupancies stay separate.
   const sql = `
-    SELECT o.*, c.Name CustomerName, c.Telephone FROM Orders o
+    SELECT o.*, c.Name CustomerName, c.Telephone,
+      inv.InvoiceId AS GroupInvoiceId, inv.IsPaid AS GroupIsPaid, inv.OccupiedAt AS GroupOccupiedAt
+    FROM Orders o
     JOIN Customers c ON c.CustomerId = o.CustomerId
     JOIN Tables t ON t.Name = o.TableNumber
-    JOIN Invoices inv ON inv.TableId = t.TableId
-      AND inv.CustomerId = o.CustomerId
-      AND inv.OccupiedAt = t.OccupiedAt
+    LEFT JOIN LATERAL (
+      SELECT i.InvoiceId, i.IsPaid, i.OccupiedAt
+      FROM Invoices i
+      WHERE i.CustomerId = o.CustomerId AND i.TableId = t.TableId
+        AND i.OccupiedAt <= o.CreatedAt
+      ORDER BY i.OccupiedAt DESC
+      LIMIT 1
+    ) inv ON TRUE
     WHERE ${PHONE_KEY_SQL("c.Telephone")} = $1
       AND o.CreatedAt::date = CURRENT_DATE
-      AND o.CreatedAt >= t.OccupiedAt
-      AND inv.IsPaid = FALSE
       AND o.Status <> 'Cancelled'
       ${name ? "AND c.Name = $2" : ""}
     ORDER BY o.OrderId DESC

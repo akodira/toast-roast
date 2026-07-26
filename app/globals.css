@@ -1252,3 +1252,8 @@ body { overflow-x: clip; max-width: 100%; }
   border: 1px solid var(--line); background: #fff; cursor: pointer; color: var(--muted);
 }
 .sound-toggle.on { color: var(--rust-deep, #8A5A2E); border-color: rgba(192,138,86,.4); }
+
+/* Portal invoice paid/unpaid status pill */
+.inv-status-pill { display: inline-block; padding: .3rem .9rem; border-radius: 999px; font-size: .8rem; font-weight: 600; }
+.inv-status-pill.paid { background: #E4F2E4; color: #2E7D32; }
+.inv-status-pill.unpaid { background: rgba(192,138,86,.14); color: var(--rust-deep, #8A5A2E); }

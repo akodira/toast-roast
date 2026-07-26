@@ -22,6 +22,25 @@ function buildCombinedInvoice(orders) {
   return { lines: Object.values(lineMap), subtotal, tax, svc, grand, taxPct, svcPct };
 }
 
+// Group today's orders into separate invoices, one per sitting (GroupInvoiceId
+// from the lookup). Each sitting keeps its own paid/unpaid status, so a paid
+// earlier sitting is shown as its own paid invoice and never merged into the
+// current unpaid one. Newest sitting first; unpaid before paid within the day.
+function groupInvoices(orders) {
+  const groups = {};
+  for (const o of orders) {
+    const gid = o.GroupInvoiceId ?? "none";
+    if (!groups[gid]) groups[gid] = { invoiceId: o.GroupInvoiceId, isPaid: !!o.GroupIsPaid, occupiedAt: o.GroupOccupiedAt, orders: [] };
+    groups[gid].orders.push(o);
+  }
+  return Object.values(groups)
+    .map(g => ({ ...g, inv: buildCombinedInvoice(g.orders), count: g.orders.length }))
+    .sort((a, b) => {
+      if (a.isPaid !== b.isPaid) return a.isPaid ? 1 : -1; // unpaid first
+      return new Date(b.occupiedAt || 0) - new Date(a.occupiedAt || 0); // newest first
+    });
+}
+
 export default function PortalClient() {
   const [session, setSession] = useState(null); // { table, tableId, phone, name } — lives only in memory for this tab
   const [mode, setMode] = useState("claim"); // "claim" | "join"
@@ -373,37 +392,57 @@ export default function PortalClient() {
 
       {tab === "invoice" && (() => {
         if (orders.length === 0) return <p>No orders yet today.</p>;
-        const inv = buildCombinedInvoice(orders);
+        const groups = groupInvoices(orders);
+        const dateStr = new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
         return (
           <div style={{ maxWidth: 560 }}>
-            <div className="card" id="total-invoice">
-              <div className="inv-brand">
-                <span className="inv-brand-name">Toast &amp; Roast</span>
-                <span className="inv-brand-sub">Total Invoice</span>
-              </div>
-              <div className="inv-meta">
-                <div><span className="inv-meta-k">Customer</span><span className="inv-meta-v">{session.name}</span></div>
-                <div><span className="inv-meta-k">Table No.</span><span className="inv-meta-v">{session.table}</span></div>
-                <div><span className="inv-meta-k">Date</span><span className="inv-meta-v">{new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span></div>
-                <div><span className="inv-meta-k">Orders</span><span className="inv-meta-v">{orders.length}</span></div>
-              </div>
-              <table className="inv">
-                <thead><tr><th>Item</th><th>Qty</th><th className="num">Unit Price</th><th className="num">Total</th></tr></thead>
-                <tbody>{inv.lines.map(l => (
-                  <tr key={l.name + l.price}><td>{l.name}</td><td>{l.qty}</td><td className="num">{fmt(l.price)}</td><td className="num">{fmt(l.total)}</td></tr>
-                ))}</tbody>
-              </table>
-              <div className="totals">
-                <div className="row"><span>Subtotal</span><span>{fmt(inv.subtotal)}</span></div>
-                <div className="row"><span>Tax ({inv.taxPct}%)</span><span>{fmt(inv.tax)}</span></div>
-                <div className="row"><span>Service ({inv.svcPct}%)</span><span>{fmt(inv.svc)}</span></div>
-                <div className="row grand"><span>Grand Total</span><span>{fmt(inv.grand)}</span></div>
-              </div>
-            </div>
-            <div className="cta-row" style={{ marginTop: "1rem" }}>
-              <button className="btn ghost small" onClick={() => downloadInvoice("png", session)}>Download PNG</button>
-              <button className="btn ghost small" onClick={() => downloadInvoice("pdf", session)}>Download PDF</button>
-            </div>
+            {groups.length > 1 && (
+              <p style={{ fontSize: ".82rem", color: "var(--muted)", marginBottom: "1rem" }}>
+                You have {groups.length} invoices today — each sitting is billed separately.
+              </p>
+            )}
+            {groups.map((g, gi) => {
+              const inv = g.inv;
+              return (
+                <div key={g.invoiceId ?? gi} style={{ marginBottom: "1.5rem" }}>
+                  <div className="card" id={gi === 0 ? "total-invoice" : undefined}>
+                    <div className="inv-brand">
+                      <span className="inv-brand-name">Toast &amp; Roast</span>
+                      <span className="inv-brand-sub">{g.isPaid ? "Invoice — Paid" : "Current Invoice"}</span>
+                    </div>
+                    <div style={{ textAlign: "center", marginBottom: ".8rem" }}>
+                      <span className={`inv-status-pill ${g.isPaid ? "paid" : "unpaid"}`}>
+                        {g.isPaid ? "✓ Paid" : "Unpaid — please settle at the counter"}
+                      </span>
+                    </div>
+                    <div className="inv-meta">
+                      <div><span className="inv-meta-k">Customer</span><span className="inv-meta-v">{session.name}</span></div>
+                      <div><span className="inv-meta-k">Table No.</span><span className="inv-meta-v">{session.table}</span></div>
+                      <div><span className="inv-meta-k">Date</span><span className="inv-meta-v">{dateStr}</span></div>
+                      <div><span className="inv-meta-k">Orders</span><span className="inv-meta-v">{g.count}</span></div>
+                    </div>
+                    <table className="inv">
+                      <thead><tr><th>Item</th><th>Qty</th><th className="num">Unit Price</th><th className="num">Total</th></tr></thead>
+                      <tbody>{inv.lines.map(l => (
+                        <tr key={l.name + l.price}><td>{l.name}</td><td>{l.qty}</td><td className="num">{fmt(l.price)}</td><td className="num">{fmt(l.total)}</td></tr>
+                      ))}</tbody>
+                    </table>
+                    <div className="totals">
+                      <div className="row"><span>Subtotal</span><span>{fmt(inv.subtotal)}</span></div>
+                      <div className="row"><span>Tax ({inv.taxPct}%)</span><span>{fmt(inv.tax)}</span></div>
+                      <div className="row"><span>Service ({inv.svcPct}%)</span><span>{fmt(inv.svc)}</span></div>
+                      <div className="row grand"><span>Grand Total</span><span>{fmt(inv.grand)}</span></div>
+                    </div>
+                  </div>
+                  {gi === 0 && (
+                    <div className="cta-row" style={{ marginTop: "1rem" }}>
+                      <button className="btn ghost small" onClick={() => downloadInvoice("png", session)}>Download PNG</button>
+                      <button className="btn ghost small" onClick={() => downloadInvoice("pdf", session)}>Download PDF</button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         );
       })()}
