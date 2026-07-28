@@ -102,8 +102,6 @@ export default async function Contact({ searchParams }) {
                     {branches.map((b) => (
                       <Link href={`/contact?branch=${b.BranchId}`} className={`ct-branch${b.BranchId === branchId ? " on" : ""}`} key={b.BranchId}>
                         <span className="ct-branch-name">{b.Name}{b.BranchId === branchId ? " ✓" : ""}</span>
-                        {b.Address && <span className="ct-branch-line">{b.Address}</span>}
-                        {b.Phone && <span className="ct-branch-line">{b.Phone}</span>}
                       </Link>
                     ))}
                   </div>
