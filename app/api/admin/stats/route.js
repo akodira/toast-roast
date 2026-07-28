@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { requireRole, ROLE_ADMIN, ROLE_MANAGER , requireSection } from "@/lib/auth";
+import { selectedBranchId } from "@/lib/branch";
 
 // All KPIs below are computed ONLY from data the system already stores
 // (orders, order lines, menu, categories, tables). Cost-based metrics
@@ -10,13 +11,20 @@ import { requireRole, ROLE_ADMIN, ROLE_MANAGER , requireSection } from "@/lib/au
 export async function GET() {
   if (!(await requireSection("dashboard"))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = await getDb();
+  const branchId = await selectedBranchId();
+  // branchId comes from the DB (a trusted integer), so it's safe to inline.
+  // These fragments scope every Orders-based metric to the selected branch:
+  // branchPlain for queries where Orders is unaliased, branchO where aliased o.
   const paid = "Status != 'Cancelled'"; // revenue counts everything except cancelled
+  const branchPlain = branchId ? ` AND BranchId = ${Number(branchId)}` : "";
+  const branchO = branchId ? ` AND o.BranchId = ${Number(branchId)}` : "";
+  const branchPlainMi = branchId ? ` AND mi.BranchId = ${Number(branchId)}` : "";
 
   // --- headline cards ---
-  const today = await db.prepare(`SELECT COUNT(*) c, COALESCE(SUM(GrandTotal),0) t FROM Orders WHERE CreatedAt::date = CURRENT_DATE AND ${paid}`).get();
-  const pendingRow = await db.prepare("SELECT COUNT(*) c FROM Orders WHERE Status='Pending'").get();
-  const completedRow = await db.prepare("SELECT COUNT(*) c FROM Orders WHERE Status='Completed'").get();
-  const totalSalesRow = await db.prepare(`SELECT COALESCE(SUM(GrandTotal),0) t, COUNT(*) c FROM Orders WHERE ${paid}`).get();
+  const today = await db.prepare(`SELECT COUNT(*) c, COALESCE(SUM(GrandTotal),0) t FROM Orders WHERE CreatedAt::date = CURRENT_DATE AND ${paid}${branchPlain}`).get();
+  const pendingRow = await db.prepare(`SELECT COUNT(*) c FROM Orders WHERE Status='Pending'${branchPlain}`).get();
+  const completedRow = await db.prepare(`SELECT COUNT(*) c FROM Orders WHERE Status='Completed'${branchPlain}`).get();
+  const totalSalesRow = await db.prepare(`SELECT COALESCE(SUM(GrandTotal),0) t, COUNT(*) c FROM Orders WHERE ${paid}${branchPlain}`).get();
   const customersRow = await db.prepare("SELECT COUNT(*) c FROM Customers").get();
 
   const totalOrders = Number(totalSalesRow.c) || 0;
@@ -24,23 +32,23 @@ export async function GET() {
   const avgOrderValue = totalOrders ? totalSales / totalOrders : 0;
 
   // avg spend per customer (distinct customers who actually ordered)
-  const spendRow = await db.prepare(`SELECT COUNT(DISTINCT CustomerId) c, COALESCE(SUM(GrandTotal),0) t FROM Orders WHERE ${paid}`).get();
+  const spendRow = await db.prepare(`SELECT COUNT(DISTINCT CustomerId) c, COALESCE(SUM(GrandTotal),0) t FROM Orders WHERE ${paid}${branchPlain}`).get();
   const avgPerCustomer = Number(spendRow.c) ? Number(spendRow.t) / Number(spendRow.c) : 0;
 
   // cancellation rate
-  const cancelRow = await db.prepare("SELECT COUNT(*) c FROM Orders").get();
-  const cancelledRow = await db.prepare("SELECT COUNT(*) c FROM Orders WHERE Status='Cancelled'").get();
+  const cancelRow = await db.prepare(`SELECT COUNT(*) c FROM Orders WHERE 1=1${branchPlain}`).get();
+  const cancelledRow = await db.prepare(`SELECT COUNT(*) c FROM Orders WHERE Status='Cancelled'${branchPlain}`).get();
   const allOrders = Number(cancelRow.c) || 0;
   const cancelRate = allOrders ? (Number(cancelledRow.c) / allOrders) * 100 : 0;
 
   // repeat customers (ordered on 2+ distinct days)
   const repeatRow = await db.prepare(`SELECT COUNT(*) c FROM (
-    SELECT CustomerId FROM Orders WHERE ${paid}
+    SELECT CustomerId FROM Orders WHERE ${paid}${branchPlain}
     GROUP BY CustomerId HAVING COUNT(DISTINCT CreatedAt::date) > 1) x`).get();
 
   // --- revenue last 14 days (for the line chart) ---
   const last14 = await db.prepare(`SELECT CreatedAt::date d, COALESCE(SUM(GrandTotal),0) t, COUNT(*) n FROM Orders
-    WHERE ${paid} AND CreatedAt::date >= CURRENT_DATE - INTERVAL '13 days'
+    WHERE ${paid}${branchPlain} AND CreatedAt::date >= CURRENT_DATE - INTERVAL '13 days'
     GROUP BY CreatedAt::date ORDER BY d`).all();
 
   // --- top 10 most ordered items (by quantity) ---
@@ -49,33 +57,33 @@ export async function GET() {
   // Use neutral aliases: lbl / q / rev / ords.
   const topItems = await db.prepare(`SELECT od.ItemName lbl, SUM(od.Quantity) q, COALESCE(SUM(od.LineTotal),0) rev
     FROM OrderDetails od JOIN Orders o ON o.OrderId = od.OrderId
-    WHERE o.${paid}
+    WHERE o.${paid}${branchO}
     GROUP BY od.ItemName ORDER BY q DESC LIMIT 10`).all();
 
   // --- slowest 5 movers (menu items that exist but sell least; 0 = never) ---
   const slowItems = await db.prepare(`SELECT mi.Name lbl, COALESCE(SUM(od.Quantity),0) q
     FROM MenuItems mi
     LEFT JOIN OrderDetails od ON od.MenuItemId = mi.MenuItemId
-    LEFT JOIN Orders o ON o.OrderId = od.OrderId AND o.${paid}
-    WHERE mi.IsActive = true
+    LEFT JOIN Orders o ON o.OrderId = od.OrderId AND o.${paid}${branchO}
+    WHERE mi.IsActive = true${branchPlainMi}
     GROUP BY mi.Name ORDER BY q ASC, mi.Name LIMIT 5`).all();
 
   // --- sales by category ---
   const byCategory = await db.prepare(`SELECT COALESCE(c.Name,'Uncategorised') lbl, COALESCE(SUM(od.LineTotal),0) rev, SUM(od.Quantity) q
     FROM OrderDetails od
-    JOIN Orders o ON o.OrderId = od.OrderId AND o.${paid}
+    JOIN Orders o ON o.OrderId = od.OrderId AND o.${paid}${branchO}
     LEFT JOIN MenuItems mi ON mi.MenuItemId = od.MenuItemId
     LEFT JOIN Categories c ON c.CategoryId = mi.CategoryId
     GROUP BY c.Name ORDER BY rev DESC`).all();
 
   // --- revenue by hour of day (peak hours) ---
   const byHour = await db.prepare(`SELECT EXTRACT(HOUR FROM CreatedAt)::int h, COALESCE(SUM(GrandTotal),0) t, COUNT(*) n
-    FROM Orders WHERE ${paid}
+    FROM Orders WHERE ${paid}${branchPlain}
     GROUP BY h ORDER BY h`).all();
 
   // --- busiest tables (by order count + revenue) ---
   const byTable = await db.prepare(`SELECT TableNumber lbl, COUNT(*) ords, COALESCE(SUM(GrandTotal),0) rev
-    FROM Orders WHERE ${paid}
+    FROM Orders WHERE ${paid}${branchPlain}
     GROUP BY TableNumber ORDER BY rev DESC LIMIT 8`).all();
 
   return NextResponse.json({

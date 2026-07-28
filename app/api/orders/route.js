@@ -4,6 +4,7 @@ import { getDb, logActivity, withTransaction } from "@/lib/db";
 import { phonesMatch, phoneKey, PHONE_KEY_SQL } from "@/lib/phone";
 import { checkTablePin } from "@/lib/pin";
 import { requireRole, ROLE_ADMIN, ROLE_STAFF, ROLE_MANAGER , requireSection } from "@/lib/auth";
+import { selectedBranchId } from "@/lib/branch";
 
 const round = (n) => Math.round(n * 100) / 100;
 
@@ -98,9 +99,16 @@ export async function GET(req) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const status = new URL(req.url).searchParams.get("status");
   const db = await getDb();
+  const branchId = await selectedBranchId();
+  // Scope the back-office order list to the admin's selected branch. Legacy
+  // orders with NULL BranchId were backfilled to the first branch at Stage 1,
+  // so a plain equality is correct.
   let sql = `SELECT o.*, c.Name CustomerName, c.Email, c.Telephone FROM Orders o JOIN Customers c ON c.CustomerId=o.CustomerId`;
   const args = [];
-  if (status && status !== "All") { sql += " WHERE o.Status=$1"; args.push(status); }
+  const conds = [];
+  if (branchId) { args.push(branchId); conds.push(`o.BranchId=$${args.length}`); }
+  if (status && status !== "All") { args.push(status); conds.push(`o.Status=$${args.length}`); }
+  if (conds.length) sql += " WHERE " + conds.join(" AND ");
   sql += " ORDER BY o.OrderId DESC LIMIT 200";
   const orders = await db.prepare(sql).all(...args);
   for (const o of orders) o.items = await db.prepare("SELECT * FROM OrderDetails WHERE OrderId=$1").all(o.OrderId);
