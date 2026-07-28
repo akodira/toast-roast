@@ -41,19 +41,24 @@ export default async function Contact({ searchParams }) {
   const db = await getDb();
   const branchId = await publicBranchId(searchParams?.branch);
   const branches = await db.prepare(
-    "SELECT BranchId, Name, Address, Phone, Email, OpeningHours, MapUrl, MapEmbed FROM Branches WHERE IsActive=true ORDER BY IsMain DESC, DisplayOrder, BranchId"
+    "SELECT BranchId, Name, Address, Phone, Email, OpeningHours, MapUrl, MapEmbed, IsMain FROM Branches WHERE IsActive=true ORDER BY IsMain DESC, DisplayOrder, BranchId"
   ).all();
   const branchList = await db.prepare("SELECT BranchId, Name FROM Branches WHERE IsActive=true ORDER BY DisplayOrder, BranchId").all();
   const selected = branches.find(b => b.BranchId === branchId) || branches[0] || null;
 
-  // Selected branch's details drive each row; fall back to the shared Website
-  // Content value only when the branch hasn't set that field.
-  const addr = selected?.Address || content.contact_address;
-  const phone = selected?.Phone || content.contact_phone;
-  const email = selected?.Email || content.contact_email;
-  const hours = selected?.OpeningHours || content.opening_hours;
-  const mapUrl = selected?.MapUrl || content.map_url;
-  const mapEmbedRaw = selected?.MapEmbed || content.map_embed;
+  // Each branch's contact details are its OWN — never borrowed from another
+  // branch. Only the Main branch falls back to the shared Website Content
+  // values (so the original single-branch site keeps working); a non-Main
+  // branch shows strictly its own fields, blank if it hasn't set one. This is
+  // what keeps the branches truly separate.
+  const isMainSel = !!selected?.IsMain;
+  const pick = (branchVal, globalVal) => (branchVal || (isMainSel ? globalVal : "")) || "";
+  const addr = pick(selected?.Address, content.contact_address);
+  const phone = pick(selected?.Phone, content.contact_phone);
+  const email = pick(selected?.Email, content.contact_email);
+  const hours = pick(selected?.OpeningHours, content.opening_hours);
+  const mapUrl = pick(selected?.MapUrl, content.map_url);
+  const mapEmbedRaw = pick(selected?.MapEmbed, content.map_embed);
 
   const rows = [
     { k: "pin", label: "Address", val: addr, extra: mapUrl ? <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="ct-maplink">View on Map →</a> : null },
