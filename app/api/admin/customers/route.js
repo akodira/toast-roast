@@ -3,14 +3,17 @@ import { NextResponse } from "next/server";
 import { getDb, withTransaction } from "@/lib/db";
 import { requireSection } from "@/lib/auth";
 import { PHONE_KEY_SQL } from "@/lib/phone";
+import { selectedBranchId } from "@/lib/branch";
 
-// Customers grouped by mobile (the identity). One row per phone key, even if
-// older data created multiple Customer rows for the same number. Name shown is
-// the most recent one used; totals/last-visit aggregate across all their rows.
+// Customers grouped by mobile (the identity). One row per phone key. Scoped to
+// the selected branch: only customers who have ordered at THIS branch appear,
+// and their order count / last visit are computed from this branch's orders
+// only. (Identity is still shared by mobile — this is a per-branch VIEW.)
 export async function GET() {
   const s = await requireSection("customers");
   if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = await getDb();
+  const branchId = await selectedBranchId();
   const rows = await db.prepare(`
     SELECT
       ${PHONE_KEY_SQL("c.Telephone")} AS phonekey,
@@ -20,17 +23,17 @@ export async function GET() {
       MAX(o.CreatedAt) AS lastvisit,
       MIN(c.CustomerId) AS refid
     FROM Customers c
-    LEFT JOIN Orders o ON o.CustomerId = c.CustomerId
+    JOIN Orders o ON o.CustomerId = c.CustomerId AND o.BranchId = $1
     GROUP BY ${PHONE_KEY_SQL("c.Telephone")}
     ORDER BY MAX(o.CreatedAt) DESC NULLS LAST
-  `).all();
+  `).all(branchId);
   const customers = rows.map(r => ({
     phoneKey: r.phonekey,
     name: r.custname,
     mobile: r.mobile,
     totalOrders: Number(r.ords || 0),
     lastVisit: r.lastvisit || null,
-    refId: r.refid, // a CustomerId we can target for name edits
+    refId: r.refid,
   }));
   return NextResponse.json({ customers });
 }

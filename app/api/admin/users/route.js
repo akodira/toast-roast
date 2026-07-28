@@ -11,16 +11,19 @@ export async function GET() {
   const users = await db.prepare("SELECT UserId,Username,FullName,IsActive,CreatedAt FROM Users").all();
   const roleRows = await db.prepare("SELECT UserId, RoleId FROM UserRoles").all();
   const ovRows = await db.prepare("SELECT UserId, Section, Allowed FROM UserSectionAccess").all();
+  const brRows = await db.prepare("SELECT UserId, BranchId FROM UserBranches").all();
   for (const u of users) {
     u.RoleIds = roleRows.filter(r => r.UserId === u.UserId).map(r => r.RoleId);
     u.Overrides = Object.fromEntries(ovRows.filter(r => r.UserId === u.UserId).map(r => [r.Section, !!r.Allowed]));
+    // Empty = all branches (unrestricted).
+    u.BranchIds = brRows.filter(r => r.UserId === u.UserId).map(r => r.BranchId);
   }
   return NextResponse.json({ users });
 }
 export async function POST(req) {
   const s = await requireSection("users");
   if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { Username, Password, FullName, RoleIds, Overrides } = await req.json();
+  const { Username, Password, FullName, RoleIds, Overrides, BranchIds } = await req.json();
   const roles = Array.isArray(RoleIds) && RoleIds.length ? RoleIds.map(Number) : [1];
   if (!Username?.trim() || !Password || Password.length < 8)
     return NextResponse.json({ error: "Username and a password of at least 8 characters are required." }, { status: 400 });
@@ -29,12 +32,14 @@ export async function POST(req) {
   if (existing) return NextResponse.json({ error: "Username already exists." }, { status: 400 });
   // Only keep overrides for real section keys.
   const ov = Object.entries(Overrides || {}).filter(([k]) => SECTION_KEYS.includes(k));
+  const branchIds = Array.isArray(BranchIds) ? BranchIds.map(Number).filter(Boolean) : [];
   try {
     const id = await withTransaction(async (tdb) => {
       const r = await tdb.prepare("INSERT INTO Users (Username,PasswordHash,FullName,RoleId) VALUES ($1,$2,$3,$4) RETURNING UserId AS id")
         .run(Username.trim(), bcrypt.hashSync(Password, 10), FullName || null, roles[0]);
       for (const roleId of roles) await tdb.prepare("INSERT INTO UserRoles (UserId,RoleId) VALUES ($1,$2)").run(r.lastInsertRowid, roleId);
       for (const [section, allowed] of ov) await tdb.prepare("INSERT INTO UserSectionAccess (UserId,Section,Allowed) VALUES ($1,$2,$3)").run(r.lastInsertRowid, section, !!allowed);
+      for (const bId of branchIds) await tdb.prepare("INSERT INTO UserBranches (UserId,BranchId) VALUES ($1,$2)").run(r.lastInsertRowid, bId);
       return r.lastInsertRowid;
     });
     await logActivity(Number(s.sub), "USER_CREATE", Username);

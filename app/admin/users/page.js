@@ -18,7 +18,7 @@ const SECTIONS = [
   ["settings", "Tax & Service", [1]],
   ["users", "Users", [1]],
 ];
-const blank = { Username: "", Password: "", FullName: "", RoleIds: [1], Overrides: {} };
+const blank = { Username: "", Password: "", FullName: "", RoleIds: [1], Overrides: {}, BranchIds: [] };
 
 // What sections these roles grant by default (before overrides).
 const defaultSections = (roleIds) => {
@@ -32,8 +32,13 @@ export default function UsersPage() {
   const [f, setF] = useState(blank);
   const [editId, setEditId] = useState(null);
   const [msg, setMsg] = useState("");
+  const [branches, setBranches] = useState([]);
   const load = () => fetch("/api/admin/users").then(r => r.json()).then(d => setUsers(d.users || []));
   useEffect(() => { load(); }, []);
+  useEffect(() => { fetch("/api/admin/branches").then(r => r.ok ? r.json() : { branches: [] }).then(d => setBranches(d.branches || [])); }, []);
+
+  const toggleBranch = (bid) =>
+    setF(f => ({ ...f, BranchIds: f.BranchIds.includes(bid) ? f.BranchIds.filter(b => b !== bid) : [...f.BranchIds, bid] }));
 
   const isAdmin = f.RoleIds.includes(1);
   const defaults = defaultSections(f.RoleIds);
@@ -57,7 +62,7 @@ export default function UsersPage() {
 
   const startEdit = (u) => {
     setEditId(u.UserId);
-    setF({ Username: u.Username, Password: "", FullName: u.FullName || "", RoleIds: u.RoleIds, Overrides: u.Overrides || {} });
+    setF({ Username: u.Username, Password: "", FullName: u.FullName || "", RoleIds: u.RoleIds, Overrides: u.Overrides || {}, BranchIds: u.BranchIds || [] });
     setMsg("");
     window.scrollTo(0, 0);
   };
@@ -70,7 +75,7 @@ export default function UsersPage() {
     if (editId && f.Password && f.Password.length < 8) return setMsg("Password must be at least 8 characters.");
 
     const url = editId ? `/api/admin/users/${editId}` : "/api/admin/users";
-    const base = { Username: f.Username, FullName: f.FullName, RoleIds: f.RoleIds, Overrides: f.Overrides };
+    const base = { Username: f.Username, FullName: f.FullName, RoleIds: f.RoleIds, Overrides: f.Overrides, BranchIds: f.BranchIds };
     const body = editId ? { ...base, ...(f.Password ? { Password: f.Password } : {}) } : { ...base, Password: f.Password };
     const res = await fetch(url, { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const d = await res.json();
@@ -120,6 +125,23 @@ export default function UsersPage() {
             })}
           </div>
         </div>
+
+        {branches.length > 0 && (
+          <div className="form-row">
+            <label>Branch Access</label>
+            <p style={{ fontSize: ".78rem", color: "var(--muted)", margin: "0 0 .5rem" }}>
+              Which branches this user can access. <strong>Leave all unchecked = access to every branch.</strong> Check specific branches to limit them.
+            </p>
+            <div className="sec-grid">
+              {branches.map(b => (
+                <label key={b.BranchId} className={`sec-chip${f.BranchIds.includes(b.BranchId) ? " on" : ""}`}>
+                  <input type="checkbox" checked={f.BranchIds.includes(b.BranchId)} onChange={() => toggleBranch(b.BranchId)} />
+                  {b.Name}{b.IsActive ? "" : " (inactive)"}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
 
         <button className="btn" onClick={save}>{editId ? "Save Changes" : "Create User"}</button>
         {editId && <button className="btn ghost" style={{ marginLeft: ".6rem" }} onClick={cancelEdit}>Cancel</button>}

@@ -6,7 +6,7 @@ import { requireRole, ROLE_ADMIN, requireSection, SECTION_KEYS } from "@/lib/aut
 export async function PUT(req, { params }) {
   const s = await requireSection("users");
   if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { Username, FullName, RoleIds, IsActive, Password, Overrides } = await req.json();
+  const { Username, FullName, RoleIds, IsActive, Password, Overrides, BranchIds } = await req.json();
   const db = await getDb();
 
   if (Username !== undefined) {
@@ -42,6 +42,15 @@ export async function PUT(req, { params }) {
     await withTransaction(async (tdb) => {
       await tdb.prepare("DELETE FROM UserSectionAccess WHERE UserId=$1").run(params.id);
       for (const [section, allowed] of ov) await tdb.prepare("INSERT INTO UserSectionAccess (UserId,Section,Allowed) VALUES ($1,$2,$3)").run(params.id, section, !!allowed);
+    });
+  }
+  // Branch assignments: replace the user's whole branch set. Empty array =
+  // unrestricted (access to all branches).
+  if (Array.isArray(BranchIds)) {
+    const branchIds = BranchIds.map(Number).filter(Boolean);
+    await withTransaction(async (tdb) => {
+      await tdb.prepare("DELETE FROM UserBranches WHERE UserId=$1").run(params.id);
+      for (const bId of branchIds) await tdb.prepare("INSERT INTO UserBranches (UserId,BranchId) VALUES ($1,$2)").run(params.id, bId);
     });
   }
   await logActivity(Number(s.sub), "USER_UPDATE", `#${params.id}`);

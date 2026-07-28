@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { requireSection } from "@/lib/auth";
 import { PHONE_KEY_SQL } from "@/lib/phone";
+import { selectedBranchId } from "@/lib/branch";
 
 // Full order + invoice history for one customer (by phone key). Each order
 // includes its line items; invoices are grouped per sitting.
@@ -12,14 +13,17 @@ export async function GET(req) {
   const key = new URL(req.url).searchParams.get("phoneKey");
   if (!key) return NextResponse.json({ error: "Mobile is required." }, { status: 400 });
   const db = await getDb();
+  const branchId = await selectedBranchId();
 
   const custRows = await db.prepare(`SELECT CustomerId FROM Customers WHERE ${PHONE_KEY_SQL("Telephone")} = $1`).all(String(key));
   const ids = custRows.map(r => r.CustomerId);
   if (ids.length === 0) return NextResponse.json({ orders: [], invoices: [] });
 
   const placeholders = ids.map((_, i) => `$${i + 1}`).join(",");
+  const bp = `$${ids.length + 1}`; // branch param for the orders query
   // Each order is tagged with the invoice (sitting) it belongs to: the invoice
   // for its table+customer whose OccupiedAt is the latest at or before the order.
+  // Scoped to the selected branch so history shows only this branch's activity.
   const orders = await db.prepare(
     `SELECT o.OrderId, o.OrderNumber, o.TableNumber, o.Status, o.Subtotal, o.TaxAmount, o.ServiceAmount, o.GrandTotal, o.CreatedAt,
        inv.InvoiceId AS GroupInvoiceId
@@ -30,8 +34,8 @@ export async function GET(req) {
        WHERE i.CustomerId = o.CustomerId AND i.TableId = t.TableId AND i.OccupiedAt <= o.CreatedAt
        ORDER BY i.OccupiedAt DESC LIMIT 1
      ) inv ON TRUE
-     WHERE o.CustomerId IN (${placeholders}) ORDER BY o.CreatedAt DESC`
-  ).all(...ids);
+     WHERE o.CustomerId IN (${placeholders}) AND o.BranchId = ${bp} ORDER BY o.CreatedAt DESC`
+  ).all(...ids, branchId);
   for (const o of orders) {
     o.items = await db.prepare("SELECT ItemName, Quantity, UnitPrice, LineTotal, Sides, Note FROM OrderDetails WHERE OrderId=$1").all(o.OrderId);
   }
@@ -57,10 +61,10 @@ export async function GET(req) {
        ) inv ON TRUE
        WHERE o.CustomerId IN (${placeholders})
      ) og ON og.MatchedInvoiceId = i.InvoiceId
-     WHERE i.CustomerId IN (${ph2})
+     WHERE i.CustomerId IN (${ph2}) AND i.BranchId = $${ids.length * 2 + 1}
      GROUP BY i.InvoiceId, t.Name
      ORDER BY i.CreatedAt DESC`
-  ).all(...ids, ...ids);
+  ).all(...ids, ...ids, branchId);
 
   return NextResponse.json({ orders, invoices });
 }
