@@ -1321,3 +1321,21 @@ body { overflow-x: clip; max-width: 100%; }
 .branch-switch-label { display: block; font-size: .68rem; letter-spacing: 1px; text-transform: uppercase; opacity: .6; margin-bottom: .3rem; }
 .branch-switch select { width: 100%; padding: .45rem .55rem; border-radius: 8px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); color: #fff; font: inherit; font-size: .85rem; cursor: pointer; }
 .branch-switch select option { color: #17120F; }
+
+/* ===== Portal branch picker (Stage 3) ===== */
+.branch-picker { display: flex; flex-direction: column; gap: .6rem; }
+.branch-choice {
+  display: flex; flex-direction: column; align-items: flex-start; gap: .2rem;
+  padding: .9rem 1rem; border: 1px solid var(--line); border-radius: 12px;
+  background: #fff; cursor: pointer; text-align: left; font: inherit; width: 100%;
+  transition: border-color .15s, background .15s;
+}
+.branch-choice:hover { border-color: var(--copper); background: #FCF8F3; }
+.branch-choice-name { font-weight: 700; font-size: 1rem; color: var(--espresso, #17120F); }
+.branch-choice-addr { font-size: .82rem; color: var(--muted); }
+.branch-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: .8rem;
+  background: rgba(192,138,86,.1); border: 1px solid rgba(192,138,86,.28);
+  border-radius: 10px; padding: .5rem .8rem; margin-bottom: 1rem; font-size: .9rem; font-weight: 600;
+}
+.branch-change { background: none; border: none; color: var(--copper-dk, #B0743C); font: inherit; font-size: .82rem; cursor: pointer; text-decoration: underline; }

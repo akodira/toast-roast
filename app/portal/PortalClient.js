@@ -44,6 +44,8 @@ function groupInvoices(orders) {
 export default function PortalClient() {
   const [session, setSession] = useState(null); // { table, tableId, phone, name } — lives only in memory for this tab
   const [mode, setMode] = useState("claim"); // "claim" | "join"
+  const [branches, setBranches] = useState([]);
+  const [branchId, setBranchId] = useState(null); // chosen branch (customer must pick first)
   const [tables, setTables] = useState([]);
   const [form, setForm] = useState({ tableId: "", phone: "", name: "" });
   const [foundTable, setFoundTable] = useState(null); // result of phone lookup in join mode
@@ -105,17 +107,33 @@ export default function PortalClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Load active branches once. If there's only one, auto-select it (no need to
+  // ask). Honor a ?branch=<id> URL param so a branch's direct link/QR lands
+  // straight on its tables.
+  useEffect(() => {
+    fetch("/api/public/branches").then(r => r.json()).then(d => {
+      const list = d.branches || [];
+      setBranches(list);
+      const param = new URLSearchParams(window.location.search).get("branch");
+      const fromParam = param && list.find(b => String(b.BranchId) === String(param));
+      if (fromParam) setBranchId(fromParam.BranchId);
+      else if (list.length === 1) setBranchId(list[0].BranchId);
+    }).catch(() => {});
+  }, []);
+
   const loadTables = async () => {
-    const res = await fetch("/api/public/tables");
+    if (!branchId) return; // wait until a branch is chosen
+    const res = await fetch(`/api/public/tables?branch=${branchId}`);
     const d = await res.json();
     if (res.ok) setTables(d.tables || []);
   };
   useEffect(() => {
-    if (session) return;
+    if (session || !branchId) return;
     loadTables();
     const t = setInterval(loadTables, 5000);
     return () => clearInterval(t);
-  }, [session, mode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, mode, branchId]);
 
   useEffect(() => {
     if (!session) return;
@@ -161,7 +179,7 @@ export default function PortalClient() {
     setBusy(false);
     if (!res.ok) { setErr(d.error); loadTables(); return; }
     const table = tables.find(t => t.TableId === +form.tableId);
-    const s = { table: table?.Name || "", tableId: form.tableId, phone: form.phone.trim(), name: form.name.trim() };
+    const s = { table: table?.Name || "", tableId: form.tableId, phone: form.phone.trim(), name: form.name.trim(), branchId };
     // Reveal the PIN first (one-time popup). Session starts when they tap
     // "Done" — and we keep the PIN in the in-memory session so the person who
     // registered can always re-read it in the portal header (see below). It
@@ -183,7 +201,7 @@ export default function PortalClient() {
     const d = await res.json();
     setBusy(false);
     if (!res.ok) { setErr(d.error); return; }
-    const s = { table: foundTable.Name, tableId: foundTable.TableId, phone: form.phone.trim(), name: joinName };
+    const s = { table: foundTable.Name, tableId: foundTable.TableId, phone: form.phone.trim(), name: joinName, branchId };
     setSession(s);
   };
 
@@ -265,10 +283,39 @@ export default function PortalClient() {
 
   if (!session) {
     const freeTables = tables.filter(t => !t.Occupied);
+
+    // Branch gate: the customer picks a branch before anything else. Skipped
+    // automatically when there's only one branch (auto-selected on load) or when
+    // arriving via a ?branch= link.
+    if (!branchId) {
+      return (
+        <div className="card" style={{ maxWidth: 440 }}>
+          <h2 style={{ marginTop: 0 }}>Choose your branch</h2>
+          <p style={{ color: "var(--muted)", fontSize: ".9rem", marginBottom: "1.2rem" }}>Where are you dining today?</p>
+          {branches.length === 0 && <p>Loading branches…</p>}
+          <div className="branch-picker">
+            {branches.map(b => (
+              <button key={b.BranchId} className="branch-choice" onClick={() => setBranchId(b.BranchId)}>
+                <span className="branch-choice-name">{b.Name}</span>
+                {b.Address && <span className="branch-choice-addr">{b.Address}</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    const currentBranchName = branches.find(b => b.BranchId === branchId)?.Name;
     return (
       <>
       {pinShow && <PinReveal data={pinShow} onDone={() => { const s = pinShow.session; setPinShow(null); setSession(s); }} />}
       <div className="card" style={{ maxWidth: 440 }}>
+        {branches.length > 1 && (
+          <div className="branch-banner">
+            <span>{currentBranchName}</span>
+            <button className="branch-change" onClick={() => { setBranchId(null); setForm({ tableId: "", phone: "", name: "" }); setCustLookup(null); }}>Change</button>
+          </div>
+        )}
         <div className="steps" style={{ marginBottom: "1.2rem" }}>
           <button className={`step-dot ${mode === "claim" ? "on" : ""}`} style={{ border: "none", cursor: "pointer" }}
             onClick={() => { setMode("claim"); setForm({ tableId: "", phone: "", name: "" }); setFoundTable(null); setJoiningAsNew(false); setJoinPin(""); setErr(""); }}>New Order</button>
@@ -389,7 +436,7 @@ export default function PortalClient() {
     );
   }
 
-  const orderMoreHref = `/order?table=${encodeURIComponent(session.table)}&name=${encodeURIComponent(session.name)}&phone=${encodeURIComponent(session.phone)}`;
+  const orderMoreHref = `/order?table=${encodeURIComponent(session.table)}&name=${encodeURIComponent(session.name)}&phone=${encodeURIComponent(session.phone)}${session.branchId ? `&branch=${session.branchId}` : ""}`;
 
   return (
     <div>

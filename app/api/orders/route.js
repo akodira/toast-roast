@@ -23,7 +23,7 @@ export async function POST(req) {
   //   2. The caller supplies the table's current PIN (verified with lockout).
   // The phone tie keeps orders attached to the right customer/invoice; the
   // PIN is the secret that stops a stranger ordering to someone else's table.
-  const table = await db.prepare("SELECT TableId, OccupiedBy, OccupiedAt FROM Tables WHERE Name=$1 AND IsActive=true").get(String(tableNumber).trim());
+  const table = await db.prepare("SELECT TableId, BranchId, OccupiedBy, OccupiedAt FROM Tables WHERE Name=$1 AND IsActive=true").get(String(tableNumber).trim());
   if (!table || !table.OccupiedBy || !phonesMatch(table.OccupiedBy, telephone))
     return NextResponse.json({ error: "This table isn't registered to your phone number. Please register or join it at /portal first." }, { status: 403 });
 
@@ -76,8 +76,8 @@ export async function POST(req) {
     } else {
       customerId = (await tdb.prepare("INSERT INTO Customers (Name,Telephone) VALUES ($1,$2) RETURNING CustomerId AS id").run(name.trim(), telephone.trim())).lastInsertRowid;
     }
-    const ord = await tdb.prepare(`INSERT INTO Orders (OrderNumber,CustomerId,TableNumber,Subtotal,TaxPercent,TaxAmount,ServicePercent,ServiceAmount,GrandTotal,Status,ReceivedAt)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'Received',NOW()) RETURNING OrderId AS id`).run(orderNumber, customerId, String(tableNumber).trim(), subtotal, taxP, taxAmount, svcP, serviceAmount, grandTotal);
+    const ord = await tdb.prepare(`INSERT INTO Orders (OrderNumber,CustomerId,TableNumber,Subtotal,TaxPercent,TaxAmount,ServicePercent,ServiceAmount,GrandTotal,Status,ReceivedAt,BranchId)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'Received',NOW(),$10) RETURNING OrderId AS id`).run(orderNumber, customerId, String(tableNumber).trim(), subtotal, taxP, taxAmount, svcP, serviceAmount, grandTotal, table.BranchId ?? null);
     for (const l of lines) {
       await tdb.prepare("INSERT INTO OrderDetails (OrderId,MenuItemId,ItemName,UnitPrice,Quantity,LineTotal,Note,Sides) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)")
         .run(ord.lastInsertRowid, l.id, l.name, l.price, l.qty, l.total, l.note || null, l.sides || null);
@@ -85,9 +85,9 @@ export async function POST(req) {
     // One invoice per (table occupancy, customer) — created on their first
     // order this sitting, reused for every order after. This is what lets
     // staff mark "this customer's invoice" paid and auto-release the table
-    // once everyone at it has paid.
-    await tdb.prepare(`INSERT INTO Invoices (TableId,CustomerId,OccupiedAt) VALUES ($1,$2,$3)
-      ON CONFLICT (TableId,CustomerId,OccupiedAt) DO NOTHING`).run(table.TableId, customerId, table.OccupiedAt);
+    // once everyone at it has paid. Tagged with the table's branch too.
+    await tdb.prepare(`INSERT INTO Invoices (TableId,CustomerId,OccupiedAt,BranchId) VALUES ($1,$2,$3,$4)
+      ON CONFLICT (TableId,CustomerId,OccupiedAt) DO NOTHING`).run(table.TableId, customerId, table.OccupiedAt, table.BranchId ?? null);
     return ord.lastInsertRowid;
   });
   return NextResponse.json({ ok: true, orderNumber });
