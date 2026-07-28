@@ -38,6 +38,23 @@ export default function BranchesPage() {
     else { const d = await res.json().catch(() => ({})); setMsg(d.error || "Could not save."); }
   };
 
+  const importSahel = async (b) => {
+    if (b.Categories > 0) { setMsg("That branch already has a menu — import only works on an empty branch."); return; }
+    if (!confirm(`Import the Lake Yard – Hacienda Bay menu (18 categories, 146 items) into "${b.Name}"? This can't be auto-undone.`)) return;
+    setMsg("Importing menu…");
+    // Point the working branch at this row, then import into it.
+    await fetch("/api/admin/current-branch", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ branchId: b.BranchId }),
+    });
+    const res = await fetch("/api/admin/branches/import-menu", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ menu: "sahel" }),
+    });
+    if (res.ok) { const d = await res.json(); setMsg(`Imported ${d.categories} categories and ${d.items} items into ${b.Name}.`); load(); }
+    else { const d = await res.json().catch(() => ({})); setMsg(d.error || "Import failed."); }
+  };
+
   const toggleActive = async (b) => {
     const res = await fetch(`/api/admin/branches/${b.BranchId}`, {
       method: "PUT", headers: { "Content-Type": "application/json" },
@@ -102,6 +119,7 @@ export default function BranchesPage() {
               <td>{b.IsActive ? <span className="status-pill st-Ready">Active</span> : <span className="status-pill st-Cancelled">Inactive</span>}</td>
               <td style={{ whiteSpace: "nowrap" }}>
                 <button className="btn small ghost" onClick={() => edit(b)}>Edit</button>{" "}
+                {b.Categories === 0 && <><button className="btn small" onClick={() => importSahel(b)}>Import Sahel Menu</button>{" "}</>}
                 <button className="btn small ghost" onClick={() => toggleActive(b)}>{b.IsActive ? "Deactivate" : "Activate"}</button>{" "}
                 <button className="btn small danger" onClick={() => del(b)}>Delete</button>
               </td>

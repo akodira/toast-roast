@@ -1,0 +1,840 @@
+[
+  {
+    "name": "Soups",
+    "note": null,
+    "items": [
+      {
+        "name": "Chicken Cream Soup",
+        "price": 249.99,
+        "desc": null
+      },
+      {
+        "name": "Chicken Mushroom Soup",
+        "price": 279.99,
+        "desc": null
+      },
+      {
+        "name": "Onion Soup",
+        "price": 219.99,
+        "desc": null
+      },
+      {
+        "name": "Seafood Soup",
+        "price": 479.99,
+        "desc": null
+      }
+    ]
+  },
+  {
+    "name": "Salads",
+    "note": null,
+    "items": [
+      {
+        "name": "Greek Salad",
+        "price": 319.99,
+        "desc": null
+      },
+      {
+        "name": "Chicken Caesar Salad",
+        "price": 349.99,
+        "desc": null
+      },
+      {
+        "name": "Crispy Chicken Salad",
+        "price": 319.99,
+        "desc": null
+      },
+      {
+        "name": "Beet Salad",
+        "price": 319.99,
+        "desc": null
+      },
+      {
+        "name": "Seafood Salad",
+        "price": 549.99,
+        "desc": null
+      },
+      {
+        "name": "Salmon Salad",
+        "price": 499.99,
+        "desc": null
+      }
+    ]
+  },
+  {
+    "name": "Appetizers",
+    "note": null,
+    "items": [
+      {
+        "name": "Fried Combo",
+        "price": 679.99,
+        "desc": null
+      },
+      {
+        "name": "Chicken Strips",
+        "price": 259.99,
+        "desc": null
+      },
+      {
+        "name": "Mozzarella Sticks",
+        "price": 279.99,
+        "desc": null
+      },
+      {
+        "name": "Onion Rings",
+        "price": 239.99,
+        "desc": null
+      },
+      {
+        "name": "Chicken Spring Rolls",
+        "price": 239.99,
+        "desc": null
+      },
+      {
+        "name": "Vegetables Spring Rolls",
+        "price": 219.99,
+        "desc": null
+      },
+      {
+        "name": "Cheese Spring Rolls",
+        "price": 219.99,
+        "desc": null
+      },
+      {
+        "name": "Fried Seafood combo",
+        "price": 679.99,
+        "desc": null
+      },
+      {
+        "name": "Fried Calamari",
+        "price": 349.99,
+        "desc": null
+      },
+      {
+        "name": "Fried Shrimps",
+        "price": 549.99,
+        "desc": null
+      },
+      {
+        "name": "Fish Fingers",
+        "price": 379.99,
+        "desc": null
+      }
+    ]
+  },
+  {
+    "name": "Chicken",
+    "note": "served with choice of 2 sides: White Rice, Mexican Rice, Pasta, Sweet Corn, Grilled Mushrooms, Sautéed, Spinach Gratin, French Fries, or Mashed Potatoes",
+    "items": [
+      {
+        "name": "Chicken Parmesan",
+        "price": 499.99,
+        "desc": "صدور دجاج بانيه مغطي بصو المارينار والجبنه الموزاريلا و البارميزان"
+      },
+      {
+        "name": "Grilled Chicken",
+        "price": 449.99,
+        "desc": "صدور دجاج مشويه علي الجريل"
+      },
+      {
+        "name": "Hickory Chicken",
+        "price": 549.99,
+        "desc": "صدور دجاج مشوي علي الجريل مغطي بالمشروم و الفلفل الوان و الريحان و الموزاريل"
+      },
+      {
+        "name": "Chicken Fajita",
+        "price": 479.99,
+        "desc": "صدور دجاج مشوي علي الجريل مغطي باللحم المدخن صوص الباربيكيو و الجبنه الشيدر"
+      },
+      {
+        "name": "Grilled Chicken Fresh Mushroom",
+        "price": 499.99,
+        "desc": "صدور الدجاج المشوي مغطي بالمشروم الفريش"
+      },
+      {
+        "name": "Creamy Chicken Casserole",
+        "price": 699.99,
+        "desc": "قطع الدجاج مع البيفي المدخن و المشروم و صوص الكريمي مغطي الجبنه الموتزريلا"
+      },
+      {
+        "name": "Country Fried Chicken",
+        "price": 499.99,
+        "desc": "صدور دجاج مقليه"
+      },
+      {
+        "name": "Chicken Pane",
+        "price": 479.99,
+        "desc": "صدور دجاج بانيه مقليه"
+      },
+      {
+        "name": "Chicken Sweet Chilli",
+        "price": 599.99,
+        "desc": "دجاج مقلي مغطي بصوص السويت شيلي"
+      }
+    ]
+  },
+  {
+    "name": "Beef",
+    "note": "served with choice of 2 sides — same list as Chicken",
+    "items": [
+      {
+        "name": "Grilled Fillet 250gm",
+        "price": 699.99,
+        "desc": "قطعه لحم ٢٥٠ جرام مشوي بتوابل توست أند روست"
+      },
+      {
+        "name": "Beef Piccata",
+        "price": 699.99,
+        "desc": "٤ قطع لحم ٢٠ جرام تقدم مع صوص من اختيارك"
+      },
+      {
+        "name": "Beef Stroganoff",
+        "price": 799.99,
+        "desc": "شرائح لحم ٢٥٠ جرام تقدم مع فلفل الوان و بصل و مشروم في صوص البراون"
+      }
+    ]
+  },
+  {
+    "name": "Seafood",
+    "note": "served with choice of 2 sides — Fish Rice, Mexican Rice, Pasta, Sweet Corn, Grilled Mushrooms, Sautéed, Spinach Gratin, French Fries, or Mashed Potatoes",
+    "items": [
+      {
+        "name": "Fish Fillet (Grilled or Fried)",
+        "price": 499.99,
+        "desc": "قطع السمك الفليه المشوي او المقلي"
+      },
+      {
+        "name": "Grilled Salmon Steak",
+        "price": 799.99,
+        "desc": "قطعه سمك سالمون ٢٥٠جرام مشوي بطريقه توست أند روست الخاصه"
+      },
+      {
+        "name": "Seafood Platter",
+        "price": 689.99,
+        "desc": "جمبري وكالمياري وبلح البحر وسمك فيليه بصوص الكريمه"
+      },
+      {
+        "name": "Seafood Fajita",
+        "price": 690,
+        "desc": "جمبري وكاليماري وبلح البحر وكابوريا استيك بتوابل الفاهيتا الخاصة"
+      }
+    ]
+  },
+  {
+    "name": "Pasta",
+    "note": null,
+    "items": [
+      {
+        "name": "Negresco",
+        "price": 369.99,
+        "desc": null
+      },
+      {
+        "name": "Chicken Mushroom Pasta",
+        "price": 399.99,
+        "desc": null
+      },
+      {
+        "name": "Crispy Melted Cheese",
+        "price": 449.99,
+        "desc": null
+      },
+      {
+        "name": "Chicken Pesto Pasta",
+        "price": 349.99,
+        "desc": null
+      },
+      {
+        "name": "Chicken Spinach Pasta",
+        "price": 349.99,
+        "desc": null
+      },
+      {
+        "name": "Mix Cheese Pasta",
+        "price": 409.99,
+        "desc": null
+      },
+      {
+        "name": "Country Chicken Pasta",
+        "price": 349.99,
+        "desc": null
+      },
+      {
+        "name": "Beef Stroganoff Pasta",
+        "price": 549.99,
+        "desc": null
+      },
+      {
+        "name": "Arrabbiata Pasta",
+        "price": 219.99,
+        "desc": null
+      },
+      {
+        "name": "Seafood Pasta",
+        "price": 599.99,
+        "desc": null
+      },
+      {
+        "name": "Shrimp Pasta",
+        "price": 674.99,
+        "desc": null
+      },
+      {
+        "name": "Salmon Pasta",
+        "price": 549.99,
+        "desc": null
+      }
+    ]
+  },
+  {
+    "name": "Pizza",
+    "note": null,
+    "items": [
+      {
+        "name": "Super Supreme Pizza",
+        "price": 399.99,
+        "desc": null
+      },
+      {
+        "name": "Chicken Ranch Pizza",
+        "price": 399.99,
+        "desc": null
+      },
+      {
+        "name": "BBQ Chicken Pizza",
+        "price": 399.99,
+        "desc": null
+      },
+      {
+        "name": "Pepperoni Pizza",
+        "price": 349.99,
+        "desc": null
+      },
+      {
+        "name": "Vegatables Pizza",
+        "price": 289.99,
+        "desc": null
+      },
+      {
+        "name": "Margherita Pizza",
+        "price": 249.99,
+        "desc": null
+      },
+      {
+        "name": "Quattro Formaggi Pizza",
+        "price": 449.99,
+        "desc": null
+      },
+      {
+        "name": "Tuna Pizza",
+        "price": 399.99,
+        "desc": null
+      },
+      {
+        "name": "Shrimp Pizza",
+        "price": 649.99,
+        "desc": null
+      },
+      {
+        "name": "Seafood Pizza",
+        "price": 599.99,
+        "desc": null
+      }
+    ]
+  },
+  {
+    "name": "Sandwiches & Burgers",
+    "note": null,
+    "items": [
+      {
+        "name": "Crispy Melt Cheese Sandwich",
+        "price": 389.99,
+        "desc": null
+      },
+      {
+        "name": "Crispy Chicken Sandwich",
+        "price": 379.99,
+        "desc": null
+      },
+      {
+        "name": "Chicken Pane Sandwich",
+        "price": 379.99,
+        "desc": null
+      },
+      {
+        "name": "Chicken Quesadillas",
+        "price": 449.99,
+        "desc": null
+      },
+      {
+        "name": "Musrhoom Steak Sandwich",
+        "price": 469.99,
+        "desc": null
+      },
+      {
+        "name": "Beef Fajita Sandwich",
+        "price": 469.99,
+        "desc": null
+      },
+      {
+        "name": "Fried Shrimp Sandwich",
+        "price": 569.99,
+        "desc": null
+      },
+      {
+        "name": "Toast & Roast Burger",
+        "price": 549.99,
+        "desc": null
+      },
+      {
+        "name": "Hickory Smoked Burger",
+        "price": 519.99,
+        "desc": null
+      },
+      {
+        "name": "Cheese Burgers",
+        "price": 499.99,
+        "desc": null
+      },
+      {
+        "name": "Mega Mushroom Burger",
+        "price": 519.99,
+        "desc": null
+      },
+      {
+        "name": "Bacon Smoked Burger",
+        "price": 549.99,
+        "desc": null
+      }
+    ]
+  },
+  {
+    "name": "Desserts",
+    "note": null,
+    "items": [
+      {
+        "name": "Cheesecake",
+        "price": 279.99,
+        "desc": null
+      },
+      {
+        "name": "Chocolate Cake",
+        "price": 279.99,
+        "desc": null
+      },
+      {
+        "name": "Brownies",
+        "price": 259.99,
+        "desc": null
+      },
+      {
+        "name": "Carrot Cake",
+        "price": 259.99,
+        "desc": null
+      },
+      {
+        "name": "Honey Cake",
+        "price": 259.99,
+        "desc": null
+      },
+      {
+        "name": "Molten Cake",
+        "price": 279.99,
+        "desc": null
+      },
+      {
+        "name": "Mix Ice Cream",
+        "price": 199.99,
+        "desc": null
+      },
+      {
+        "name": "Tres Leches",
+        "price": 399.99,
+        "desc": null
+      }
+    ]
+  },
+  {
+    "name": "Fresh Juice & Smoothies",
+    "note": null,
+    "items": [
+      {
+        "name": "Lemon",
+        "price": 114.99,
+        "desc": null
+      },
+      {
+        "name": "Lemon Mint",
+        "price": 134.99,
+        "desc": null
+      },
+      {
+        "name": "Orange",
+        "price": 184.99,
+        "desc": null
+      },
+      {
+        "name": "Kiwi",
+        "price": 194.99,
+        "desc": null
+      },
+      {
+        "name": "Mango",
+        "price": 194.99,
+        "desc": null
+      },
+      {
+        "name": "Strawyberry",
+        "price": 194.99,
+        "desc": null
+      },
+      {
+        "name": "Guava",
+        "price": 184.99,
+        "desc": null
+      },
+      {
+        "name": "Pinapple",
+        "price": 194.99,
+        "desc": null
+      },
+      {
+        "name": "Avocado",
+        "price": 299.99,
+        "desc": null
+      },
+      {
+        "name": "Banana Milk",
+        "price": 184.99,
+        "desc": null
+      },
+      {
+        "name": "Seasonal Fresh Juice",
+        "price": 249.99,
+        "desc": null
+      }
+    ]
+  },
+  {
+    "name": "Ice Coffee & Cold Drinks",
+    "note": null,
+    "items": [
+      {
+        "name": "Frappuccino (Caramel/Vanilla/Chocolate/Hazelnut)",
+        "price": 194.99,
+        "desc": null
+      },
+      {
+        "name": "Milkshake (Vanilla/Chocolate/Caramel/Mango/Strawberry/Lotus)",
+        "price": 209.99,
+        "desc": null
+      },
+      {
+        "name": "Pistachio Milkshake",
+        "price": 239.99,
+        "desc": null
+      },
+      {
+        "name": "Pistachio Nutella Milkshake",
+        "price": 239.99,
+        "desc": null
+      },
+      {
+        "name": "Yogurt Shakes (Vanilla/Chocolate/Caramel/Mango/Strawberry/Oreo/Matcha/Banana)",
+        "price": 209.99,
+        "desc": null
+      },
+      {
+        "name": "Yogurt Shakes Pistachio",
+        "price": 239.99,
+        "desc": null
+      },
+      {
+        "name": "Cold Chocolate",
+        "price": 179.99,
+        "desc": null
+      },
+      {
+        "name": "Iced Spanich Latte",
+        "price": 170,
+        "desc": null
+      },
+      {
+        "name": "Ice Coffee",
+        "price": 159.99,
+        "desc": null
+      },
+      {
+        "name": "Redbull",
+        "price": 189.99,
+        "desc": null
+      },
+      {
+        "name": "Soft Drink",
+        "price": 94.99,
+        "desc": null
+      },
+      {
+        "name": "Small Mineral Water",
+        "price": 49.99,
+        "desc": null
+      },
+      {
+        "name": "Sparkling Water",
+        "price": 59.99,
+        "desc": null
+      }
+    ]
+  },
+  {
+    "name": "Cocktails",
+    "note": null,
+    "items": [
+      {
+        "name": "Reval",
+        "price": 209.99,
+        "desc": null
+      },
+      {
+        "name": "Sunshine",
+        "price": 149.99,
+        "desc": null
+      },
+      {
+        "name": "Refresh",
+        "price": 209.99,
+        "desc": null
+      },
+      {
+        "name": "Mojito",
+        "price": 150,
+        "desc": null
+      },
+      {
+        "name": "Redbull Mojito",
+        "price": 239.99,
+        "desc": null
+      },
+      {
+        "name": "Mango Kiwi",
+        "price": 194.99,
+        "desc": null
+      },
+      {
+        "name": "Leo",
+        "price": 209.99,
+        "desc": null
+      },
+      {
+        "name": "Slash",
+        "price": 150,
+        "desc": null
+      }
+    ]
+  },
+  {
+    "name": "Hot Drinks",
+    "note": null,
+    "items": [
+      {
+        "name": "Tea",
+        "price": 59.99,
+        "desc": null
+      },
+      {
+        "name": "Green Tea",
+        "price": 64.99,
+        "desc": null
+      },
+      {
+        "name": "Earl Grey",
+        "price": 69.99,
+        "desc": null
+      },
+      {
+        "name": "Flavored Tea",
+        "price": 79.99,
+        "desc": null
+      },
+      {
+        "name": "Herbal Tea",
+        "price": 89.99,
+        "desc": null
+      },
+      {
+        "name": "Karak Tea",
+        "price": 109.99,
+        "desc": null
+      },
+      {
+        "name": "Hot Cider",
+        "price": 139.99,
+        "desc": null
+      }
+    ]
+  },
+  {
+    "name": "Hot Chocolate",
+    "note": null,
+    "items": [
+      {
+        "name": "Hot Chocolate",
+        "price": 159.99,
+        "desc": null
+      },
+      {
+        "name": "Mix Chocolate",
+        "price": 189.99,
+        "desc": null
+      },
+      {
+        "name": "Crème Brulee",
+        "price": 189.99,
+        "desc": null
+      },
+      {
+        "name": "Swiss Chocolate",
+        "price": 189.99,
+        "desc": null
+      }
+    ]
+  },
+  {
+    "name": "Hot Coffee Corner",
+    "note": null,
+    "items": [
+      {
+        "name": "Single Espresso",
+        "price": 89.99,
+        "desc": null
+      },
+      {
+        "name": "Double Espresso",
+        "price": 109.99,
+        "desc": null
+      },
+      {
+        "name": "Ristretto",
+        "price": 89.99,
+        "desc": null
+      },
+      {
+        "name": "Espresso Con Panna",
+        "price": 149.99,
+        "desc": null
+      },
+      {
+        "name": "Chocolate Espresso",
+        "price": 149.99,
+        "desc": null
+      },
+      {
+        "name": "Espresso Macchiato",
+        "price": 104.99,
+        "desc": null
+      },
+      {
+        "name": "Vienna Coffee",
+        "price": 134.99,
+        "desc": null
+      },
+      {
+        "name": "Ginger Latte",
+        "price": 169.99,
+        "desc": null
+      },
+      {
+        "name": "Flat White",
+        "price": 134.99,
+        "desc": null
+      },
+      {
+        "name": "Cappuccino",
+        "price": 149.99,
+        "desc": null
+      },
+      {
+        "name": "Latte",
+        "price": 149.99,
+        "desc": null
+      },
+      {
+        "name": "Spanich Latte",
+        "price": 169.99,
+        "desc": null
+      },
+      {
+        "name": "Cortado",
+        "price": 149.99,
+        "desc": null
+      },
+      {
+        "name": "American",
+        "price": 114.99,
+        "desc": null
+      },
+      {
+        "name": "Mocha",
+        "price": 169.99,
+        "desc": null
+      },
+      {
+        "name": "Nescafe",
+        "price": 149.99,
+        "desc": null
+      },
+      {
+        "name": "Single Turkish Coffee",
+        "price": 69.99,
+        "desc": null
+      },
+      {
+        "name": "Double Turkish Coffee",
+        "price": 79.99,
+        "desc": null
+      },
+      {
+        "name": "French Coffee",
+        "price": 84.99,
+        "desc": null
+      },
+      {
+        "name": "Black & White",
+        "price": 149.99,
+        "desc": null
+      }
+    ]
+  },
+  {
+    "name": "Speciality Coffee",
+    "note": null,
+    "items": [
+      {
+        "name": "V 60",
+        "price": 249.99,
+        "desc": null
+      }
+    ]
+  },
+  {
+    "name": "Shisha",
+    "note": null,
+    "items": [
+      {
+        "name": "Special Shisha",
+        "price": 399.99,
+        "desc": null
+      },
+      {
+        "name": "Lai",
+        "price": 49.99,
+        "desc": null
+      },
+      {
+        "name": "Mu'assel",
+        "price": 99.99,
+        "desc": null
+      }
+    ]
+  }
+]
