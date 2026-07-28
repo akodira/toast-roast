@@ -9,6 +9,7 @@ const SECTIONS = [
   ["dashboard", "Dashboard", [1, 4]],
   ["orders", "Orders", [1, 2, 4]],
   ["customers", "Customers", [1, 4]],
+  ["branches", "Branches", [1]],
   ["invoices", "Invoices", [1, 2, 4]],
   ["tables", "Tables", [1, 2, 4]],
   ["menu", "Menu Items", [1, 3]],

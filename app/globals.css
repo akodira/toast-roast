@@ -1309,3 +1309,9 @@ body { overflow-x: clip; max-width: 100%; }
 .hist-items li { margin: .15rem 0; }
 .hist-sub { color: var(--rust-deep, #8A5A2E); font-style: italic; }
 .hist-order-total { text-align: right; font-weight: 700; color: var(--copper-dk); margin-top: .5rem; font-size: .9rem; }
+
+/* ===== Branches admin page ===== */
+.branch-form { padding: 1.2rem 1.4rem; margin-bottom: 1.4rem; }
+.branch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem 1.2rem; }
+.branch-grid .branch-wide { grid-column: 1 / -1; }
+@media (max-width: 640px) { .branch-grid { grid-template-columns: 1fr; } }

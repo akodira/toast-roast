@@ -11,6 +11,7 @@ const ALL_LINKS = [
   ["/admin", "Dashboard", "dashboard"],
   ["/admin/orders", "Orders", "orders"],
   ["/admin/customers", "Customers", "customers"],
+  ["/admin/branches", "Branches", "branches"],
   ["/admin/invoices", "Invoices", "invoices"],
   ["/admin/tables", "Tables", "tables"],
   ["/admin/menu", "Menu Items", "menu"],
