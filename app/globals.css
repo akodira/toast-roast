@@ -1315,3 +1315,9 @@ body { overflow-x: clip; max-width: 100%; }
 .branch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem 1.2rem; }
 .branch-grid .branch-wide { grid-column: 1 / -1; }
 @media (max-width: 640px) { .branch-grid { grid-template-columns: 1fr; } }
+
+/* ===== Admin branch switcher ===== */
+.branch-switch { padding: .7rem .9rem; border-bottom: 1px solid rgba(255,255,255,.08); margin-bottom: .4rem; }
+.branch-switch-label { display: block; font-size: .68rem; letter-spacing: 1px; text-transform: uppercase; opacity: .6; margin-bottom: .3rem; }
+.branch-switch select { width: 100%; padding: .45rem .55rem; border-radius: 8px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); color: #fff; font: inherit; font-size: .85rem; cursor: pointer; }
+.branch-switch select option { color: #17120F; }

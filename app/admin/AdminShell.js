@@ -31,11 +31,33 @@ export default function AdminShell({ children }) {
   const path = usePathname();
   const router = useRouter();
   const [sections, setSections] = useState(null);
+  const [branches, setBranches] = useState([]);
+  const [currentBranch, setCurrentBranch] = useState(null);
 
   useEffect(() => {
     fetch("/api/auth/me").then(r => r.ok ? r.json() : Promise.reject()).then(d => setSections(d.sections || []))
       .catch(() => router.push("/admin/login"));
   }, [router]);
+
+  // Load the branch list + which one is currently selected, for the switcher.
+  useEffect(() => {
+    fetch("/api/admin/current-branch").then(r => r.ok ? r.json() : null).then(d => {
+      if (d) { setBranches(d.branches || []); setCurrentBranch(d.current); }
+    }).catch(() => {});
+  }, []);
+
+  const switchBranch = async (branchId) => {
+    const res = await fetch("/api/admin/current-branch", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ branchId: Number(branchId) }),
+    });
+    if (res.ok) {
+      setCurrentBranch(Number(branchId));
+      // Reload so every branch-scoped page re-fetches for the new branch.
+      router.refresh();
+      window.location.reload();
+    }
+  };
 
   // Bounce away from a section this user can't access (nav-hiding alone is
   // just cosmetic; the API routes are the real gate).
@@ -52,6 +74,16 @@ export default function AdminShell({ children }) {
     <div className="admin-shell">
       <aside className="admin-side">
         <Link href="/admin" className="brand">T&R Back Office</Link>
+        {branches.length > 0 && (
+          <div className="branch-switch">
+            <label className="branch-switch-label">Branch</label>
+            <select value={currentBranch ?? ""} onChange={e => switchBranch(e.target.value)}>
+              {branches.map(b => (
+                <option key={b.BranchId} value={b.BranchId}>{b.Name}{b.IsActive ? "" : " (inactive)"}</option>
+              ))}
+            </select>
+          </div>
+        )}
         <nav>
           {links.map(([h, l]) => <Link key={h} href={h} className={path === h ? "on" : ""}>{l}</Link>)}
           <a href="#" onClick={(e) => { e.preventDefault(); logout(); }}>Sign out</a>
