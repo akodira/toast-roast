@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import CategoryIcon from "@/components/CategoryIcon";
@@ -75,6 +75,16 @@ function ItemRow({ item }) {
 export default function MenuBrowser({ categories, items, eyebrow, pdfUrl, taxPercent, servicePercent }) {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState(categories[0]?.CategoryId || 0);
+
+  // When the branch changes, the category list changes — the previously
+  // selected category id may not exist in the new branch. Reset to the new
+  // branch's first category so both branches behave the same (default to their
+  // first category, not a blank screen).
+  const catKey = categories.map(c => c.CategoryId).join(",");
+  useEffect(() => {
+    setCat(prev => categories.some(c => c.CategoryId === prev) ? prev : (categories[0]?.CategoryId || 0));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [catKey]);
 
   const term = q.trim().toLowerCase();
   const searching = term.length > 0;
