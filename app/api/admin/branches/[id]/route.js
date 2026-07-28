@@ -20,6 +20,11 @@ export async function PUT(req, { params }) {
         body.TaxPercent ?? null, body.ServicePercent ?? null,
         Number.isFinite(body.DisplayOrder) ? body.DisplayOrder : 0,
         body.IsActive === false ? false : true, params.id);
+  // "Main" is radio-style: setting this branch as Main clears it on all others,
+  // so exactly one branch is ever the public-website default.
+  if (body.IsMain === true) {
+    await db.prepare("UPDATE Branches SET IsMain=(BranchId=$1)").run(params.id);
+  }
   return NextResponse.json({ ok: true });
 }
 

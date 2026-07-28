@@ -1339,3 +1339,19 @@ body { overflow-x: clip; max-width: 100%; }
   border-radius: 10px; padding: .5rem .8rem; margin-bottom: 1rem; font-size: .9rem; font-weight: 600;
 }
 .branch-change { background: none; border: none; color: var(--copper-dk, #B0743C); font: inherit; font-size: .82rem; cursor: pointer; text-decoration: underline; }
+
+/* ===== Public header branch switcher ===== */
+.hdr-right { display: flex; align-items: center; gap: .8rem; }
+.hdr-branch { display: inline-flex; align-items: center; gap: .35rem; }
+.hdr-branch-label { font-size: .72rem; letter-spacing: .5px; text-transform: uppercase; opacity: .7; }
+.hdr-branch select { padding: .35rem .5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.08); color: inherit; font: inherit; font-size: .82rem; cursor: pointer; }
+.hdr-branch select option { color: #17120F; }
+.site-header:not(.on-hero) .hdr-branch select { border-color: var(--line); background: #fff; }
+
+/* ===== Contact page branches ===== */
+.ct-branches { margin-top: 1.6rem; }
+.ct-branches-title { font-size: 1.1rem; margin: 0 0 .8rem; }
+.ct-branch-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .8rem; }
+.ct-branch { display: flex; flex-direction: column; gap: .2rem; padding: .8rem 1rem; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.ct-branch-name { font-weight: 700; }
+.ct-branch-line { font-size: .85rem; color: var(--muted); }

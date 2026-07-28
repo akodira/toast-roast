@@ -27,7 +27,7 @@ export async function GET() {
       BranchId: b.BranchId, Name: b.Name, Slug: b.Slug,
       Address: b.address ?? b.Address ?? null, Phone: b.Phone ?? null,
       TaxPercent: b.TaxPercent, ServicePercent: b.ServicePercent,
-      DisplayOrder: b.DisplayOrder, IsActive: !!b.IsActive,
+      DisplayOrder: b.DisplayOrder, IsActive: !!b.IsActive, IsMain: !!b.IsMain,
       Categories: Number(b.catcount || 0), Items: Number(b.itemcount || 0), Tables: Number(b.tablecount || 0),
     })),
   });
@@ -51,5 +51,9 @@ export async function POST(req) {
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING BranchId AS id`
   ).run(name, slug, body.Address || null, body.Phone || null,
         body.TaxPercent ?? null, body.ServicePercent ?? null, order, body.IsActive === false ? false : true);
+  // If created as Main, make it the sole Main branch.
+  if (body.IsMain === true) {
+    await db.prepare("UPDATE Branches SET IsMain=(BranchId=$1)").run(r.lastInsertRowid);
+  }
   return NextResponse.json({ ok: true, branchId: r.lastInsertRowid });
 }

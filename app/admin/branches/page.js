@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import AdminShell from "../AdminShell";
 
-const BLANK = { Name: "", Address: "", Phone: "", TaxPercent: "", ServicePercent: "", IsActive: true };
+const BLANK = { Name: "", Address: "", Phone: "", TaxPercent: "", ServicePercent: "", IsActive: true, IsMain: false };
 
 export default function BranchesPage() {
   const [branches, setBranches] = useState([]);
@@ -17,7 +17,7 @@ export default function BranchesPage() {
     setF({
       Name: b.Name || "", Address: b.Address || "", Phone: b.Phone || "",
       TaxPercent: b.TaxPercent ?? "", ServicePercent: b.ServicePercent ?? "",
-      DisplayOrder: b.DisplayOrder, IsActive: b.IsActive,
+      DisplayOrder: b.DisplayOrder, IsActive: b.IsActive, IsMain: b.IsMain,
     });
     setMsg("");
   };
@@ -97,6 +97,7 @@ export default function BranchesPage() {
             <input type="number" step="0.01" value={f.ServicePercent} onChange={e => setF({ ...f, ServicePercent: e.target.value })} placeholder="e.g. 12 (blank = default)" />
           </div>
           <div className="field"><label><input type="checkbox" checked={!!f.IsActive} onChange={e => setF({ ...f, IsActive: e.target.checked })} /> Active</label></div>
+          <div className="field"><label><input type="checkbox" checked={!!f.IsMain} onChange={e => setF({ ...f, IsMain: e.target.checked })} /> Main (shown by default on the public website)</label></div>
         </div>
         <div style={{ marginTop: ".6rem" }}>
           <button className="btn" onClick={save}>{editId ? "Save Changes" : "Add Branch"}</button>
@@ -116,7 +117,7 @@ export default function BranchesPage() {
               <td className="num">{b.TaxPercent ?? "—"}% / {b.ServicePercent ?? "—"}%</td>
               <td className="num">{b.Categories} cat · {b.Items} items</td>
               <td className="num">{b.Tables}</td>
-              <td>{b.IsActive ? <span className="status-pill st-Ready">Active</span> : <span className="status-pill st-Cancelled">Inactive</span>}</td>
+              <td>{b.IsActive ? <span className="status-pill st-Ready">Active</span> : <span className="status-pill st-Cancelled">Inactive</span>}{b.IsMain && <span className="status-pill st-Preparing" style={{ marginLeft: ".4rem" }}>Main</span>}</td>
               <td style={{ whiteSpace: "nowrap" }}>
                 <button className="btn small ghost" onClick={() => edit(b)}>Edit</button>{" "}
                 {b.Categories === 0 && <><button className="btn small" onClick={() => importSahel(b)}>Import Sahel Menu</button>{" "}</>}

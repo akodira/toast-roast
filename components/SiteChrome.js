@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cache } from "react";
 import { getDb } from "@/lib/db";
 import { SOCIAL_LINKS } from "./socials";
+import BranchSwitcher from "./BranchSwitcher";
 
 export const getContent = cache(async function getContent() {
   const db = await getDb();
@@ -38,7 +39,7 @@ export function Brand({ content }) {
 }
 
 /* `onHero` makes the header transparent and overlay the hero (homepage only). */
-export function Header({ content, onHero = false }) {
+export function Header({ content, onHero = false, branches = [], currentBranch = null }) {
   return (
     <header className={`site-header${onHero ? " on-hero" : ""}`}>
       <div className="container">
@@ -49,7 +50,10 @@ export function Header({ content, onHero = false }) {
           <Link href="/about">About Us</Link>
           <Link href="/contact">Contact Us</Link>
         </nav>
-        <Link href="/portal" className="btn small nav-cta"><TableIcon /> Join a Table</Link>
+        <div className="hdr-right">
+          <BranchSwitcher branches={branches} current={currentBranch} />
+          <Link href="/portal" className="btn small nav-cta"><TableIcon /> Join a Table</Link>
+        </div>
       </div>
     </header>
   );

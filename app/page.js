@@ -2,6 +2,7 @@ import Link from "next/link";
 import Html from "@/components/Html";
 import { Header, Footer, getContent } from "@/components/SiteChrome";
 import { getDb } from "@/lib/db";
+import { publicBranchId } from "@/lib/branch";
 import HomeMenu, { ItemCard } from "./HomeMenu";
 import JoinTableBox from "./JoinTableBox";
 
@@ -14,16 +15,18 @@ const FEATURE_ICONS = [
   <><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1Z" /><path d="m9 12 2 2 4-4" /></>,
 ];
 
-export default async function Home() {
+export default async function Home({ searchParams }) {
   const content = await getContent();
   const db = await getDb();
+  const branchId = await publicBranchId(searchParams?.branch);
+  const branches = await db.prepare("SELECT BranchId, Name FROM Branches WHERE IsActive=true ORDER BY DisplayOrder, BranchId").all();
 
-  const cats = await db.prepare("SELECT * FROM Categories WHERE IsActive=true ORDER BY DisplayOrder").all();
+  const cats = await db.prepare("SELECT * FROM Categories WHERE IsActive=true AND BranchId=$1 ORDER BY DisplayOrder").all(branchId);
   // CatName is needed for the no-photo fallback card (shows the item's
   // category under the monogram), so join it rather than SELECT *.
   const items = await db.prepare(`SELECT m.*, c.Name AS CatName FROM MenuItems m
     JOIN Categories c ON c.CategoryId = m.CategoryId
-    WHERE m.IsActive=true AND m.IsAvailable=true ORDER BY m.DisplayOrder`).all();
+    WHERE m.IsActive=true AND m.IsAvailable=true AND m.BranchId=$1 ORDER BY m.DisplayOrder`).all(branchId);
   const picks = items.filter(i => i.IsFeatured).slice(0, 4);
 
   const features = [1, 2, 3, 4]
@@ -36,7 +39,7 @@ export default async function Home() {
         <div className={`hero-bg ${content.hero_image ? "" : "no-photo"}`}
           style={content.hero_image ? { backgroundImage: `url(${content.hero_image})` } : undefined} />
         <div className="hero-inner">
-          <Header content={content} onHero />
+          <Header content={content} onHero branches={branches} currentBranch={branchId} />
           <div className="container">
             <div className="hero-copy">
               <h1 dangerouslySetInnerHTML={{ __html: content.hero_title }} />

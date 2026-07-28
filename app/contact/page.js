@@ -1,4 +1,5 @@
 import { Header, Footer, getContent } from "@/components/SiteChrome";
+import { getDb } from "@/lib/db";
 import Link from "next/link";
 import Html from "@/components/Html";
 export const dynamic = "force-dynamic";
@@ -36,6 +37,10 @@ function resolveEmbedSrc(raw) {
 
 export default async function Contact() {
   const content = await getContent();
+  const db = await getDb();
+  const branches = await db.prepare(
+    "SELECT Name, Address, Phone FROM Branches WHERE IsActive=true ORDER BY IsMain DESC, DisplayOrder, BranchId"
+  ).all();
   const rows = [
     { k: "pin", label: "Address", val: content.contact_address, extra: content.map_url ? <a href={content.map_url} target="_blank" rel="noopener noreferrer" className="ct-maplink">View on Map →</a> : null },
     { k: "phone", label: "Phone", val: content.contact_phone },
@@ -70,6 +75,21 @@ export default async function Contact() {
                   </div>
                 ))}
               </div>
+
+              {branches.length > 1 && (
+                <div className="ct-branches">
+                  <h2 className="ct-branches-title">Our Branches</h2>
+                  <div className="ct-branch-grid">
+                    {branches.map((b, i) => (
+                      <div className="ct-branch" key={i}>
+                        <span className="ct-branch-name">{b.Name}</span>
+                        {b.Address && <span className="ct-branch-line">{b.Address}</span>}
+                        {b.Phone && <span className="ct-branch-line">{b.Phone}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="ct-map">
