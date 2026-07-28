@@ -1344,9 +1344,10 @@ body { overflow-x: clip; max-width: 100%; }
 .hdr-right { display: flex; align-items: center; gap: .8rem; }
 .hdr-branch { display: inline-flex; align-items: center; gap: .35rem; }
 .hdr-branch-label { font-size: .72rem; letter-spacing: .5px; text-transform: uppercase; opacity: .7; }
-.hdr-branch select { padding: .35rem .5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.08); color: inherit; font: inherit; font-size: .82rem; cursor: pointer; }
-.hdr-branch select option { color: #17120F; }
-.site-header:not(.on-hero) .hdr-branch select { border-color: var(--line); background: #fff; }
+.hdr-branch select { padding: .35rem .5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.12); color: #fff; font: inherit; font-size: .82rem; cursor: pointer; }
+.hdr-branch select option { color: #17120F; background: #fff; }
+.site-header:not(.on-hero) .hdr-branch select { border-color: var(--line); background: #fff; color: #17120F; }
+.site-header:not(.on-hero) .hdr-branch-label { color: #17120F; }
 
 /* ===== Contact page branches ===== */
 .ct-branches { margin-top: 1.6rem; }

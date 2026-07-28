@@ -27,6 +27,6 @@ export async function POST(req) {
     await logActivity(Number(s.sub), "TABLE_CREATE", Name);
     return NextResponse.json({ ok: true, id: r.lastInsertRowid });
   } catch {
-    return NextResponse.json({ error: "A table with that name already exists." }, { status: 400 });
+    return NextResponse.json({ error: "This branch already has a table with that name." }, { status: 400 });
   }
 }

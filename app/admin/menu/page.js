@@ -20,11 +20,25 @@ export default function MenuAdmin() {
   useEffect(() => { load(); }, []);
   const save = async () => {
     setMsg("");
+    if (!f.Name?.trim() || !f.CategoryId || f.Price === "" || f.Price == null) {
+      setMsg("Name, category and price are required.");
+      return;
+    }
     const url = editId ? `/api/admin/items/${editId}` : "/api/admin/items";
-    const res = await fetch(url, { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(f) });
-    const d = await res.json();
-    setMsg(res.ok ? "Saved." : d.error);
-    if (res.ok) { resetForm(); load(); }
+    try {
+      const res = await fetch(url, { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(f) });
+      let d = {};
+      try { d = await res.json(); } catch { /* non-JSON response */ }
+      if (res.ok) {
+        setMsg(d.warning || "Saved.");
+        resetForm();
+        load();
+      } else {
+        setMsg(d.error || `Save failed (HTTP ${res.status}).`);
+      }
+    } catch (err) {
+      setMsg("Save failed: " + (err?.message || "network error"));
+    }
   };
   const del = async (id) => { if (!confirm("Delete this item?")) return; await fetch(`/api/admin/items/${id}`, { method: "DELETE" }); load(); };
   const upload = async (e) => {
@@ -38,6 +52,15 @@ export default function MenuAdmin() {
       // Save immediately — don't let the photo get lost if "Save Changes" is missed.
       await fetch(`/api/admin/items/${editId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...f, ImageUrl: d.url }) });
       setMsg("Photo uploaded and saved.");
+      load();
+    }
+  };
+  const removePhoto = async () => {
+    setF(v => ({ ...v, ImageUrl: "" }));
+    setFileKey(k => k + 1); // reset the file input
+    if (editId) {
+      await fetch(`/api/admin/items/${editId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...f, ImageUrl: null }) });
+      setMsg("Photo removed.");
       load();
     }
   };
@@ -58,7 +81,10 @@ export default function MenuAdmin() {
         <div className="field"><label>Description</label><textarea value={f.Description || ""} onChange={e => setF({ ...f, Description: e.target.value })} /></div>
         <div className="field"><label>Price</label><input type="number" step="0.01" value={f.Price} onChange={e => setF({ ...f, Price: e.target.value })} /></div>
         <div className="field"><label>Image</label><input key={fileKey} type="file" accept="image/*" onChange={upload} />
-          {f.ImageUrl && <img src={f.ImageUrl} alt="" style={{ width: 90, marginTop: ".5rem", borderRadius: 8 }} />}</div>
+          {f.ImageUrl && <div style={{ marginTop: ".5rem", display: "flex", alignItems: "center", gap: ".6rem" }}>
+            <img src={f.ImageUrl} alt="" style={{ width: 90, borderRadius: 8 }} />
+            <button type="button" className="btn small danger" onClick={removePhoto}>Remove photo</button>
+          </div>}</div>
         <div className="field"><label>Display Order</label><input type="number" value={f.DisplayOrder} onChange={e => setF({ ...f, DisplayOrder: +e.target.value })} /></div>
         <div className="field">
           <label>Side Options <span style={{ fontWeight: 400, opacity: .6, fontSize: ".8rem" }}>— free add-ons, one per line. Leave empty for none.</span></label>
