@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import AdminShell from "../AdminShell";
 
-const BLANK = { Name: "", Address: "", Phone: "", TaxPercent: "", ServicePercent: "", IsActive: true, IsMain: false };
+const BLANK = { Name: "", Address: "", Phone: "", Email: "", OpeningHours: "", MapUrl: "", MapEmbed: "", TaxPercent: "", ServicePercent: "", IsActive: true, IsMain: false };
 
 export default function BranchesPage() {
   const [branches, setBranches] = useState([]);
@@ -16,6 +16,7 @@ export default function BranchesPage() {
     setEditId(b.BranchId);
     setF({
       Name: b.Name || "", Address: b.Address || "", Phone: b.Phone || "",
+      Email: b.Email || "", OpeningHours: b.OpeningHours || "", MapUrl: b.MapUrl || "", MapEmbed: b.MapEmbed || "",
       TaxPercent: b.TaxPercent ?? "", ServicePercent: b.ServicePercent ?? "",
       DisplayOrder: b.DisplayOrder, IsActive: b.IsActive, IsMain: b.IsMain,
     });
@@ -89,6 +90,18 @@ export default function BranchesPage() {
           </div>
           <div className="field branch-wide"><label>Address</label>
             <input value={f.Address} onChange={e => setF({ ...f, Address: e.target.value })} placeholder="Branch address (optional)" />
+          </div>
+          <div className="field"><label>Email</label>
+            <input value={f.Email} onChange={e => setF({ ...f, Email: e.target.value })} placeholder="branch@toastandroast.com" />
+          </div>
+          <div className="field"><label>Opening Hours</label>
+            <input value={f.OpeningHours} onChange={e => setF({ ...f, OpeningHours: e.target.value })} placeholder="Daily 9:00 AM – 2:00 AM" />
+          </div>
+          <div className="field branch-wide"><label>Map Link (Google Maps URL)</label>
+            <input value={f.MapUrl} onChange={e => setF({ ...f, MapUrl: e.target.value })} placeholder="https://maps.google.com/…" />
+          </div>
+          <div className="field branch-wide"><label>Map Embed (optional — full &lt;iframe&gt; or embed URL)</label>
+            <input value={f.MapEmbed} onChange={e => setF({ ...f, MapEmbed: e.target.value })} placeholder="Paste Google Maps embed iframe or src URL" />
           </div>
           <div className="field"><label>Tax %</label>
             <input type="number" step="0.01" value={f.TaxPercent} onChange={e => setF({ ...f, TaxPercent: e.target.value })} placeholder="e.g. 14 (blank = default)" />

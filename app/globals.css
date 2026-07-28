@@ -1352,6 +1352,8 @@ body { overflow-x: clip; max-width: 100%; }
 .ct-branches { margin-top: 1.6rem; }
 .ct-branches-title { font-size: 1.1rem; margin: 0 0 .8rem; }
 .ct-branch-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .8rem; }
-.ct-branch { display: flex; flex-direction: column; gap: .2rem; padding: .8rem 1rem; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.ct-branch { display: flex; flex-direction: column; gap: .2rem; padding: .8rem 1rem; border: 1px solid var(--line); border-radius: 12px; background: #fff; text-decoration: none; color: inherit; transition: border-color .15s, background .15s; }
+.ct-branch:hover { border-color: var(--copper); background: #FCF8F3; }
+.ct-branch.on { border-color: var(--copper); background: rgba(192,138,86,.08); box-shadow: 0 0 0 1px var(--copper); }
 .ct-branch-name { font-weight: 700; }
 .ct-branch-line { font-size: .85rem; color: var(--muted); }

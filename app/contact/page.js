@@ -1,5 +1,6 @@
 import { Header, Footer, getContent } from "@/components/SiteChrome";
 import { getDb } from "@/lib/db";
+import { publicBranchId } from "@/lib/branch";
 import Link from "next/link";
 import Html from "@/components/Html";
 export const dynamic = "force-dynamic";
@@ -35,24 +36,37 @@ function resolveEmbedSrc(raw) {
   return /\/maps\/embed/i.test(url) ? url : null;
 }
 
-export default async function Contact() {
+export default async function Contact({ searchParams }) {
   const content = await getContent();
   const db = await getDb();
+  const branchId = await publicBranchId(searchParams?.branch);
   const branches = await db.prepare(
-    "SELECT Name, Address, Phone FROM Branches WHERE IsActive=true ORDER BY IsMain DESC, DisplayOrder, BranchId"
+    "SELECT BranchId, Name, Address, Phone, Email, OpeningHours, MapUrl, MapEmbed FROM Branches WHERE IsActive=true ORDER BY IsMain DESC, DisplayOrder, BranchId"
   ).all();
+  const branchList = await db.prepare("SELECT BranchId, Name FROM Branches WHERE IsActive=true ORDER BY DisplayOrder, BranchId").all();
+  const selected = branches.find(b => b.BranchId === branchId) || branches[0] || null;
+
+  // Selected branch's details drive each row; fall back to the shared Website
+  // Content value only when the branch hasn't set that field.
+  const addr = selected?.Address || content.contact_address;
+  const phone = selected?.Phone || content.contact_phone;
+  const email = selected?.Email || content.contact_email;
+  const hours = selected?.OpeningHours || content.opening_hours;
+  const mapUrl = selected?.MapUrl || content.map_url;
+  const mapEmbedRaw = selected?.MapEmbed || content.map_embed;
+
   const rows = [
-    { k: "pin", label: "Address", val: content.contact_address, extra: content.map_url ? <a href={content.map_url} target="_blank" rel="noopener noreferrer" className="ct-maplink">View on Map →</a> : null },
-    { k: "phone", label: "Phone", val: content.contact_phone },
-    { k: "mail", label: "Email", val: content.contact_email },
-    { k: "clock", label: "Opening Hours", val: content.opening_hours },
+    { k: "pin", label: "Address", val: addr, extra: mapUrl ? <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="ct-maplink">View on Map →</a> : null },
+    { k: "phone", label: "Phone", val: phone },
+    { k: "mail", label: "Email", val: email },
+    { k: "clock", label: "Opening Hours", val: hours },
   ];
-  const embedSrc = resolveEmbedSrc(content.map_embed);
-  const hasMap = !!embedSrc || !!content.map_url?.trim();
+  const embedSrc = resolveEmbedSrc(mapEmbedRaw);
+  const hasMap = !!embedSrc || !!mapUrl?.trim();
 
   return (
     <>
-      <Header content={content} />
+      <Header content={content} branches={branchList} currentBranch={branchId} />
       <main className="ct-page">
         <div className="container">
           <div className="ct-grid">
@@ -80,12 +94,12 @@ export default async function Contact() {
                 <div className="ct-branches">
                   <h2 className="ct-branches-title">Our Branches</h2>
                   <div className="ct-branch-grid">
-                    {branches.map((b, i) => (
-                      <div className="ct-branch" key={i}>
-                        <span className="ct-branch-name">{b.Name}</span>
+                    {branches.map((b) => (
+                      <Link href={`/contact?branch=${b.BranchId}`} className={`ct-branch${b.BranchId === branchId ? " on" : ""}`} key={b.BranchId}>
+                        <span className="ct-branch-name">{b.Name}{b.BranchId === branchId ? " ✓" : ""}</span>
                         {b.Address && <span className="ct-branch-line">{b.Address}</span>}
                         {b.Phone && <span className="ct-branch-line">{b.Phone}</span>}
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -95,8 +109,8 @@ export default async function Contact() {
             <div className="ct-map">
               {embedSrc
                 ? <iframe src={embedSrc} title="Map" loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen></iframe>
-                : content.map_url?.trim()
-                  ? <a className="ct-map-link" href={content.map_url} target="_blank" rel="noopener noreferrer"><span className="ct-map-pin"><Ic kind="pin" /></span><span>Open in Maps →</span></a>
+                : mapUrl?.trim()
+                  ? <a className="ct-map-link" href={mapUrl} target="_blank" rel="noopener noreferrer"><span className="ct-map-pin"><Ic kind="pin" /></span><span>Open in Maps →</span></a>
                   : <div className="ct-map-empty"><Ic kind="pin" /><span>Map coming soon</span></div>}
             </div>
 
