@@ -116,11 +116,19 @@ export default function BranchesPage() {
             <input value={f.MapEmbed} onChange={e => setF({ ...f, MapEmbed: e.target.value })} placeholder="Paste Google Maps embed iframe or src URL" />
           </div>
           <div className="field branch-wide"><label>Menu PDF (downloadable menu for this branch)</label>
-            <input key={pdfKey} type="file" accept="application/pdf" onChange={uploadPdf} />
-            {f.MenuPdfUrl && <div style={{ marginTop: ".4rem", display: "flex", alignItems: "center", gap: ".6rem", fontSize: ".85rem" }}>
-              <a href={f.MenuPdfUrl} target="_blank" rel="noopener noreferrer">View current PDF ↗</a>
-              <button type="button" className="btn small ghost" onClick={() => { setF(v => ({ ...v, MenuPdfUrl: "" })); setPdfKey(k => k + 1); }}>Remove</button>
-            </div>}
+            <input key={pdfKey} id="branch-pdf-input" type="file" accept="application/pdf" onChange={uploadPdf} style={{ display: "none" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: ".6rem", flexWrap: "wrap" }}>
+              <label htmlFor="branch-pdf-input" className="btn small ghost" style={{ cursor: "pointer", margin: 0 }}>
+                {f.MenuPdfUrl ? "Replace PDF" : "Upload PDF"}
+              </label>
+              {f.MenuPdfUrl
+                ? <span style={{ fontSize: ".85rem", display: "inline-flex", alignItems: "center", gap: ".6rem" }}>
+                    <span style={{ color: "var(--forest, #2B342E)", fontWeight: 600 }}>✓ PDF set for this branch</span>
+                    <a href={f.MenuPdfUrl} target="_blank" rel="noopener noreferrer">View ↗</a>
+                    <button type="button" className="btn small ghost" onClick={() => { setF(v => ({ ...v, MenuPdfUrl: "" })); setPdfKey(k => k + 1); }}>Remove</button>
+                  </span>
+                : <span style={{ fontSize: ".85rem", color: "var(--muted)" }}>No PDF uploaded for this branch yet</span>}
+            </div>
           </div>
           <div className="field"><label>Tax %</label>
             <input type="number" step="0.01" value={f.TaxPercent} onChange={e => setF({ ...f, TaxPercent: e.target.value })} placeholder="e.g. 14 (blank = default)" />
