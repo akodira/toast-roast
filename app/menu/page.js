@@ -10,10 +10,15 @@ export default async function MenuPage({ searchParams }) {
   const db = await getDb();
   const branchId = await publicBranchId(searchParams?.branch);
   const branches = await db.prepare("SELECT BranchId, Name FROM Branches WHERE IsActive=true ORDER BY DisplayOrder, BranchId").all();
+  const selBranch = await db.prepare("SELECT MenuPdfUrl, IsMain FROM Branches WHERE BranchId=$1").get(branchId);
   const categories = await db.prepare("SELECT * FROM Categories WHERE IsActive=true AND BranchId=$1 ORDER BY DisplayOrder").all(branchId);
   const items = await db.prepare("SELECT * FROM MenuItems WHERE IsActive=true AND BranchId=$1 ORDER BY DisplayOrder").all(branchId);
   const settingRows = await db.prepare("SELECT * FROM Settings").all();
   const settings = Object.fromEntries(settingRows.map(r => [r.SettingKey, r.SettingValue]));
+  // Each branch has its OWN menu PDF; only the Main branch falls back to the
+  // shared global menu PDF, so non-Main branches show only their own (or none).
+  const branchPdf = (selBranch?.MenuPdfUrl || "").trim();
+  const pdfUrl = branchPdf || (selBranch?.IsMain ? (content.menu_pdf?.trim() || "") : "");
 
   return (
     <>
@@ -24,7 +29,7 @@ export default async function MenuPage({ searchParams }) {
             categories={categories}
             items={items}
             eyebrow={content.menu_title || "Our Menu"}
-            pdfUrl={content.menu_pdf?.trim() || ""}
+            pdfUrl={pdfUrl}
             taxPercent={settings.tax_percent}
             servicePercent={settings.service_percent}
           />

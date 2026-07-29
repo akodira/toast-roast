@@ -27,7 +27,7 @@ export async function GET() {
       BranchId: b.BranchId, Name: b.Name, Slug: b.Slug,
       Address: b.address ?? b.Address ?? null, Phone: b.Phone ?? null,
       Email: b.Email ?? null, OpeningHours: b.OpeningHours ?? null,
-      MapUrl: b.MapUrl ?? null, MapEmbed: b.MapEmbed ?? null,
+      MapUrl: b.MapUrl ?? null, MapEmbed: b.MapEmbed ?? null, MenuPdfUrl: b.MenuPdfUrl ?? null,
       TaxPercent: b.TaxPercent, ServicePercent: b.ServicePercent,
       DisplayOrder: b.DisplayOrder, IsActive: !!b.IsActive, IsMain: !!b.IsMain,
       Categories: Number(b.catcount || 0), Items: Number(b.itemcount || 0), Tables: Number(b.tablecount || 0),
@@ -49,10 +49,10 @@ export async function POST(req) {
   while (await db.prepare("SELECT BranchId FROM Branches WHERE Slug=$1").get(slug)) { slug = `${base}-${n++}`; }
   const order = (await db.prepare("SELECT COALESCE(MAX(DisplayOrder),-1)+1 AS n FROM Branches").get()).n;
   const r = await db.prepare(
-    `INSERT INTO Branches (Name, Slug, Address, Phone, Email, OpeningHours, MapUrl, MapEmbed, TaxPercent, ServicePercent, DisplayOrder, IsActive)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING BranchId AS id`
+    `INSERT INTO Branches (Name, Slug, Address, Phone, Email, OpeningHours, MapUrl, MapEmbed, MenuPdfUrl, TaxPercent, ServicePercent, DisplayOrder, IsActive)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING BranchId AS id`
   ).run(name, slug, body.Address || null, body.Phone || null, body.Email || null,
-        body.OpeningHours || null, body.MapUrl || null, body.MapEmbed || null,
+        body.OpeningHours || null, body.MapUrl || null, body.MapEmbed || null, body.MenuPdfUrl || null,
         body.TaxPercent ?? null, body.ServicePercent ?? null, order, body.IsActive === false ? false : true);
   // If created as Main, make it the sole Main branch.
   if (body.IsMain === true) {

@@ -14,10 +14,10 @@ export async function PUT(req, { params }) {
   if (!name) return NextResponse.json({ error: "Branch name is required." }, { status: 400 });
   const db = await getDb();
   await db.prepare(
-    `UPDATE Branches SET Name=$1, Address=$2, Phone=$3, Email=$4, OpeningHours=$5, MapUrl=$6, MapEmbed=$7,
-       TaxPercent=$8, ServicePercent=$9, DisplayOrder=$10, IsActive=$11 WHERE BranchId=$12`
+    `UPDATE Branches SET Name=$1, Address=$2, Phone=$3, Email=$4, OpeningHours=$5, MapUrl=$6, MapEmbed=$7, MenuPdfUrl=$8,
+       TaxPercent=$9, ServicePercent=$10, DisplayOrder=$11, IsActive=$12 WHERE BranchId=$13`
   ).run(name, body.Address || null, body.Phone || null, body.Email || null,
-        body.OpeningHours || null, body.MapUrl || null, body.MapEmbed || null,
+        body.OpeningHours || null, body.MapUrl || null, body.MapEmbed || null, body.MenuPdfUrl || null,
         body.TaxPercent ?? null, body.ServicePercent ?? null,
         Number.isFinite(body.DisplayOrder) ? body.DisplayOrder : 0,
         body.IsActive === false ? false : true, params.id);

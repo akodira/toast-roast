@@ -2,13 +2,25 @@
 import { useEffect, useState } from "react";
 import AdminShell from "../AdminShell";
 
-const BLANK = { Name: "", Address: "", Phone: "", Email: "", OpeningHours: "", MapUrl: "", MapEmbed: "", TaxPercent: "", ServicePercent: "", IsActive: true, IsMain: false };
+const BLANK = { Name: "", Address: "", Phone: "", Email: "", OpeningHours: "", MapUrl: "", MapEmbed: "", MenuPdfUrl: "", TaxPercent: "", ServicePercent: "", IsActive: true, IsMain: false };
 
 export default function BranchesPage() {
   const [branches, setBranches] = useState([]);
   const [f, setF] = useState(BLANK);
   const [editId, setEditId] = useState(null);
   const [msg, setMsg] = useState("");
+  const [pdfKey, setPdfKey] = useState(0);
+
+  const uploadPdf = async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    setMsg("Uploading menu PDF…");
+    const fd = new FormData(); fd.append("file", file);
+    const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+    const d = await res.json();
+    if (!res.ok) { setMsg(d.error || "Upload failed."); return; }
+    setF(v => ({ ...v, MenuPdfUrl: d.url }));
+    setMsg("Menu PDF uploaded — click Save Changes to keep it.");
+  };
   const load = () => fetch("/api/admin/branches").then(r => r.json()).then(d => setBranches(d.branches || []));
   useEffect(() => { load(); }, []);
 
@@ -16,7 +28,7 @@ export default function BranchesPage() {
     setEditId(b.BranchId);
     setF({
       Name: b.Name || "", Address: b.Address || "", Phone: b.Phone || "",
-      Email: b.Email || "", OpeningHours: b.OpeningHours || "", MapUrl: b.MapUrl || "", MapEmbed: b.MapEmbed || "",
+      Email: b.Email || "", OpeningHours: b.OpeningHours || "", MapUrl: b.MapUrl || "", MapEmbed: b.MapEmbed || "", MenuPdfUrl: b.MenuPdfUrl || "",
       TaxPercent: b.TaxPercent ?? "", ServicePercent: b.ServicePercent ?? "",
       DisplayOrder: b.DisplayOrder, IsActive: b.IsActive, IsMain: b.IsMain,
     });
@@ -102,6 +114,13 @@ export default function BranchesPage() {
           </div>
           <div className="field branch-wide"><label>Map Embed (optional — full &lt;iframe&gt; or embed URL)</label>
             <input value={f.MapEmbed} onChange={e => setF({ ...f, MapEmbed: e.target.value })} placeholder="Paste Google Maps embed iframe or src URL" />
+          </div>
+          <div className="field branch-wide"><label>Menu PDF (downloadable menu for this branch)</label>
+            <input key={pdfKey} type="file" accept="application/pdf" onChange={uploadPdf} />
+            {f.MenuPdfUrl && <div style={{ marginTop: ".4rem", display: "flex", alignItems: "center", gap: ".6rem", fontSize: ".85rem" }}>
+              <a href={f.MenuPdfUrl} target="_blank" rel="noopener noreferrer">View current PDF ↗</a>
+              <button type="button" className="btn small ghost" onClick={() => { setF(v => ({ ...v, MenuPdfUrl: "" })); setPdfKey(k => k + 1); }}>Remove</button>
+            </div>}
           </div>
           <div className="field"><label>Tax %</label>
             <input type="number" step="0.01" value={f.TaxPercent} onChange={e => setF({ ...f, TaxPercent: e.target.value })} placeholder="e.g. 14 (blank = default)" />
